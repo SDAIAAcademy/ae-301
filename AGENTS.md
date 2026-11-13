@@ -1,6 +1,6 @@
-# Applied NLP Engineering: notes for coding agents
+# Applied Natural Language Processing Engineering: notes for coding agents
 
-This repository is one SDAIA Academy course: **Applied NLP Engineering** (`applied-nlp`). It holds content only.
+This repository is one SDAIA Academy course: **Applied Natural Language Processing Engineering** (`applied-nlp`, catalog code AE-301). It holds content only.
 The SDAIA Academy engine (major version 1) turns it into a static site: slide decks
 with speaker notes and a presenter view, the course page, lab pages, a practice page and Markdown
 for AI assistants. The repository is public, and so is everything in it.
@@ -71,7 +71,7 @@ one that fits the task before you start, and follow it:
 
 - Nothing internal from the catalog: no hours per badge domain, no priorities, no exam weights, no
   notes on which entries a course was derived from. Use what
-  `node academy.mjs catalog --code applied-nlp` prints; it leaves those out (the engine
+  `node academy.mjs catalog --code AE-301` prints; it leaves those out (the engine
   finds the catalog beside itself; `--catalog <folder>` names it when it is elsewhere).
 - No exam questions. Exam items live in `assessments/*.private.json` (ignored by git) or in a file
   outside the repository passed to `academy exam --bank <file>`. `assessments/bank.json` holds

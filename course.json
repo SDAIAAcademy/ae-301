@@ -2,14 +2,27 @@
   "$schema": "https://sdaiaacademy.github.io/engine/schemas/course.schema.json",
   "engine": "1",
   "id": "applied-nlp",
-  "version": "2026.1.0",
+  "code": "AE-301",
+  "version": "2027.1.0",
   "lang": "en",
-  "title": "Applied NLP Engineering",
-  "tagline": "From tokens to fine-tuned language models: build, evaluate and adapt practical NLP systems for English and Arabic text.",
+  "title": {
+    "en": "Applied Natural Language Processing Engineering",
+    "ar": "الهندسة التطبيقية لمعالجة اللغات الطبيعية"
+  },
+  "tagline": "REPLACE: one line under the title: what participants can do after the course",
+  "description": "Participants build the language layer of a customer-service system for a fictional regional water utility whose messages arrive in Modern Standard Arabic, Gulf dialect, Arabic written in Latin script and English. They trace text through tokenisers, embeddings and attention, build semantic search, route messages and extract account fields three ways (a classical baseline, a prompted generative model and a fine-tuned encoder), adapt a model with low-rank adapters in free notebook memory, and ship the chosen model as a small service with a model card. Every choice rests on scores by dialect, latency and cost.",
   "track": "ai-engineering",
-  "audience": "Python-proficient developers and data scientists with basic ML. No prior transformer experience needed.",
+  "level": 300,
+  "badge": {
+    "name": "AI Engineering",
+    "level": "Associate"
+  },
+  "audience": "Practitioners. Engineers who have completed the level 200 set or can show equivalent work: a deployed model or language model application they built and can explain.",
   "prerequisites": [
-    "Google Colab (GPU) or local with uv. Run 00_setup_check before Day 1; see labs/README.md."
+    "AE-202 Deep Learning and Generative AI Fundamentals",
+    "Trains a small neural network with a hand-written training loop",
+    "Computes precision, recall and F1 from predictions",
+    "Reads and writes UTF-8 Arabic text in Python"
   ],
   "site": {
     "url": "https://sdaiaacademy.github.io/applied-nlp/",
@@ -18,200 +31,124 @@
   "outcomes": [
     {
       "id": "LO1",
-      "text": "Explain and implement tokenization, embeddings and transformer inference"
+      "text": "Explain how tokenisation, embeddings and attention turn Arabic and English text into model inputs, and where script, diacritics and dialect break that pipeline, given 50 parallel messages and three tokenisers",
+      "level": "Awareness",
+      "evidence": "a one-page note with token counts per language and two failures traced to their cause"
     },
     {
       "id": "LO2",
-      "text": "Build semantic search and text classification systems"
+      "text": "Implement semantic search over a bilingual message archive and measure it for each language variety, given 2,000 synthetic messages and 40 labelled queries",
+      "level": "Applied",
+      "evidence": "a table of recall at 10 for each of the four varieties"
     },
     {
       "id": "LO3",
-      "text": "Develop structured-output and retrieval-grounded LLM applications"
+      "text": "Implement schema-validated extraction of account numbers, districts and complaint types from free text, masking personal fields before text reaches a hosted model, given 200 messages with gold fields",
+      "level": "Applied",
+      "evidence": "field-level precision and recall, a log of validation failures and a passing masking test"
     },
     {
       "id": "LO4",
-      "text": "Choose between discriminative decision models and generative LLMs"
+      "text": "Apply low-rank adapter fine-tuning to an encoder within a fixed memory budget and compare it with full fine-tuning, given a routing set split by customer and a free notebook GPU",
+      "level": "Applied",
+      "evidence": "training logs, trainable-parameter counts and test scores for both runs"
     },
     {
       "id": "LO5",
-      "text": "Fine-tune transformers with supervised and parameter-efficient methods"
+      "text": "Decide among a classical baseline, a prompted generative model and a fine-tuned encoder for message routing, given eight departments, a held-out test set and a latency budget",
+      "level": "Performance",
+      "evidence": "a table of macro F1, F1 by dialect, CPU latency and cost per thousand messages, with a defended recommendation"
     },
     {
       "id": "LO6",
-      "text": "Evaluate, compare and demonstrate practical NLP solutions"
+      "text": "Deliver the chosen model as a tested service with a model card that states its limits by language variety, given a smoke-test set",
+      "level": "Performance",
+      "evidence": "a running service that passes the smoke test and a model card with results by dialect and a hand-off rule"
     }
   ],
   "case_study": {
-    "name": "Intelligent Support Ticket Processing",
-    "summary": "Given an English or Arabic customer message, identify its intent, find similar historical cases, assign a category and priority, and draft a grounded recommended reply. Every lab adds a component to this system."
+    "name": "REPLACE: the name of the fictional organisation every lab works on",
+    "summary": "REPLACE: two sentences on the case study and its synthetic data"
   },
   "format": "intensive",
+  "format_note": "Intensive: 3 teaching days of four sessions and a capstone day, with guided pre-work and a tracked follow-up task",
+  "hours": {
+    "instruction": 5,
+    "lab": 5,
+    "guided_self_study": 5,
+    "assessment": 1,
+    "capstone": 5
+  },
   "unit": "day",
   "days": [
     {
       "id": "day1",
       "kind": "day",
-      "title": "Text Representation & Transformer Foundations",
+      "title": "Represent",
       "deck": "slides/day1.html",
       "sessions": [
         {
-          "title": "Tokenization",
-          "summary": "Tokenization: from text to integers",
+          "title": "Tokenisation",
           "outcomes": [
-            "Explain the tokenization pipeline and subword algorithms (BPE, WordPiece)",
-            "Inspect token IDs, special tokens, attention masks and context limits",
-            "Measure how tokenizers treat Arabic vs. English, and why it costs money"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO1"
           ],
           "lab": {
             "id": "1.1",
-            "title": "Inspect English and Arabic tokenization",
+            "title": "Count tokens for 50 parallel Arabic, dialect and English messages with three tokenisers and price the difference",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "You will compare five tokenizers on our support tickets and quantify the \"Arabic token tax\".",
-            "href": "D1_1_tokenization.ipynb",
-            "steps": [
-              {
-                "text": "Tokenize a ticket, map IDs ↔ tokens, decode back",
-                "minutes": 5
-              },
-              {
-                "text": "Inspect special tokens, padding, attention masks",
-                "minutes": 5
-              },
-              {
-                "text": "Compute fertility for EN vs. AR across 5 tokenizers",
-                "minutes": 8
-              },
-              {
-                "text": "Write an Arabic normalizer; measure its effect",
-                "minutes": 5
-              },
-              {
-                "text": "Find the token-length percentile for max_length",
-                "minutes": 2
-              }
-            ],
-            "stretch": "Train a tiny BPE tokenizer on the tickets"
+            "href": "D1_1_count_tokens_50.ipynb"
           }
         },
         {
-          "title": "Embeddings",
-          "summary": "Embeddings: meaning as geometry",
+          "title": "Embeddings and semantic search",
           "outcomes": [
-            "Explain dense vectors, cosine similarity and pooling",
-            "Choose an embedding model for a multilingual use case",
-            "Build and evaluate a semantic search over historical tickets"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO2"
           ],
           "lab": {
             "id": "1.2",
-            "title": "Build semantic search over historical tickets",
+            "title": "Index 2,000 messages with an open multilingual embedding model and score 20 queries by variety",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "Embed thousands of tickets, search in English and Arabic, and put a number on retrieval quality.",
-            "href": "D1_2_embeddings_semantic_search.ipynb",
-            "steps": [
-              {
-                "text": "Embed sentences; compute a similarity matrix and a heatmap",
-                "minutes": 5
-              },
-              {
-                "text": "Compare mean pooling by hand with the library output",
-                "minutes": 5
-              },
-              {
-                "text": "Index historical tickets with NumPy, then FAISS",
-                "minutes": 5
-              },
-              {
-                "text": "Evaluate Hit@5 and MRR on test tickets (same-intent relevance)",
-                "minutes": 5
-              },
-              {
-                "text": "Cross-lingual: Arabic queries → English history",
-                "minutes": 5
-              }
-            ],
-            "stretch": "Compare two embedding models, or plot a 2-D UMAP of intents"
+            "href": "D1_2_index_2_000.ipynb"
           }
         },
         {
-          "title": "Transformers",
-          "summary": "Inside the transformer",
+          "title": "Inside the transformer",
           "outcomes": [
-            "Explain self-attention, multi-head attention and positional information",
-            "Distinguish encoder, decoder and encoder–decoder models and what each is for",
-            "Load any model from the Hugging Face Hub and inspect its outputs"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO1"
           ],
           "lab": {
             "id": "1.3",
-            "title": "Open the black box",
+            "title": "Inspect attention for one Arabic sentence and compare an encoder with a decoder on it",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "Look at hidden states and attention, implement attention in NumPy, and watch context change a word's vector.",
-            "href": "D1_3_transformers_inside.ipynb",
-            "steps": [
-              {
-                "text": "Implement scaled dot-product attention in 10 lines of NumPy",
-                "minutes": 6
-              },
-              {
-                "text": "Inspect hidden-state and attention shapes for a ticket",
-                "minutes": 4
-              },
-              {
-                "text": "Plot an attention heatmap for chosen layer/head",
-                "minutes": 5
-              },
-              {
-                "text": "Contextual embeddings: \"charge\" in two contexts",
-                "minutes": 5
-              },
-              {
-                "text": "Fill-mask in English and Arabic with XLM-R",
-                "minutes": 5
-              }
-            ],
-            "stretch": "Causal mask: compare encoder vs. decoder attention patterns"
+            "href": "D1_3_inspect_attention_one.ipynb"
           }
         },
         {
           "title": "Decision models",
-          "summary": "Decision models: when the answer is a label",
           "outcomes": [
-            "Build zero-shot and embedding-based classifiers for ticket intent",
-            "Evaluate with per-class precision/recall/F1 and confusion matrices",
-            "Use thresholds to abstain and route uncertain cases to humans"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO5"
           ],
           "lab": {
             "id": "1.4",
-            "title": "Ticket classification + Day 1 integration",
-            "minutes": 30,
-            "summary": "Climb the ladder (TF-IDF → zero-shot → embeddings + LR), evaluate properly, add abstention, and combine it with this morning's search.",
-            "href": "D1_4_decision_models.ipynb",
-            "steps": [
-              {
-                "text": "TF-IDF + logistic regression baseline",
-                "minutes": 5
-              },
-              {
-                "text": "Zero-shot NLI on categories; try two label wordings",
-                "minutes": 7
-              },
-              {
-                "text": "Embeddings + logistic regression on intents",
-                "minutes": 5
-              },
-              {
-                "text": "Report, confusion matrix, EN vs. AR slice",
-                "minutes": 5
-              },
-              {
-                "text": "Coverage–accuracy curve; choose τ on validation",
-                "minutes": 4
-              },
-              {
-                "text": "Integrate: process_ticket() = classify + top-3 similar",
-                "minutes": 4
-              }
-            ],
-            "stretch": "kNN-vote classifier from the search index; compare errors"
+            "title": "Train a bag-of-words linear baseline for routing without AI assistance and report macro F1 by dialect",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "minutes": 25,
+            "href": "D1_4_train_bag_words.ipynb"
           }
         }
       ]
@@ -219,167 +156,71 @@
     {
       "id": "day2",
       "kind": "day",
-      "title": "LLMs & Applied NLP Systems",
+      "title": "Generate",
       "deck": "slides/day2.html",
       "sessions": [
         {
-          "title": "Generative LLMs",
-          "summary": "Generative LLMs: one token at a time",
+          "title": "Generative language models",
           "outcomes": [
-            "Explain next-token prediction, causal attention and the KV cache",
-            "Use chat templates correctly with instruction-tuned models",
-            "Choose decoding settings (greedy, temperature, top-p) for a task"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO5"
           ],
           "lab": {
             "id": "2.1",
-            "title": "Run and probe a small instruct model",
+            "title": "Vary sampling settings on ten replies and record consistency and invented details",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "Qwen2.5-1.5B-Instruct on GPU (0.5B on CPU), or any OpenAI-compatible endpoint you set in .env.",
-            "href": "D2_1_generative_llms.ipynb",
-            "steps": [
-              {
-                "text": "Render the chat template; count prompt tokens",
-                "minutes": 4
-              },
-              {
-                "text": "Inspect the top-10 next-token probabilities",
-                "minutes": 5
-              },
-              {
-                "text": "Write your own greedy loop with model() calls",
-                "minutes": 6
-              },
-              {
-                "text": "Compare greedy vs. T=0.7 vs. T=1.5 on a reply draft (×3 runs)",
-                "minutes": 5
-              },
-              {
-                "text": "Measure prefill vs. decode time; tokens per second",
-                "minutes": 5
-              }
-            ],
-            "stretch": "Ask in Arabic and English; compare quality and token counts"
+            "href": "D2_1_vary_sampling_settings.ipynb"
           }
         },
         {
-          "title": "Structured outputs",
-          "summary": "Prompting & structured outputs",
+          "title": "Prompting and structured outputs",
           "outcomes": [
-            "Write production prompts: role, task, constraints, format, examples",
-            "Get schema-valid JSON reliably: validation, retries, constrained decoding",
-            "Defend against prompt injection hidden inside customer messages"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO3"
           ],
           "lab": {
             "id": "2.2",
-            "title": "Triage tickets into validated JSON",
+            "title": "Extract account number, district and complaint type into a validated schema and log failures",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "Build analyze(ticket) → TicketAnalysis, then measure validity and accuracy across prompt variants.",
-            "href": "D2_2_prompting_structured_outputs.ipynb",
-            "steps": [
-              {
-                "text": "Write the schema; zero-shot prompt; parse 20 tickets",
-                "minutes": 5
-              },
-              {
-                "text": "Add validation + retry; log the validity rate",
-                "minutes": 5
-              },
-              {
-                "text": "Static 4-shot vs. dynamic 4-shot (retrieved examples)",
-                "minutes": 7
-              },
-              {
-                "text": "Regex for order IDs + LLM for the rest; merge",
-                "minutes": 4
-              },
-              {
-                "text": "Run 5 injection attacks; harden the prompt",
-                "minutes": 4
-              }
-            ],
-            "stretch": "Constrained decoding with a custom LogitsProcessor"
+            "href": "D2_2_extract_account_number.ipynb"
           }
         },
         {
-          "title": "RAG",
-          "summary": "Retrieval-augmented generation",
+          "title": "Retrieval-augmented generation",
           "outcomes": [
-            "Build a RAG pipeline: chunk, embed, retrieve, rerank, generate with citations",
-            "Improve retrieval with hybrid search and cross-encoder reranking",
-            "Evaluate retrieval and groundedness separately"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO2"
           ],
           "lab": {
             "id": "2.3",
-            "title": "Minimal RAG over the help center and past tickets",
+            "title": "Ground replies in the tariff rules with citations and refuse when the rules are silent",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "No framework: about 100 lines you fully understand. Frameworks (LangChain, LlamaIndex, Haystack) wrap these same steps.",
-            "href": "D2_3_rag.ipynb",
-            "steps": [
-              {
-                "text": "Chunk KB articles by heading; attach metadata",
-                "minutes": 4
-              },
-              {
-                "text": "Dense + BM25 retrieval; fuse with RRF",
-                "minutes": 5
-              },
-              {
-                "text": "Evaluate Hit@3 on the provided question set",
-                "minutes": 4
-              },
-              {
-                "text": "Rerank with a cross-encoder; re-evaluate",
-                "minutes": 4
-              },
-              {
-                "text": "Grounded, cited JSON reply; validate citations",
-                "minutes": 6
-              },
-              {
-                "text": "Ask an unanswerable question: does it abstain?",
-                "minutes": 2
-              }
-            ],
-            "stretch": "Arabic tickets against the English KB: with and without query translation"
+            "href": "D2_3_ground_replies_tariff.ipynb"
           }
         },
         {
-          "title": "Model selection",
-          "summary": "Model selection & evaluation",
+          "title": "Model selection and evaluation",
           "outcomes": [
-            "Compare encoder classifiers and LLMs on accuracy, latency and cost",
-            "Evaluate generative outputs: validity, faithfulness, LLM-as-judge",
-            "Assemble the end-to-end ticket assistant with a cascade design"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO5"
           ],
           "lab": {
             "id": "2.4",
-            "title": "Benchmark, decide, integrate",
-            "minutes": 30,
-            "summary": "Put numbers on \"encoder vs. LLM\", then build the cascade and the full pipeline with error analysis.",
-            "href": "D2_4_model_selection_evaluation.ipynb",
-            "steps": [
-              {
-                "text": "Same 200 test tickets: encoder vs. LLM zero-shot vs. LLM few-shot",
-                "minutes": 8
-              },
-              {
-                "text": "Macro-F1, p50/p95 latency, estimated cost per 1k",
-                "minutes": 5
-              },
-              {
-                "text": "Cascade: choose τ; report accuracy vs. % sent to LLM",
-                "minutes": 6
-              },
-              {
-                "text": "Wire assist(ticket) end to end; run on 10 EN + 10 AR",
-                "minutes": 6
-              },
-              {
-                "text": "Error analysis: label 10 failures by stage",
-                "minutes": 5
-              }
-            ],
-            "stretch": "LLM-as-judge for faithfulness; compare with your own labels"
+            "title": "Compare two open-weight models on 40 labelled messages for F1, latency and cost",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "minutes": 25,
+            "href": "D2_4_compare_two_open.ipynb"
           }
         }
       ]
@@ -387,141 +228,71 @@
     {
       "id": "day3",
       "kind": "day",
-      "title": "Fine-Tuning & NLP Engineering",
+      "title": "Adapt",
       "deck": "slides/day3.html",
       "sessions": [
         {
-          "title": "Fine-tuning fundamentals",
-          "summary": "Fine-tuning fundamentals & data",
+          "title": "Fine-tuning data",
           "outcomes": [
-            "Place fine-tuning on the spectrum of adaptation techniques",
-            "Decide when fine-tuning is worth it, and when RAG or prompting is better",
-            "Build leak-free train/validation/test splits and a tokenized dataset"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO4"
           ],
           "lab": {
             "id": "3.1",
-            "title": "Prepare a leak-free ticket dataset",
-            "minutes": 20,
-            "summary": "The output of this lab (a saved DatasetDict + label maps) feeds Labs 3.2 and 3.4.",
-            "href": "D3_1_finetuning_data_prep.ipynb",
-            "steps": [
-              {
-                "text": "Explore label distribution and text lengths",
-                "minutes": 3
-              },
-              {
-                "text": "Near-duplicate check between train and test with embeddings",
-                "minutes": 5
-              },
-              {
-                "text": "Build a realistic low-resource train set (≤ 80 per intent)",
-                "minutes": 3
-              },
-              {
-                "text": "Label maps, DatasetDict, tokenization, save to disk",
-                "minutes": 6
-              },
-              {
-                "text": "Start the model download for Lab 3.2 / 3.3 in the background",
-                "minutes": 3
-              }
-            ],
-            "stretch": "Generate 100 synthetic Arabic training tickets with the LLM; spot-check 10"
+            "title": "Split a labelled set by customer to avoid leakage and check label balance by dialect",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "minutes": 25,
+            "href": "D3_1_split_labelled_set.ipynb"
           }
         },
         {
-          "title": "Fine-tune an encoder",
-          "summary": "Fine-tune a decision model",
+          "title": "Fine-tuning an encoder",
           "outcomes": [
-            "Explain classification heads, logits, softmax and cross-entropy",
-            "Fine-tune a multilingual encoder with the Hugging Face Trainer",
-            "Read learning curves; prevent overfitting; pick the best checkpoint"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO4"
           ],
           "lab": {
             "id": "3.2",
-            "title": "Fine-tune a ticket intent classifier",
+            "title": "Fine-tune a small Arabic-capable encoder for routing and read its confusion matrix",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "About 5 minutes of training on a Colab T4. Start training first, then read the code while it runs.",
-            "href": "D3_2_finetune_encoder.ipynb",
-            "steps": [
-              {
-                "text": "Load the saved dataset; build model with label maps",
-                "minutes": 3
-              },
-              {
-                "text": "Train with Trainer + early stopping",
-                "minutes": 8
-              },
-              {
-                "text": "Plot train/val loss and macro-F1 per epoch",
-                "minutes": 3
-              },
-              {
-                "text": "Test once: English and Arabic; compare to Day 1 embeddings + LR",
-                "minutes": 6
-              },
-              {
-                "text": "Save model + tokenizer + label maps; reload; predict",
-                "minutes": 5
-              }
-            ],
-            "stretch": "Data-size ablation: 10 / 25 / 80 per class; plot F1 vs. data"
+            "href": "D3_2_fine_tune_small.ipynb"
           }
         },
         {
-          "title": "LLM adaptation",
-          "summary": "LLM adaptation with LoRA",
+          "title": "Low-rank and quantised adapters",
           "outcomes": [
-            "Explain why full LLM fine-tuning is expensive and how LoRA/QLoRA fix it",
-            "Prepare chat-formatted SFT data with loss masking",
-            "Run a LoRA fine-tune and measure before vs. after"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO4"
           ],
           "lab": {
             "id": "3.3",
-            "title": "LoRA-tune a small instruct model for ticket triage",
+            "title": "Train a low-rank adapter in a fixed memory budget and compare it with a supplied full fine-tuning run",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
             "minutes": 25,
-            "summary": "Qwen2.5-0.5B-Instruct + LoRA on ~1,500 examples. Trains in about 8–10 min on a T4. Fallback: an instructor-trained adapter.",
-            "href": "D3_3_lora_llm.ipynb",
-            "stretch": "Merge the adapter; compare r = 4 vs. r = 32"
+            "href": "D3_3_train_low_rank.ipynb"
           }
         },
         {
-          "title": "Evaluate & deploy",
-          "summary": "Evaluate, deploy & capstone kickoff",
+          "title": "Evaluate and deploy",
           "outcomes": [
-            "Compare every model from the bootcamp on one honest leaderboard",
-            "Do structured error analysis and behavioural tests",
-            "Package a reproducible model and serve it behind a demo app"
+            "REPLACE: what a participant can do after this session"
+          ],
+          "lo": [
+            "LO6"
           ],
           "lab": {
             "id": "3.4",
-            "title": "Leaderboard, error analysis, demo",
-            "minutes": 20,
-            "summary": "This notebook is also your capstone template for evaluation and serving.",
-            "href": "D3_4_evaluate_deploy.ipynb",
-            "steps": [
-              {
-                "text": "Load saved predictions; build the leaderboard with bootstrap CIs",
-                "minutes": 5
-              },
-              {
-                "text": "Confusion pairs + tag 10 errors by cause",
-                "minutes": 5
-              },
-              {
-                "text": "Run the behavioural test suite",
-                "minutes": 3
-              },
-              {
-                "text": "Batch vs. single latency; CPU int8 quantization",
-                "minutes": 3
-              },
-              {
-                "text": "Launch the Gradio demo of the full assistant",
-                "minutes": 4
-              }
-            ],
-            "stretch": "Wrap assist() in a FastAPI endpoint"
+            "title": "Wrap the chosen model in a small API with a demo page, measure CPU latency and draft the model card",
+            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "minutes": 25,
+            "href": "D3_4_wrap_chosen_model.ipynb"
           }
         }
       ]
@@ -529,50 +300,94 @@
     {
       "id": "day4",
       "kind": "capstone",
-      "title": "Capstone Project Presentations",
+      "title": "Capstone project presentations",
       "deck": "slides/day4.html"
     }
   ],
   "capstone": {
-    "summary": "Teams of 2–3 build an applied NLP solution, choosing one of: Intelligent Support Ticket Assistant: classify, retrieve similar cases, draft grounded replies; Arabic Document Intelligence: extract and categorize; answer questions with evidence; Voice of Customer Analyzer: classify feedback, cluster issues, summarize insights.",
-    "submission": "Submit a repository with working code, README, evaluation results and sample inputs/outputs. Template: labs/capstone/.",
+    "summary": "A routing and extraction service for the utility, or for a comparable text task with synthetic data, submitted as a public repository whose README reports the three-way comparison by dialect, latency and cost, with a model card, then an eight-minute defence and four minutes of questions",
+    "submission": "REPLACE: what participants submit and how: a public repository link, or a shared folder for a course without code",
+    "talk_minutes": 8,
+    "qa_minutes": 4,
     "rubric": [
       {
-        "criterion": "Functional end-to-end solution",
-        "weight": 30
-      },
-      {
-        "criterion": "Model selection & implementation",
+        "criterion": "Three-way comparison",
         "weight": 25
       },
       {
-        "criterion": "Evaluation & error analysis",
+        "criterion": "Extraction",
         "weight": 20
       },
       {
-        "criterion": "Fine-tuning or justified adaptation",
-        "weight": 15
+        "criterion": "Adaptation",
+        "weight": 20
       },
       {
-        "criterion": "Presentation & reproducibility",
-        "weight": 10
+        "criterion": "Service and model card",
+        "weight": 20
+      },
+      {
+        "criterion": "Reproducibility",
+        "weight": 15
       }
-    ],
-    "talk_minutes": 10,
-    "qa_minutes": 5
+    ]
   },
   "labs": {
     "kind": "notebooks",
     "base": "labs/"
   },
-  "extensions": {
-    "css": [
-      "assets/migrated.css"
-    ]
-  },
-  "checks": {
-    "sessions_per_day": 4,
-    "session_lab": true,
-    "lab_minutes": null
-  }
+  "tools": [
+    {
+      "slot": "Model library and training framework",
+      "examples": [
+        "Hugging Face Transformers",
+        "PyTorch"
+      ]
+    },
+    {
+      "slot": "Embeddings and vector index",
+      "examples": [
+        "Sentence Transformers",
+        "FAISS",
+        "LanceDB"
+      ]
+    },
+    {
+      "slot": "Baselines and metrics",
+      "examples": [
+        "scikit-learn",
+        "seqeval"
+      ]
+    },
+    {
+      "slot": "Parameter-efficient fine-tuning",
+      "examples": [
+        "PEFT",
+        "a hand-written low-rank adapter layer"
+      ]
+    },
+    {
+      "slot": "Arabic text processing",
+      "examples": [
+        "CAMeL Tools",
+        "PyArabic"
+      ]
+    },
+    {
+      "slot": "Language model access",
+      "examples": [
+        "a locally served open-weight model",
+        "a free hosted open-weight model",
+        "any commercial API"
+      ]
+    },
+    {
+      "slot": "Service, validation and demo",
+      "examples": [
+        "FastAPI with Pydantic",
+        "Gradio",
+        "Streamlit"
+      ]
+    }
+  ]
 }
