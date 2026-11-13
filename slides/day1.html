@@ -359,7 +359,7 @@ top = np.argsort(-scores)[:10]</code></pre>
 </section>
 
 <section class="slide lab" id="lab-1-2" data-auto="lab" data-lab="1.2">
-  <aside class="notes"><p>Walk the room. This is the first lab that calls a hosted model: 21 requests in batches of 100 messages, cached afterwards. Usual problems: no key in .env or in the Colab secrets (the banner says STAND-IN and the embedding row is then only a second lexical search); a free model that is busy (wait a minute, run the cell again: finished batches are cached); a query embedded before the archive. Free endpoints allow 20 requests a minute and 50 a day without purchased credits, which this lab fits. Collect embedding rows from three tables for the board.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
+  <aside class="notes"><p>Walk the room. This is the first lab that calls a hosted model: 21 requests (20 batches of 100 messages and one batch of all 40 queries), spaced about three seconds apart and cached afterwards. Usual problems: no key in .env or in the Colab secrets (the banner says STAND-IN and the embedding row is then only a second lexical search); a free model that is busy (wait a minute, run the cell again: finished batches are cached); a query embedded before the archive. Free endpoints allow 20 requests a minute and 50 a day without purchased credits, which this lab fits. Collect embedding rows from three tables for the board.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
 </section>
 
 <!-- ======================= SESSION 3 ======================= -->

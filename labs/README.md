@@ -6,7 +6,7 @@ Hands-on notebooks for the SDAIA Academy course **AE-301 Applied Natural Languag
 
 ## Quick start
 
-**1 · Get a free OpenRouter key** at <https://openrouter.ai/keys>. Free models (ids ending in `:free`) allow 20 requests a minute and 50 a day; an account that has bought at least 10 credits gets 1,000 free-model requests a day, and free models do not spend the credits. Identical requests are replayed from `labs/cache/`, so running a cell again costs nothing. With a fresh free key, set `ANLP_QUICK=1` on Day 2: the labs then use smaller samples that fit the daily limit.
+**1 · Get a free OpenRouter key** at <https://openrouter.ai/keys>. Free models (ids ending in `:free`) allow 20 requests a minute and 50 a day; an account that has bought at least 10 credits gets 1,000 free-model requests a day, and free models do not spend the credits. Identical requests are replayed from `labs/cache/`, so running a cell again costs nothing. The helper spaces calls to a free model by about three seconds and waits when the provider answers with a rate limit. **Plan Day 2 before the cohort:** its four labs make about 390 requests (about 125 with `ANLP_QUICK=1`), more than a fresh free key allows in a day even in quick mode. Each participant needs a key on an account that has bought at least 10 credits, or a table shares one such key and its cache; Day 1 (about 22 requests) fits a fresh free key.
 
 **2a · Google Colab**
 1. Open a notebook from the [course page](https://sdaiaacademy.github.io/applied-nlp/), or directly: `https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/<notebook>.ipynb`.

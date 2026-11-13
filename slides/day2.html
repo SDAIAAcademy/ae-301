@@ -168,7 +168,7 @@ out = out / out.sum()</code></pre>
 </section>
 
 <section class="slide lab" id="lab-2-1" data-auto="lab" data-lab="2.1">
-  <aside class="notes"><p>Walk the room. Step 1 uses the course's own decoder and needs no key. Steps 2 to 4 make 60 calls to the hosted model (24 in quick mode): free endpoints allow 20 requests a minute and 50 a day unless the account has bought credits, so tables on a fresh free key should set ANLP_QUICK=1. Usual problems: a nucleus that drops the top token when it alone exceeds top_p (keep a token when the mass before it is below top_p); a checker that flags numbers quoted from the customer's own message.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
+  <aside class="notes"><p>Walk the room. Step 1 uses the course's own decoder and needs no key. Steps 2 to 4 make 60 calls to the hosted model (24 in quick mode): free endpoints allow 20 requests a minute and 50 a day unless the account has bought credits. Quick mode helps, but Day 2 as a whole (about 125 requests in quick mode) does not fit a fresh free key: check before the day that every table has a key with credits or shares one. Usual problems: a nucleus that drops the top token when it alone exceeds top_p (keep a token when the mass before it is below top_p); a checker that flags numbers quoted from the customer's own message.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
 </section>
 
 <!-- ======================= SESSION 2 ======================= -->

@@ -42,6 +42,7 @@ EMBED_MODEL = os.getenv("ANLP_EMBED_MODEL", "nvidia/nemotron-3.5-embed-1b:free")
 FALLBACKS = [m for m in os.getenv("ANLP_FALLBACKS", "google/gemma-4-26b-a4b-it:free").split(",") if m]
 USE_CACHE = os.getenv("ANLP_CACHE", "1") == "1"
 _STANDIN = os.getenv("ANLP_STANDIN", "0") == "1" or not API_KEY
+MIN_INTERVAL = float(os.getenv("ANLP_MIN_INTERVAL", "3.1"))  # seconds between uncached calls to a ":free" model
 
 
 def pick(full, quick):
@@ -227,6 +228,31 @@ def _store(kind: str, key: str, value) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
 
 
+_last_call = 0.0
+
+
+def _call(model: str, fn):
+    """One request: paced for a free model, retried after a wait on a rate limit (429) or a busy server (5xx).
+
+    Returns the response and the seconds the successful request took, without the waiting.
+    """
+    global _last_call
+    for attempt in range(3):
+        if model.endswith(":free"):  # free endpoints allow 20 requests a minute
+            time.sleep(max(0.0, _last_call + MIN_INTERVAL - time.monotonic()))
+        _last_call = time.monotonic()
+        try:
+            t0 = time.perf_counter()
+            return fn(), time.perf_counter() - t0
+        except Exception as err:  # noqa: BLE001
+            status = getattr(err, "status_code", None) or 0
+            if attempt == 2 or not (status == 429 or status >= 500):
+                raise
+            wait = 30 * (attempt + 1)
+            print(f"  {model}: {'rate limit' if status == 429 else 'busy'} ({status}); waiting {wait} s, then trying again")
+            time.sleep(wait)
+
+
 def _fall_back(err: Exception) -> None:
     global _STANDIN
     print(f"⚠️  The hosted model refused ({type(err).__name__}: {str(err)[:120]}). Switching to the scripted stand-in.")
@@ -249,15 +275,14 @@ def chat(messages_: list[dict], model: str | None = None, temperature: float = 0
     if not _STANDIN:
         for m in [model] + [f for f in FALLBACKS if f != model]:
             try:
-                t0 = time.perf_counter()
                 kw = {"response_format": {"type": "json_object"}} if json_mode else {}
                 if seed_ is not None:
                     kw["seed"] = seed_
-                r = _openai().chat.completions.create(model=m, messages=messages_, temperature=temperature, top_p=top_p,
-                                                      max_tokens=max_tokens, **kw)
+                r, seconds = _call(m, lambda: _openai().chat.completions.create(
+                    model=m, messages=messages_, temperature=temperature, top_p=top_p, max_tokens=max_tokens, **kw))
                 out = {"text": r.choices[0].message.content or "", "prompt_tokens": r.usage.prompt_tokens if r.usage else None,
                        "completion_tokens": r.usage.completion_tokens if r.usage else None,
-                       "latency_s": round(time.perf_counter() - t0, 3), "model": m, "standin": False}
+                       "latency_s": round(seconds, 3), "model": m, "standin": False}
                 _store("chat", key, out)
                 return out
             except Exception as err:  # noqa: BLE001  a busy free model: try the next one
@@ -278,6 +303,7 @@ def chat(messages_: list[dict], model: str | None = None, temperature: float = 0
 def embed(texts: list[str], model: str | None = None, batch: int = 64) -> np.ndarray:
     """Unit-length embeddings from a hosted embedding model, cached per text."""
     model = model or EMBED_MODEL
+    started_real = not _STANDIN
     out, todo = [None] * len(texts), []
     for i, t in enumerate(texts):
         hit = _cached("embed", _key([model, t, _STANDIN]))
@@ -290,7 +316,7 @@ def embed(texts: list[str], model: str | None = None, batch: int = 64) -> np.nda
         vecs = None
         if not _STANDIN:
             try:
-                r = _openai().embeddings.create(model=model, input=[texts[i] for i in idx])
+                r, _ = _call(model, lambda: _openai().embeddings.create(model=model, input=[texts[i] for i in idx]))
                 vecs = [d.embedding for d in r.data]
             except Exception as err:  # noqa: BLE001
                 _fall_back(err)
@@ -299,6 +325,8 @@ def embed(texts: list[str], model: str | None = None, batch: int = 64) -> np.nda
         for i, v in zip(idx, vecs):
             out[i] = v
             _store("embed", _key([model, texts[i], _STANDIN]), v)
+    if started_real and _STANDIN:  # the model stopped answering part-way: never mix its vectors with the stand-in's
+        out = [_standin_vector(t) for t in texts]
     arr = np.asarray(out, dtype=np.float32)
     return arr / np.linalg.norm(arr, axis=1, keepdims=True).clip(1e-9)
 

@@ -103,6 +103,8 @@ try:
 except NameError:
     E = G.embed(list(ARCHIVE["text"]), batch=100)
 assert E.shape[0] == len(ARCHIVE) and np.allclose(np.linalg.norm(E, axis=1), 1, atol=1e-3)
+# all 40 queries and the account number of the last step in one request: later calls come from the cache
+G.embed([x["query"] for x in ALL_QUERIES] + [ARCHIVE[ARCHIVE["account_number"].notna()].iloc[5]["account_number"]])
 print("embeddings:", E.shape, "| model:", "stand-in (lexical, not a model)" if G.standin() else G.EMBED_MODEL)
 
 # %% [markdown]
