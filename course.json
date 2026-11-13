@@ -9,7 +9,7 @@
     "en": "Applied Natural Language Processing Engineering",
     "ar": "الهندسة التطبيقية لمعالجة اللغات الطبيعية"
   },
-  "tagline": "REPLACE: one line under the title: what participants can do after the course",
+  "tagline": "Route, search and extract customer messages in four varieties of Arabic and English, and choose the model on measured quality, latency and cost",
   "description": "Participants build the language layer of a customer-service system for a fictional regional water utility whose messages arrive in Modern Standard Arabic, Gulf dialect, Arabic written in Latin script and English. They trace text through tokenisers, embeddings and attention, build semantic search, route messages and extract account fields three ways (a classical baseline, a prompted generative model and a fine-tuned encoder), adapt a model with low-rank adapters in free notebook memory, and ship the chosen model as a small service with a model card. Every choice rests on scores by dialect, latency and cost.",
   "track": "ai-engineering",
   "level": 300,
@@ -22,7 +22,8 @@
     "AE-202 Deep Learning and Generative AI Fundamentals",
     "Trains a small neural network with a hand-written training loop",
     "Computes precision, recall and F1 from predictions",
-    "Reads and writes UTF-8 Arabic text in Python"
+    "Reads and writes UTF-8 Arabic text in Python",
+    "Setup: a laptop CPU with uv, or Google Colab, and a key for a free hosted model (OpenRouter by default). Nothing downloads a language model. Run 00_setup_check before Day 1; see labs/README.md."
   ],
   "site": {
     "url": "https://sdaiaacademy.github.io/applied-nlp/",
@@ -67,8 +68,8 @@
     }
   ],
   "case_study": {
-    "name": "REPLACE: the name of the fictional organisation every lab works on",
-    "summary": "REPLACE: two sentences on the case study and its synthetic data"
+    "name": "Sawaqi Water Company",
+    "summary": "Sawaqi Water Company is a fictional regional water utility whose customers write in Modern Standard Arabic, Gulf dialect, Arabic in Latin script and English. Participants build Ghayth, its language layer: tokenisers and normalisation, semantic search over 2,000 messages, a routing baseline, grounded replies from the tariff rule book, schema-validated extraction with masking, a fine-tuned encoder and a low-rank adapter, and a small service with a model card. All data is synthetic and generated with a fixed seed; nothing downloads a language model."
   },
   "format": "intensive",
   "format_note": "Intensive: 3 teaching days of four sessions and a capstone day, with guided pre-work and a tracked follow-up task",
@@ -89,66 +90,154 @@
       "sessions": [
         {
           "title": "Tokenisation",
+          "summary": "Text becomes integers: subword tokenisers, their cost per language, and the Arabic letters that break them",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Explain how a subword tokeniser splits Arabic, Arabizi and English text",
+            "Measure tokens per message and price the difference by variety",
+            "Normalise alef, hamza, ta marbuta, diacritics and digits, and trace a failure to its cause"
           ],
           "lo": [
             "LO1"
           ],
           "lab": {
             "id": "1.1",
-            "title": "Count tokens for 50 parallel Arabic, dialect and English messages with three tokenisers and price the difference",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Three tokenisers, four varieties",
             "minutes": 25,
-            "href": "D1_1_count_tokens_50.ipynb"
+            "summary": "Count tokens for 50 parallel Arabic, dialect and English messages with three tokenisers and price the difference, then normalise and trace two failures to their cause.",
+            "href": "D1_1_tokenisers.ipynb",
+            "steps": [
+              {
+                "text": "Load three tokenisers and split one message",
+                "minutes": 4
+              },
+              {
+                "text": "Tokens per message: 50 messages, four varieties",
+                "minutes": 7
+              },
+              {
+                "text": "Price the difference per thousand messages",
+                "minutes": 5
+              },
+              {
+                "text": "Normalise, then trace two failures to their cause",
+                "minutes": 9
+              }
+            ],
+            "stretch": "Train a small tokeniser on the Sawaqi messages and count again"
           }
         },
         {
           "title": "Embeddings and semantic search",
+          "summary": "Messages as vectors: index once, query by meaning, and measure recall for each variety",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Explain what an embedding and cosine similarity capture",
+            "Index a message archive and answer queries with a vector index",
+            "Score recall at 10 for each language variety and read where it fails"
           ],
           "lo": [
             "LO2"
           ],
           "lab": {
             "id": "1.2",
-            "title": "Index 2,000 messages with an open multilingual embedding model and score 20 queries by variety",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Semantic search over 2,000 messages",
             "minutes": 25,
-            "href": "D1_2_index_2_000.ipynb"
+            "summary": "Index 2,000 messages with an open multilingual embedding model and score 20 queries by variety, against a character n-gram baseline.",
+            "href": "D1_2_semantic_search.ipynb",
+            "steps": [
+              {
+                "text": "Normalise and build a character n-gram baseline",
+                "minutes": 6
+              },
+              {
+                "text": "Embed 2,000 messages with a hosted open model",
+                "minutes": 6
+              },
+              {
+                "text": "A flat inner-product index and one query",
+                "minutes": 5
+              },
+              {
+                "text": "Recall at 10 for 20 queries, by variety",
+                "minutes": 8
+              }
+            ],
+            "stretch": "Score all 40 queries and add a hybrid of both rankings"
           }
         },
         {
           "title": "Inside the transformer",
+          "summary": "Attention, layers and the two families: an encoder reads both ways, a decoder only looks back",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Describe attention as queries, keys and values",
+            "Read an attention map for one Arabic sentence",
+            "Explain when an encoder and when a decoder fits the task"
           ],
           "lo": [
             "LO1"
           ],
           "lab": {
             "id": "1.3",
-            "title": "Inspect attention for one Arabic sentence and compare an encoder with a decoder on it",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Attention in an encoder and a decoder",
             "minutes": 25,
-            "href": "D1_3_inspect_attention_one.ipynb"
+            "summary": "Inspect attention for one Arabic sentence in the course encoder and decoder, compare what each token can see, and compare filling a gap with predicting the next token.",
+            "href": "D1_3_attention.ipynb",
+            "steps": [
+              {
+                "text": "Load the course encoder and decoder",
+                "minutes": 4
+              },
+              {
+                "text": "Attention by hand for one head",
+                "minutes": 7
+              },
+              {
+                "text": "Read the maps: who attends to whom",
+                "minutes": 7
+              },
+              {
+                "text": "Fill the gap, or predict the next token",
+                "minutes": 7
+              }
+            ],
+            "stretch": "Change one letter of the sentence and compare the maps"
           }
         },
         {
           "title": "Decision models",
+          "summary": "Most production language work is classification: start with a baseline and report it by subgroup",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Build a bag-of-words linear classifier without AI assistance",
+            "Report macro F1 and F1 by language variety",
+            "Decide when a classifier should abstain"
           ],
           "lo": [
             "LO5"
           ],
           "lab": {
             "id": "1.4",
-            "title": "Train a bag-of-words linear baseline for routing without AI assistance and report macro F1 by dialect",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "A routing baseline, without AI",
             "minutes": 25,
-            "href": "D1_4_train_bag_words.ipynb"
+            "summary": "Train a bag-of-words linear baseline for routing without AI assistance and report macro F1 by dialect, with predictions and CPU latency saved for Day 2.",
+            "href": "D1_4_baseline.ipynb",
+            "steps": [
+              {
+                "text": "Features: word and character n-grams",
+                "minutes": 6
+              },
+              {
+                "text": "Train a linear model on the customer split",
+                "minutes": 5
+              },
+              {
+                "text": "Macro F1 overall and by dialect",
+                "minutes": 7
+              },
+              {
+                "text": "Save predictions and CPU latency",
+                "minutes": 7
+              }
+            ],
+            "stretch": "Abstain below a confidence threshold and count the hand-offs"
           }
         }
       ]
@@ -161,66 +250,154 @@
       "sessions": [
         {
           "title": "Generative language models",
+          "summary": "A decoder in a loop: sampling settings, consistency and invented details",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Explain how temperature and top-p change the next-token choice",
+            "Measure the consistency of replies across repeated samples",
+            "Detect details a reply invented"
           ],
           "lo": [
             "LO5"
           ],
           "lab": {
             "id": "2.1",
-            "title": "Vary sampling settings on ten replies and record consistency and invented details",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Sampling, consistency and invented details",
             "minutes": 25,
-            "href": "D2_1_vary_sampling_settings.ipynb"
+            "summary": "Vary sampling settings on ten replies and record consistency and invented details, starting from the course decoder's own next-token distribution.",
+            "href": "D2_1_sampling.ipynb",
+            "steps": [
+              {
+                "text": "Temperature on one next-token distribution",
+                "minutes": 5
+              },
+              {
+                "text": "Ten replies at three settings",
+                "minutes": 8
+              },
+              {
+                "text": "Consistency across samples",
+                "minutes": 6
+              },
+              {
+                "text": "An invented-detail checker",
+                "minutes": 6
+              }
+            ],
+            "stretch": "Fix a seed and see what it does and does not make repeatable"
           }
         },
         {
           "title": "Prompting and structured outputs",
+          "summary": "A prompt is a specification; a schema is the contract; personal fields are masked before they leave",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Write an extraction prompt with a schema and examples",
+            "Validate replies and repair or log the failures",
+            "Mask personal fields before text reaches a hosted model"
           ],
           "lo": [
             "LO3"
           ],
           "lab": {
             "id": "2.2",
-            "title": "Extract account number, district and complaint type into a validated schema and log failures",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Masked, validated extraction",
             "minutes": 25,
-            "href": "D2_2_extract_account_number.ipynb"
+            "summary": "Extract account number, district and complaint type into a validated schema, mask personal fields before the hosted model sees them, and log failures.",
+            "href": "D2_2_extraction.ipynb",
+            "steps": [
+              {
+                "text": "Mask personal fields, with a test",
+                "minutes": 6
+              },
+              {
+                "text": "A schema whose validators catch wrong values",
+                "minutes": 5
+              },
+              {
+                "text": "Extract with a hosted model, repair once, log failures",
+                "minutes": 8
+              },
+              {
+                "text": "Field precision and recall against a regex baseline",
+                "minutes": 6
+              }
+            ],
+            "stretch": "Add two examples per variety to the prompt and score again"
           }
         },
         {
           "title": "Retrieval-augmented generation",
+          "summary": "Ground replies in the tariff rule book, cite the rule, and refuse when the rules are silent",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Chunk and index a bilingual rule book",
+            "Write a prompt that cites its sources and refuses when they are silent",
+            "Evaluate retrieval and generation separately"
           ],
           "lo": [
             "LO2"
           ],
           "lab": {
             "id": "2.3",
-            "title": "Ground replies in the tariff rules with citations and refuse when the rules are silent",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Grounded replies from the rule book",
             "minutes": 25,
-            "href": "D2_3_ground_replies_tariff.ipynb"
+            "summary": "Ground replies in the tariff rules with citations and refuse when the rules are silent, scoring retrieval and answers separately on 16 questions.",
+            "href": "D2_3_rag.ipynb",
+            "steps": [
+              {
+                "text": "Chunk and index the rule book",
+                "minutes": 6
+              },
+              {
+                "text": "Retrieval: hit at 3 on 16 questions",
+                "minutes": 5
+              },
+              {
+                "text": "Grounded replies with citations",
+                "minutes": 8
+              },
+              {
+                "text": "Score citations and refusals",
+                "minutes": 6
+              }
+            ],
+            "stretch": "Ask in Gulf dialect and in Arabizi: does retrieval still find the rule?"
           }
         },
         {
           "title": "Model selection and evaluation",
+          "summary": "Choose on quality by variety, latency and cost per thousand messages, not on a leaderboard",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Compare models on one labelled set by macro F1 and F1 by variety",
+            "Measure latency percentiles and cost per thousand messages",
+            "Defend a choice against a latency budget"
           ],
           "lo": [
             "LO5"
           ],
           "lab": {
             "id": "2.4",
-            "title": "Compare two open-weight models on 40 labelled messages for F1, latency and cost",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Two open-weight models against the baseline",
             "minutes": 25,
-            "href": "D2_4_compare_two_open.ipynb"
+            "summary": "Compare two open-weight models as zero-shot routers on 40 labelled messages for F1, latency and cost, next to the Day 1 baseline.",
+            "href": "D2_4_model_selection.ipynb",
+            "steps": [
+              {
+                "text": "A zero-shot routing prompt and a label parser",
+                "minutes": 6
+              },
+              {
+                "text": "Run both models on 40 messages",
+                "minutes": 7
+              },
+              {
+                "text": "Macro F1 and F1 by variety",
+                "minutes": 6
+              },
+              {
+                "text": "Latency, cost per thousand, decision",
+                "minutes": 6
+              }
+            ],
+            "stretch": "A cascade: the baseline first, the model only when it is unsure"
           }
         }
       ]
@@ -233,66 +410,154 @@
       "sessions": [
         {
           "title": "Fine-tuning data",
+          "summary": "An honest test score needs a split by customer and enough labels in every variety",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Decide when fine-tuning is worth it",
+            "Split by customer to prevent leakage",
+            "Check label balance by department and variety"
           ],
           "lo": [
             "LO4"
           ],
           "lab": {
             "id": "3.1",
-            "title": "Split a labelled set by customer to avoid leakage and check label balance by dialect",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "A split without leakage",
             "minutes": 25,
-            "href": "D3_1_split_labelled_set.ipynb"
+            "summary": "Split a labelled set by customer to avoid leakage, show how much a random split inflates the score, and check label balance by dialect.",
+            "href": "D3_1_splits.ipynb",
+            "steps": [
+              {
+                "text": "Find near-duplicate messages per customer",
+                "minutes": 5
+              },
+              {
+                "text": "Random split against customer split",
+                "minutes": 8
+              },
+              {
+                "text": "Label balance by dialect",
+                "minutes": 6
+              },
+              {
+                "text": "Write the split and a data card",
+                "minutes": 6
+              }
+            ],
+            "stretch": "A split that is grouped by customer and stratified by department"
           }
         },
         {
           "title": "Fine-tuning an encoder",
+          "summary": "An encoder plus a small head, trained with a short loop and read through its confusion matrix",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Add a classification head to a pretrained encoder",
+            "Fine-tune it with sensible defaults and watch validation",
+            "Read a confusion matrix and name the errors"
           ],
           "lo": [
             "LO4"
           ],
           "lab": {
             "id": "3.2",
-            "title": "Fine-tune a small Arabic-capable encoder for routing and read its confusion matrix",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "Fine-tune the course encoder for routing",
             "minutes": 25,
-            "href": "D3_2_fine_tune_small.ipynb"
+            "summary": "Fine-tune a small Arabic-capable encoder for routing, score it by variety and read its confusion matrix.",
+            "href": "D3_2_finetune_encoder.ipynb",
+            "steps": [
+              {
+                "text": "Load the encoder and encode a batch",
+                "minutes": 4
+              },
+              {
+                "text": "A classification head and a training loop",
+                "minutes": 9
+              },
+              {
+                "text": "Macro F1 overall and by variety",
+                "minutes": 5
+              },
+              {
+                "text": "Read the confusion matrix",
+                "minutes": 7
+              }
+            ],
+            "stretch": "Run the same notebook on a published Arabic encoder in Colab with a GPU"
           }
         },
         {
           "title": "Low-rank and quantised adapters",
+          "summary": "Train a small update instead of every weight, within a memory budget",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Explain the memory cost of full fine-tuning",
+            "Write a low-rank adapter layer and count trainable parameters",
+            "Compare an adapter run with full fine-tuning on the same split"
           ],
           "lo": [
             "LO4"
           ],
           "lab": {
             "id": "3.3",
-            "title": "Train a low-rank adapter in a fixed memory budget and compare it with a supplied full fine-tuning run",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "A low-rank adapter in a memory budget",
             "minutes": 25,
-            "href": "D3_3_train_low_rank.ipynb"
+            "summary": "Train a low-rank adapter in a fixed memory budget and compare it with a supplied full fine-tuning run, with the frozen weights optionally held in 8 bits.",
+            "href": "D3_3_lora.ipynb",
+            "steps": [
+              {
+                "text": "A low-rank adapter layer by hand",
+                "minutes": 7
+              },
+              {
+                "text": "Wrap the attention and count parameters",
+                "minutes": 4
+              },
+              {
+                "text": "A memory budget, with 8-bit frozen weights",
+                "minutes": 6
+              },
+              {
+                "text": "Train and compare with full fine-tuning",
+                "minutes": 8
+              }
+            ],
+            "stretch": "Sweep the rank and plot macro F1 against trainable parameters"
           }
         },
         {
           "title": "Evaluate and deploy",
+          "summary": "One table for every approach, a small tested service and a model card with results by variety",
           "outcomes": [
-            "REPLACE: what a participant can do after this session"
+            "Put every approach in one comparison table",
+            "Serve the chosen model behind a small API with a smoke test",
+            "Write a model card with results by variety and a hand-off rule"
           ],
           "lo": [
             "LO6"
           ],
           "lab": {
             "id": "3.4",
-            "title": "Wrap the chosen model in a small API with a demo page, measure CPU latency and draft the model card",
-            "summary": "REPLACE: one line on what participants build and take away; then list the steps of the lab in course.json, their minutes adding up to 25",
+            "title": "A small service with a model card",
             "minutes": 25,
-            "href": "D3_4_wrap_chosen_model.ipynb"
+            "summary": "Wrap the chosen model in a small API with a demo page, pass the smoke test, measure CPU latency and draft the model card.",
+            "href": "D3_4_service.ipynb",
+            "steps": [
+              {
+                "text": "An API that routes, extracts and hands off",
+                "minutes": 7
+              },
+              {
+                "text": "Pass the smoke test",
+                "minutes": 5
+              },
+              {
+                "text": "CPU latency, median and 95th percentile",
+                "minutes": 5
+              },
+              {
+                "text": "Draft the model card by variety",
+                "minutes": 8
+              }
+            ],
+            "stretch": "Serve the same model with a Gradio or Streamlit demo"
           }
         }
       ]
@@ -300,13 +565,13 @@
     {
       "id": "day4",
       "kind": "capstone",
-      "title": "Capstone project presentations",
+      "title": "Capstone: a routing and extraction service and its defence",
       "deck": "slides/day4.html"
     }
   ],
   "capstone": {
     "summary": "A routing and extraction service for the utility, or for a comparable text task with synthetic data, submitted as a public repository whose README reports the three-way comparison by dialect, latency and cost, with a model card, then an eight-minute defence and four minutes of questions",
-    "submission": "REPLACE: what participants submit and how: a public repository link, or a shared folder for a course without code",
+    "submission": "A public GitHub repository whose README reports the three-way comparison (baseline, prompted model, fine-tuned encoder) by dialect, CPU latency and cost per thousand messages, with the model card and timestamped training and evaluation logs committed. Then an eight-minute live defence and four minutes of questions: the participant re-scores the model on a batch the assessor supplies and explains two errors.",
     "talk_minutes": 8,
     "qa_minutes": 4,
     "rubric": [
