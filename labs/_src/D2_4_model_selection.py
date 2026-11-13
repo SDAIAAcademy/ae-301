@@ -30,7 +30,13 @@ import pandas as pd
 
 test = G.messages("test")
 PER_VARIETY = G.pick(10, 5)
-SAMPLE = pd.concat([test[test["variety"] == v].sample(PER_VARIETY, random_state=301) for v in G.VARIETIES]).reset_index(drop=True)
+
+
+def sample_of(per_variety: int) -> pd.DataFrame:
+    return pd.concat([test[test["variety"] == v].sample(per_variety, random_state=301) for v in G.VARIETIES]).reset_index(drop=True)
+
+
+SAMPLE = sample_of(PER_VARIETY)
 MODELS = {"larger": G.CHAT_MODEL, "smaller": G.SMALL_MODEL}
 print(len(SAMPLE), "messages |", MODELS)
 
@@ -97,6 +103,8 @@ def route(model: str, text: str) -> dict:
 
 # %%
 runs = G.attempt(lambda: {name: [route(model, t) for t in SAMPLE["text"]] for name, model in MODELS.items()}, "d24_runs")
+if any(len(rows) != len(SAMPLE) for rows in runs.values()):  # the reference result covers the full sample of 40
+    SAMPLE = sample_of(10)
 for name, rows in runs.items():
     unparsed = sum(r["label"] is None for r in rows)
     print(f"{name}: {len(rows)} calls, {unparsed} replies without a department name")

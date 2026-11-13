@@ -86,7 +86,8 @@
     <pre class="code s" data-file="Lab 2.1"><code class="language-python">probs = (logits / temperature).softmax(-1)
 order = probs.argsort(descending=True)
 before = probs[order].cumsum(0) - probs[order]
-keep = order[before &lt; top_p]     # the smallest set that reaches top_p
+# the smallest set that reaches top_p
+keep = order[before &lt; top_p]
 out = torch.zeros_like(probs)
 out[keep] = probs[keep]
 out = out / out.sum()</code></pre>

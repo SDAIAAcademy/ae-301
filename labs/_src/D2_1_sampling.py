@@ -129,6 +129,7 @@ def all_replies():
 
 
 replies = pd.DataFrame(G.attempt(all_replies, "d21_replies"))
+replies = replies[replies["task"].isin([t["id"] for t in TASKS])]  # the reference result covers all ten tasks
 print(len(replies), "replies |", "stand-in (scripted, not a model)" if G.standin() else G.CHAT_MODEL)
 for _, r in replies[replies["task"] == replies["task"].iloc[0]].iterrows():
     print(f"  {r['setting']:9s}#{r['sample']}  {r['reply']}")

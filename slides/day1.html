@@ -243,9 +243,11 @@
   <div class="kicker">Similarity</div>
   <h2>With unit vectors, similarity is one dot product</h2>
   <div class="cols cols-2">
-    <pre class="code" data-file="Lab 1.2"><code class="language-python">E = G.embed(messages)        # (2000, d), rows of length 1
-q = G.embed([query])[0]      # (d,)
-scores = E @ q               # cosine similarity, 2000 at once
+    <pre class="code" data-file="Lab 1.2"><code class="language-python"># E: (2000, d), each row of length 1
+E = G.embed(messages)
+q = G.embed([query])[0]   # (d,)
+# cosine similarity, 2000 at once
+scores = E @ q
 top = np.argsort(-scores)[:10]</code></pre>
     <ul class="bullets small">
       <li><b>Cosine similarity</b> compares directions and ignores length: 1 the same, 0 unrelated.</li>
@@ -384,9 +386,9 @@ output  = weights @ V                     # each token: a weighted average of th
   <div class="cols cols-2">
     <pre class="code s" data-file="Lab 1.3"><code class="language-python">def attention_weights(q, k, causal=False):
     scores = q @ k.T / math.sqrt(q.shape[-1])
-    if causal:                       # a decoder may not look ahead
-        future = ~torch.ones_like(scores, dtype=torch.bool).tril()
-        scores = scores.masked_fill(future, float("-inf"))
+    if causal:      # a decoder may not look ahead
+        seen = torch.ones_like(scores).tril().bool()
+        scores = scores.masked_fill(~seen, -math.inf)
     return scores.softmax(-1)</code></pre>
     <ul class="bullets small">
       <li>Dividing by the square root of the head's width keeps the softmax from saturating.</li>
@@ -530,11 +532,13 @@ output  = weights @ V                     # each token: a weighted average of th
   <h2>Count words and character n-grams; weigh the rare ones up</h2>
   <div class="cols cols-2">
     <pre class="code s" data-file="Lab 1.4"><code class="language-python">make_union(
+    # words and pairs of words
     TfidfVectorizer(preprocessor=G.normalise,
-                    ngram_range=(1, 2)),         # words and pairs
+                    ngram_range=(1, 2)),
+    # pieces of words, 2 to 4 characters
     TfidfVectorizer(preprocessor=G.normalise,
                     analyzer="char_wb",
-                    ngram_range=(2, 4)))         # pieces of words
+                    ngram_range=(2, 4)))
 # then LogisticRegression(C=10, max_iter=1000)</code></pre>
     <ul class="bullets small">
       <li><b>TF-IDF</b>: a word counts more when few messages contain it.</li>

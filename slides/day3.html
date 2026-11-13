@@ -191,8 +191,8 @@ for cid in ids:                 # a customer goes whole
         self.head = nn.Linear(encoder.cfg.d, n_labels)
 
     def forward(self, ids):
-        mask = ids != 0                       # padding out
-        h = self.encoder(ids, mask)           # one vector per token
+        mask = ids != 0              # padding out
+        h = self.encoder(ids, mask)  # a vector per token
         pooled = (h * mask[..., None]).sum(1) \
                  / mask.sum(1, keepdim=True)
         return self.head(self.drop(pooled))</code></pre>

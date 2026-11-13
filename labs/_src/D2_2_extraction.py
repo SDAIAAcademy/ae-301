@@ -25,7 +25,7 @@ G.banner("Lab 2.2")
 # %%
 import json
 import re
-from typing import Literal, Optional
+from typing import Literal, Optional, get_args
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError, ValidationInfo, field_validator
@@ -163,8 +163,13 @@ def validate(text: str, mapping: dict) -> Extraction:
         return Extraction.model_validate_json(text, context={"mapping": mapping})
     except NotImplementedError:  # safety net: the same rule, written outside the class
         data = json.loads(text)
-        if data.get("account_number") is not None and data["account_number"] not in mapping:
+        account = data.get("account_number")
+        if account is not None and not (account.startswith("[ACCOUNT_") and account in mapping):
             raise ValueError("account_number must be an [ACCOUNT_n] placeholder that appears in the message, or null")
+        if set(data) != set(Extraction.model_fields):
+            raise ValueError("the keys must be exactly: " + ", ".join(Extraction.model_fields))
+        if data["district"] not in (None, *get_args(District)) or data["complaint_type"] not in get_args(ComplaintType):
+            raise ValueError("district or complaint_type is not a value of the list")
         return Extraction.model_construct(**data)
 
 
@@ -234,6 +239,8 @@ def run_extraction():
 
 
 run = G.attempt(run_extraction, "d22_run")
+if len(run["predictions"]) != len(ITEMS):  # the reference result covers all 200 messages
+    ITEMS = G.jsonl("extraction_200.jsonl")
 PREDS, FAILURES = run["predictions"], run["failures"]
 first, second = sum(f["attempt"] == 1 for f in FAILURES), sum(f["attempt"] == 2 for f in FAILURES)
 print(f"{len(ITEMS)} messages | failed the first validation: {first} | still failing after one repair: {second} |",
