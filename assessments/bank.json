@@ -3,166 +3,841 @@
   "version": 1,
   "questions": [
     {
-      "id": "q-example-1",
+      "id": "q-tokens-01",
       "type": "single",
-      "prompt": "REPLACE: a practice question on LO1, as a short scenario",
+      "prompt": "A utility's messages are sent to a hosted model. For the same complaint, the provider reports 14 tokens for the English version and 46 for the Modern Standard Arabic version. The Arabic text has no diacritics and no typos. What is the most likely cause?",
       "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
+        "The Arabic text was not normalised before it was sent",
+        "The Arabic message contains more words than the English one",
+        "The model's tokeniser was trained mostly on English text",
+        "The provider counts Arabic characters instead of tokens"
       ],
       "correct": [
-        1
+        2
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "A byte-level tokeniser with few Arabic merges falls back to short byte pieces, about two per letter, so the same content costs about three times the tokens.",
       "misconceptions": [
-        "REPLACE: the misconception behind this option",
+        "Reaches for normalisation when the text is already clean",
+        "Counts words: Arabic versions of the same complaint have fewer words, not three times more",
         "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
+        "Confuses the unit: providers bill tokens, and characters would give a different ratio"
       ],
       "lo": [
         "LO1"
       ],
       "day": "day1",
       "session": 1,
-      "level": "apply",
+      "slide": "tokens-per-variety",
+      "level": "analyze",
       "pool": "practice",
-      "weight": 1
+      "weight": 1,
+      "timer": 90
     },
     {
-      "id": "q-example-2",
-      "type": "tf",
-      "prompt": "REPLACE: a statement on LO2 that is true",
+      "id": "q-tokens-02",
+      "type": "single",
+      "prompt": "An Arabic WordPiece tokeniser turns the word العِداد (with one diacritic) into [UNK], and the same word without the diacritic into two known pieces. Where does the failure come from?",
       "options": [
-        "True",
-        "False"
+        "The vocabulary has no piece with a diacritic",
+        "The classifier after the tokeniser was never trained on this word",
+        "The message mixes two scripts in one word",
+        "The word is too long for the tokeniser's maximum length"
       ],
       "correct": [
         0
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "The tokeniser's training text had no diacritics, so no vocabulary piece contains one and the whole word becomes unknown.",
       "misconceptions": [
         "",
-        "REPLACE: the misconception behind this option"
+        "Locates the failure after the step where it happens",
+        "Sees a script problem where there is one script",
+        "Blames length: the word has six letters"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 1,
+      "slide": "two-failures-traced",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-tokens-03",
+      "type": "single",
+      "prompt": "A routing call sends 200 tokens of instructions and a message of 20 tokens. The input price is 0.50 USD per million tokens. What do 1,000 calls cost in input tokens?",
+      "options": [
+        "0.01 USD",
+        "0.10 USD",
+        "0.11 USD",
+        "1.10 USD"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Each call sends 220 tokens; 1,000 calls are 220,000 tokens, which is 0.22 of a million, times 0.50 USD = 0.11 USD.",
+      "misconceptions": [
+        "Prices the messages only and forgets the instructions",
+        "Prices the instructions only and forgets the messages",
+        "",
+        "Slips one decimal place in the conversion to millions"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 1,
+      "slide": "price-per-thousand",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-attention-01",
+      "type": "single",
+      "prompt": "You compute the attention weights of one head for a six-token sentence in a decoder. What must be true of the row of the third token?",
+      "options": [
+        "It is zero for tokens one and two and sums to 1",
+        "It is equal for all six tokens and sums to the number of tokens",
+        "It is zero for the third token itself and sums to the number of heads",
+        "It is zero for tokens four to six and sums to 1"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "A decoder masks every later position before the softmax, so those weights are exactly zero, and a softmax row sums to 1.",
+      "misconceptions": [
+        "Reverses the mask: a decoder looks back, not ahead",
+        "Confuses attention with an average over all tokens",
+        "Mixes up the softmax over tokens with the number of heads",
+        ""
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 3,
+      "slide": "encoder-sees-both-ways",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 60
+    },
+    {
+      "id": "q-attention-02",
+      "type": "single",
+      "prompt": "A team must tag every word of a message as part of a district name, part of an account number, or neither. They have 3,000 labelled messages and need answers in milliseconds on a processor. Which design fits best?",
+      "options": [
+        "A decoder prompted to rewrite the message with tags",
+        "An encoder with one classification score per token",
+        "An embedding model and a nearest-neighbour search per message",
+        "An encoder with one classification score per message"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "The task needs one decision per token, with both sides of the word in view: an encoder with a token-classification head does that in one pass.",
+      "misconceptions": [
+        "Generates text for a labelling task, at many times the latency",
+        "",
+        "Returns similar messages, not a label for each word",
+        "Gives one label for the whole message, which cannot mark single words"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 3,
+      "slide": "which-family-for-which-job",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-search-01",
+      "type": "single",
+      "prompt": "A search returns its top 10 messages for a query. The query has 6 relevant messages in the archive, and 3 of them are in the top 10. What is recall at 10?",
+      "options": [
+        "0.30",
+        "0.50",
+        "0.60",
+        "1.00"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Recall at 10 divides the relevant messages found (3) by the relevant messages a list of ten could hold, min(10, 6) = 6: 0.50.",
+      "misconceptions": [
+        "Divides by the length of the list: that is precision at 10",
+        "",
+        "Divides the relevant messages by the list length",
+        "Counts a query as solved when any relevant message appears"
       ],
       "lo": [
         "LO2"
       ],
       "day": "day1",
-      "session": 1,
-      "level": "understand",
-      "pool": "practice",
-      "weight": 1
-    },
-    {
-      "id": "q-example-3",
-      "type": "single",
-      "prompt": "REPLACE: a practice question on LO3, as a short scenario",
-      "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
-      ],
-      "correct": [
-        1
-      ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
-      "misconceptions": [
-        "REPLACE: the misconception behind this option",
-        "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
-      ],
-      "lo": [
-        "LO3"
-      ],
-      "day": "day1",
-      "session": 1,
+      "session": 2,
+      "slide": "recall-at-ten",
       "level": "apply",
       "pool": "practice",
-      "weight": 1
+      "weight": 1,
+      "timer": 90
     },
     {
-      "id": "q-example-4",
-      "type": "tf",
-      "prompt": "REPLACE: a statement on LO4 that is true",
+      "id": "q-search-02",
+      "type": "single",
+      "prompt": "A character n-gram search scores recall at 10 of 0.45 for English queries and 0.03 for queries written in Arabizi. The relevant messages for each query are in all four varieties. What explains the Arabizi number best?",
       "options": [
-        "True",
-        "False"
+        "The metric divides by the wrong number of relevant messages for this variety",
+        "Arabizi queries are shorter than English queries",
+        "The index holds fewer Arabizi messages than it should",
+        "Arabizi spellings vary, so few letter sequences are shared"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "A lexical search finds shared letter sequences; Arabizi has no fixed spelling, so a query shares few of them even with other Arabizi messages, and none with Arabic script.",
+      "misconceptions": [
+        "Suspects the metric although the same code scored English",
+        "Blames length: the queries are of similar length in every variety",
+        "Suspects the index when the baseline simply cannot match across spellings",
+        ""
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day1",
+      "session": 2,
+      "slide": "ngram-baseline-by-variety",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-search-03",
+      "type": "single",
+      "prompt": "Agents search the archive two ways: by a description of the problem, and by a ticket number such as SW-48213. The vector search is good at the first and poor at the second. What should the team build?",
+      "options": [
+        "An exact lookup for ticket numbers beside it",
+        "A second vector index that holds only ticket numbers",
+        "A rule that rewrites ticket numbers into words before embedding",
+        "A larger embedding model for both kinds of query"
       ],
       "correct": [
         0
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "A ticket number has no meaning to embed; exact identifiers need exact matching, and the two searches can sit side by side.",
       "misconceptions": [
         "",
-        "REPLACE: the misconception behind this option"
+        "Keeps the wrong tool for the job in a second copy",
+        "Invents a transformation that adds no meaning",
+        "Expects size to give meaning to an identifier"
       ],
       "lo": [
-        "LO4"
+        "LO2"
       ],
       "day": "day1",
-      "session": 1,
-      "level": "understand",
+      "session": 2,
+      "slide": "where-meaning-search-fails",
+      "level": "evaluate",
       "pool": "practice",
-      "weight": 1
+      "weight": 1,
+      "timer": 90
     },
     {
-      "id": "q-example-5",
+      "id": "q-rag-01",
       "type": "single",
-      "prompt": "REPLACE: a practice question on LO5, as a short scenario",
+      "prompt": "A grounded assistant answers 20 questions from a rule book. For 5 wrong answers, the rule that answers the question was not among the retrieved chunks. For 2 others, the rule was retrieved and the reply states a wrong figure. Which part needs work first?",
       "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
+        "The evaluation set, because seven errors in twenty are too many to be real",
+        "The generator, because it wrote all seven wrong answers",
+        "The retriever, because five errors happen before the model reads",
+        "The prompt, because a stricter prompt fixes both kinds"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "In five cases the model never saw the rule, so no prompt can fix them; the retriever is the larger and earlier cause.",
+      "misconceptions": [
+        "Dismisses the measurement instead of reading it",
+        "Attributes every error to the last step of the pipeline",
+        "",
+        "Expects a prompt to supply a rule that is not in the context"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 3,
+      "slide": "score-the-two-parts-apart",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-rag-02",
+      "type": "single",
+      "prompt": "A grounded assistant must tell the customer when the rule book does not answer a question. Why does the course ask for the exact reply NOT_IN_RULES and not a polite sentence?",
+      "options": [
+        "A fixed string is cheaper to generate than a sentence",
+        "Code can detect it, count it and hand the question on",
+        "Customers prefer short replies to long ones",
+        "The model cannot write polite sentences when the temperature is 0"
       ],
       "correct": [
         1
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "An exact string can be tested and acted on by code; a free sentence that means the same cannot be counted reliably.",
       "misconceptions": [
-        "REPLACE: the misconception behind this option",
+        "Thinks of token cost, which is negligible here",
         "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
+        "Confuses the internal signal with the text a customer finally sees",
+        "Misreads what temperature does"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 3,
+      "slide": "answer-from-the-rules-only",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 60
+    },
+    {
+      "id": "q-extract-01",
+      "type": "single",
+      "prompt": "An extractor is scored on 100 messages for the field district. The gold data has a district in 60 messages. The extractor returns a district in 50 messages, and 45 of those are right. What are precision and recall for this field?",
+      "options": [
+        "Precision 0.45, recall 0.75",
+        "Precision 0.75, recall 0.90",
+        "Precision 0.90, recall 0.45",
+        "Precision 0.90, recall 0.75"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "Precision is right values over returned values, 45 / 50 = 0.90; recall is right values over gold values, 45 / 60 = 0.75.",
+      "misconceptions": [
+        "Divides the right values by all 100 messages for precision",
+        "Swaps the two definitions",
+        "Divides the right values by all 100 messages for recall",
+        ""
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "valid-json-is-not-right",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-extract-02",
+      "type": "single",
+      "prompt": "Before a message goes to a hosted model, the account number is replaced by [ACCOUNT_1]. The model returns the account field as 3055512345. The message had no such number. What should the service do?",
+      "options": [
+        "Reject it, because the model only saw a placeholder",
+        "Accept it when the number exists in the customer table",
+        "Reject it only when the confidence is low",
+        "Accept it, because it matches the pattern of an account number"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "The model saw masked text, so a real-looking number in its answer cannot come from the message: it is invented, and the validator rejects it.",
+      "misconceptions": [
+        "",
+        "Lets an invented value pass because it happens to exist",
+        "Waits for a confidence that an extraction reply does not carry",
+        "Checks the shape of the value and not where it came from"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "mask-before-it-leaves",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-extract-03",
+      "type": "single",
+      "prompt": "A masking step replaces phone numbers that match 05 and eight digits. Its test passes on 200 messages. In production, a customer writes the phone number as ٠٥٥ ١٢٣ ٤٥٦٧ and it reaches the hosted model. Which two things did the masking miss?",
+      "options": [
+        "A wrong country code and a missing name",
+        "Diacritics on the digits and a long message",
+        "A second phone number and a greeting in English",
+        "Arabic-Indic digits, and spaces in the number"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "The pattern expects ten Western digits in a row; this number is in Arabic-Indic digits and is broken by spaces, so the pattern never matches.",
+      "misconceptions": [
+        "Looks for causes that are not in the example",
+        "Applies letter problems to digits",
+        "Invents content the message does not have",
+        ""
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "masking-has-a-test",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-extract-04",
+      "type": "single",
+      "prompt": "An extraction reply fails validation, is repaired once, and fails again. The course's loop then logs the failure and returns no fields. Why does it not try a third and fourth time?",
+      "options": [
+        "A third reply would overwrite the log entry of the first",
+        "Validation errors are random, so further retries could make no difference",
+        "Each retry costs a call and rarely succeeds after two failures",
+        "The provider forbids more than two calls for one message"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Retries have a price and falling returns; a logged failure goes to a person, which is safer than a guessed value.",
+      "misconceptions": [
+        "Misunderstands the log, which keeps one entry per attempt",
+        "Treats systematic errors as chance",
+        "",
+        "Invents a provider rule"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "validate-repair-log",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 60
+    },
+    {
+      "id": "q-lora-01",
+      "type": "single",
+      "prompt": "A linear layer has a weight matrix of 512 by 512. You add a low-rank adapter of rank 4 to it. How many trainable numbers does the adapter have?",
+      "options": [
+        "2,048",
+        "4,096",
+        "8,192",
+        "262,144"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "A has 4 × 512 numbers and B has 512 × 4: 2,048 + 2,048 = 4,096.",
+      "misconceptions": [
+        "Counts only one of the two matrices",
+        "",
+        "Doubles the rank or counts each matrix twice",
+        "Counts the frozen weight matrix itself"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "low-rank-update",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-lora-02",
+      "type": "single",
+      "prompt": "A model has 100 million parameters. With Adam, a trainable weight needs 16 bytes during training and a frozen 32-bit weight needs 4 bytes. You train adapters that are 1% of the parameters and freeze the rest. About how much memory do the weights need during training?",
+      "options": [
+        "0.4 GB",
+        "0.6 GB",
+        "1.6 GB",
+        "2.0 GB"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "Frozen: 99 million × 4 bytes = 396 MB. Trainable: 1 million × 16 bytes = 16 MB. Together about 412 MB, or 0.4 GB.",
+      "misconceptions": [
+        "",
+        "Adds a full copy of gradients for the frozen weights",
+        "Charges every weight as trainable",
+        "Charges every weight as trainable and adds the frozen copy again"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "memory-budget",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-lora-03",
+      "type": "single",
+      "prompt": "On the same split, full fine-tuning of a small encoder reaches test macro F1 0.63 with 530,000 trainable parameters. A rank-8 adapter reaches 0.41 with 9,000. Training memory is not a constraint for this model. Which run do you carry into the comparison with the baseline?",
+      "options": [
+        "The adapter, because a model with fewer trainable parameters always generalises better",
+        "The full run, because memory is not scarce and it scores higher",
+        "Neither, because the two runs cannot be compared",
+        "The adapter, because it trains 98% fewer parameters"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "An adapter trades quality for memory; when memory is not scarce, the saving buys nothing and the higher score decides.",
+      "misconceptions": [
+        "Turns a tendency into a rule that the measured scores contradict",
+        "",
+        "Refuses a comparison made on the same split with the same metric",
+        "Optimises a number that is not the constraint"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "adapter-vs-full",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-split-01",
+      "type": "single",
+      "prompt": "A routing model scores macro F1 0.91 on a random split and 0.86 when the split keeps each customer on one side. A third of the customers wrote the same complaint more than once. Which number predicts the score on a customer who has never written before?",
+      "options": [
+        "The mean of the two, 0.885",
+        "Neither, because both numbers were measured on the same data",
+        "0.91, because it uses more varied training data",
+        "0.86, because no copy of a test message was trained on"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "With a random split, near-copies of test messages sit in the training set, so the test is partly a memory test; the split by customer removes that.",
+      "misconceptions": [
+        "Averages a biased and an unbiased estimate",
+        "Overlooks that the way of splitting is exactly what differs",
+        "Mistakes leakage for variety",
+        ""
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 1,
+      "slide": "leak-inflates-the-score",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-split-02",
+      "type": "single",
+      "prompt": "A colleague fine-tunes with six learning rates, scores each run on the test split, and reports the best test score as the model's quality. What is the flaw?",
+      "options": [
+        "The test split chose the learning rate, so it is no longer unseen",
+        "The learning rate should be chosen on the training loss",
+        "The best score should be averaged with the worst",
+        "Six runs are too few to find a good learning rate for an encoder of this size"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "Choosing among runs by test score fits the choice to the test split; a validation split is for choosing, the test split for one final measurement.",
+      "misconceptions": [
+        "",
+        "Chooses on the data the model has memorised",
+        "Proposes arithmetic that does not remove the selection effect",
+        "Focuses on the size of the search and misses the leak"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 2,
+      "slide": "pick-the-epoch-on-validation",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-decide-01",
+      "type": "single",
+      "prompt": "A router for three departments has F1 of 0.90 for billing (500 test messages), 0.80 for supply (400) and 0.10 for connections (100). What is its macro F1?",
+      "options": [
+        "0.60",
+        "0.72",
+        "0.78",
+        "0.90"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "Macro F1 is the plain mean over departments: (0.90 + 0.80 + 0.10) / 3 = 0.60.",
+      "misconceptions": [
+        "",
+        "Rounds a size-weighted mean downwards",
+        "Weights each department by its number of messages",
+        "Reports the best department"
       ],
       "lo": [
         "LO5"
       ],
       "day": "day1",
-      "session": 1,
+      "session": 4,
+      "slide": "macro-f1-by-hand",
       "level": "apply",
       "pool": "practice",
-      "weight": 1
+      "weight": 1,
+      "timer": 90
     },
     {
-      "id": "q-example-6",
-      "type": "tf",
-      "prompt": "REPLACE: a statement on LO6 that is true",
+      "id": "q-decide-02",
+      "type": "single",
+      "prompt": "Three routers are measured on the same test split. A: macro F1 0.85, Arabizi 0.42, 5 ms at the 95th percentile, no cost per call. B: 0.88, Arabizi 0.70, 900 ms, 0.04 USD per 1,000. C: 0.63, Arabizi 0.28, 20 ms, no cost per call. The budget is 300 ms at the 95th percentile. Which recommendation holds?",
       "options": [
-        "True",
-        "False"
+        "A for all messages, and nothing more to do",
+        "A, with Arabizi handed to a person or sent to B off the real-time path",
+        "B for all messages, because it has the highest macro F1",
+        "C for all messages, because a neural model will improve as more data arrives"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "B breaks the latency budget and C is worse than A everywhere; A fits the budget, and its weak variety needs a hand-off or a slower path.",
+      "misconceptions": [
+        "Accepts 0.42 for one customer group without a rule for it",
+        "",
+        "Ignores the latency budget",
+        "Chooses on a hope instead of the measurements"
+      ],
+      "lo": [
+        "LO5"
+      ],
+      "day": "day2",
+      "session": 4,
+      "slide": "choose-on-four-columns",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-decide-03",
+      "type": "single",
+      "prompt": "On 40 test messages, ten per variety, model X scores 0.70 for Gulf and model Y scores 0.60. On 400 messages, 150 of them Gulf, the two models score 0.82 and 0.84 for Gulf. What should you conclude?",
+      "options": [
+        "X is better for Gulf, as the first test showed",
+        "Y is better for Gulf, as the second test showed",
+        "The two are close for Gulf; ten messages cannot rank them",
+        "The second test is wrong, because both scores changed between the tests"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "With ten messages one error moves the score by several points; on 150 messages the models are two points apart, which is still within noise.",
+      "misconceptions": [
+        "Trusts the smaller sample",
+        "Reads a two-point gap as a ranking",
+        "",
+        "Expects scores to be stable across sample sizes"
+      ],
+      "lo": [
+        "LO5"
+      ],
+      "day": "day2",
+      "session": 4,
+      "slide": "forty-messages-are-few",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-decide-04",
+      "type": "single",
+      "prompt": "A prompted router gives the same message two different departments on two runs. The team sets the temperature to 0 and the label is now stable. What do they know about the label?",
+      "options": [
+        "It is stable; whether it is right is unmeasured",
+        "It is correct, because the model is now certain",
+        "It is the label most customers would choose",
+        "It will stay the same after a change to another model"
       ],
       "correct": [
         0
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "Temperature 0 removes the random draw; the single remaining answer is the model's most likely one, right or wrong.",
       "misconceptions": [
         "",
-        "REPLACE: the misconception behind this option"
+        "Confuses repeatability with correctness",
+        "Reads a model probability as a survey",
+        "Extends a setting's effect to another model"
+      ],
+      "lo": [
+        "LO5"
+      ],
+      "day": "day2",
+      "session": 1,
+      "slide": "settings-follow-the-task",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 60
+    },
+    {
+      "id": "q-serve-01",
+      "type": "single",
+      "prompt": "A routing service passes its smoke test: 24 messages, all answered with status 200, and the four edge cases handed to a person. What does this result establish?",
+      "options": [
+        "The service routes at least 20 of 24 messages correctly",
+        "The model's macro F1 is above the hand-off threshold",
+        "The service meets its latency budget at the 95th percentile",
+        "The service answers and handles the edge cases"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "A smoke test checks that the service answers and handles edge cases; quality needs the held-out test split, and latency its own measurement.",
+      "misconceptions": [
+        "Reads correctness into a test that did not check labels",
+        "Mixes a score with a threshold",
+        "Assumes a timing that the test did not take",
+        ""
       ],
       "lo": [
         "LO6"
       ],
-      "day": "day1",
-      "session": 1,
+      "day": "day3",
+      "session": 4,
+      "slide": "smoke-test-is-not-quality",
       "level": "understand",
       "pool": "practice",
-      "weight": 1
+      "weight": 1,
+      "timer": 60
+    },
+    {
+      "id": "q-serve-02",
+      "type": "single",
+      "prompt": "A model card reports macro F1 0.85 on the test split and says the model supports Arabic and English. By variety the scores are MSA 0.94, Gulf 0.86, English 0.81 and Arabizi 0.42. Which line must be added before the card is signed?",
+      "options": [
+        "The average length of a message in tokens",
+        "The number of parameters of the model",
+        "Results by variety and a hand-off rule for Arabizi",
+        "The name of the engineer who trained and evaluated the model"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "A card states limits by subgroup: one customer group is served far worse than the average says, and the card must say when its messages go to a person.",
+      "misconceptions": [
+        "Adds a statistic that does not show the failure",
+        "Adds a fact that changes no decision",
+        "",
+        "Adds provenance where the missing part is a limit"
+      ],
+      "lo": [
+        "LO6"
+      ],
+      "day": "day3",
+      "session": 4,
+      "slide": "model-card-by-variety",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-serve-03",
+      "type": "single",
+      "prompt": "A service hands a message to a person when the best probability is below 0.5, or 0.7 for Arabizi. An Arabizi message gets leaks with probability 0.62 and an English message gets billing with 0.55. What happens to the two messages?",
+      "options": [
+        "Both are handed to a person",
+        "The Arabizi one goes to a person; the English one is routed",
+        "The English message is handed to a person; the Arabizi one is routed",
+        "Both are routed by the model"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "0.62 is below the Arabizi threshold of 0.7, so that message is handed off; 0.55 is above the general threshold of 0.5, so the English one is routed.",
+      "misconceptions": [
+        "Applies the Arabizi threshold to both",
+        "",
+        "Swaps the two thresholds",
+        "Applies the general threshold to both"
+      ],
+      "lo": [
+        "LO6"
+      ],
+      "day": "day3",
+      "session": 4,
+      "slide": "hand-off-rule",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
+      "id": "q-serve-04",
+      "type": "single",
+      "prompt": "A model answers in 4 ms when called in a notebook. Behind the service, the same message takes 9 ms at the median and 35 ms at the 95th percentile. The budget is 300 ms at the 95th percentile. What do you report?",
+      "options": [
+        "35 ms, a breach because it is eight times the model's latency",
+        "The mean of 9 ms and 35 ms",
+        "4 ms, the model's own latency",
+        "9 ms and 35 ms through the service, inside the budget"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "The customer waits for the service, not for the model alone; the median and the 95th percentile through the service are the numbers to report against the budget.",
+      "misconceptions": [
+        "Compares with the wrong reference: the budget is 300 ms",
+        "Averages two percentiles into a number with no meaning",
+        "Reports the part instead of the whole path",
+        ""
+      ],
+      "lo": [
+        "LO6"
+      ],
+      "day": "day3",
+      "session": 4,
+      "slide": "latency-through-the-service",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
     }
   ]
 }

@@ -654,5 +654,115 @@
         "Streamlit"
       ]
     }
+  ],
+  "sources": [
+    {
+      "group": "Tokenisers, transformers and encoders",
+      "items": [
+        {
+          "title": "Vaswani et al.: Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762"
+        },
+        {
+          "title": "Sennrich, Haddow and Birch: Neural Machine Translation of Rare Words with Subword Units",
+          "url": "https://arxiv.org/abs/1508.07909"
+        },
+        {
+          "title": "Devlin et al.: BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+          "url": "https://arxiv.org/abs/1810.04805"
+        },
+        {
+          "title": "Inoue et al.: The Interplay of Variant, Size, and Task Type in Arabic Pre-trained Language Models (CAMeLBERT)",
+          "url": "https://arxiv.org/abs/2103.06678"
+        },
+        {
+          "title": "Hugging Face: CAMeL-Lab/bert-base-arabic-camelbert-mix (tokeniser used in Lab 1.1)",
+          "url": "https://huggingface.co/CAMeL-Lab/bert-base-arabic-camelbert-mix"
+        },
+        {
+          "title": "Hugging Face: openai-community/gpt2 (tokeniser used in Lab 1.1)",
+          "url": "https://huggingface.co/openai-community/gpt2"
+        },
+        {
+          "title": "Hugging Face: Qwen/Qwen3-0.6B (tokeniser used in Lab 1.1)",
+          "url": "https://huggingface.co/Qwen/Qwen3-0.6B"
+        }
+      ]
+    },
+    {
+      "group": "Adaptation",
+      "items": [
+        {
+          "title": "Hu et al.: LoRA: Low-Rank Adaptation of Large Language Models",
+          "url": "https://arxiv.org/abs/2106.09685"
+        },
+        {
+          "title": "Dettmers et al.: QLoRA: Efficient Finetuning of Quantized LLMs",
+          "url": "https://arxiv.org/abs/2305.14314"
+        },
+        {
+          "title": "Hugging Face PEFT documentation",
+          "url": "https://huggingface.co/docs/peft/index"
+        }
+      ]
+    },
+    {
+      "group": "Evaluation, services and hosted models",
+      "items": [
+        {
+          "title": "Mitchell et al.: Model Cards for Model Reporting",
+          "url": "https://arxiv.org/abs/1810.03993"
+        },
+        {
+          "title": "scikit-learn: StratifiedGroupKFold",
+          "url": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedGroupKFold.html"
+        },
+        {
+          "title": "FastAPI documentation",
+          "url": "https://fastapi.tiangolo.com/"
+        },
+        {
+          "title": "Pydantic documentation: validators",
+          "url": "https://docs.pydantic.dev/latest/concepts/validators/"
+        },
+        {
+          "title": "OpenRouter: list of models and prices",
+          "url": "https://openrouter.ai/api/v1/models"
+        },
+        {
+          "title": "OpenRouter: rate limits",
+          "url": "https://openrouter.ai/docs/api-reference/limits"
+        }
+      ]
+    },
+    {
+      "group": "National references (read them at their official addresses)",
+      "items": [
+        {
+          "title": "Personal Data Protection Law",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/PersonalDataProtectionLaw.pdf"
+        },
+        {
+          "title": "Implementing Regulation of the Personal Data Protection Law",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/ImplementingRegulationPersonalDataProtectionLaw.pdf"
+        },
+        {
+          "title": "SDAIA: Data Classification Policy",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/DataClassificationPolicy.pdf"
+        },
+        {
+          "title": "SDAIA: Principles of AI Ethics",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/ai-principles.pdf"
+        },
+        {
+          "title": "SDAIA: Generative AI Guidelines for Government",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Files/GenAIGuidelinesForGovernmentENCompressed.pdf"
+        },
+        {
+          "title": "SDAIA: Generative AI Guidelines for the Public",
+          "url": "https://sdaia.gov.sa/en/SDAIA/about/Files/GenerativeAIPublicEN.pdf"
+        }
+      ]
+    }
   ]
 }
