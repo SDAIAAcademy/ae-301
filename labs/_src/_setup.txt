@@ -1,0 +1,14 @@
+import os, sys, subprocess
+from pathlib import Path
+
+if "google.colab" in sys.modules:
+    if not Path("/content/applied-nlp").exists():
+        subprocess.run(["git", "clone", "-q", "https://github.com/SDAIAAcademy/applied-nlp.git", "/content/applied-nlp"], check=True)
+    os.chdir("/content/applied-nlp/labs")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements-colab.txt"], check=True)
+else:
+    while not Path("ghayth.py").exists() and Path.cwd() != Path.cwd().parent:
+        os.chdir("..")  # solutions/ notebooks run from labs/
+sys.path.insert(0, os.getcwd())
+
+import ghayth as G

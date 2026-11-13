@@ -1,1022 +1,673 @@
-<!-- ======================= OPENING ======================= -->
-<section class="slide title" data-label="Welcome" id="title">
-  <div class="kicker">SDAIA Academy · Applied NLP Engineering</div>
-  <h1>From Tokens to Fine-Tuned Language Models</h1>
-  <p class="lead mt">Day 1: Text Representation &amp; Transformer Foundations</p>
-  <div class="meta">
-    <span class="track">AI Engineering Track</span>
-    <span>3 teaching days + capstone day</span>
-    <span>12 training hours</span>
-    <span>Hands-on Python</span>
-  </div>
-  <aside class="notes">Welcome everyone, introduce yourself and the TA. Ask participants: who has used an LLM API? Who has trained a model with scikit-learn? Who has fine-tuned a transformer? Use the answers to calibrate pace.</aside>
+<section class="slide title" id="title" data-auto="title">
+  <aside class="notes"><p>Open with a show of hands: who has shipped a text model that customers used, and in which languages? Keep two answers for later: someone will have a story about Arabic in Latin script. Check that everyone ran the setup check notebook; pair up anyone who did not.</p></aside>
 </section>
 
-<section class="slide" data-label="Course overview" id="four-days-one-evolving">
-  <div class="kicker">The bootcamp at a glance</div>
-  <h2>Four days, one evolving system</h2>
-  <div class="cols cols-4 gap-s">
-    <div class="card c-teal"><h4>Day 1 · Represent</h4><p class="small">Tokenization, embeddings, transformers, decision models.</p><span class="pill c-teal">Semantic search + classifier</span></div>
-    <div class="card c-cyan"><h4>Day 2 · Generate</h4><p class="small">LLMs, decoding, prompting, structured outputs, RAG, model selection.</p><span class="pill c-cyan">End-to-end ticket assistant</span></div>
-    <div class="card c-coral"><h4>Day 3 · Adapt</h4><p class="small">Fine-tuning encoders, LoRA for LLMs, evaluation and serving.</p><span class="pill c-coral">Fine-tuned model + demo</span></div>
-    <div class="card c-amber"><h4>Day 4 · Demonstrate</h4><p class="small">Capstone presentations, live demos and technical Q&amp;A.</p><span class="pill c-amber">Team capstone</span></div>
-  </div>
-  <div class="callout tip mt"><b>Our goal:</b> leave able to <b>build, evaluate and adapt</b> NLP systems, and to choose between embeddings, encoder classifiers, generative LLMs and fine-tuning for a given problem.</div>
+<section class="slide" id="agenda" data-auto="agenda">
+  <aside class="notes"><p>Four sessions, each about 25 minutes of concepts and a 25-minute lab. Today builds the representation of text and the baseline that every later model is compared with. Press B for a break between sessions.</p></aside>
 </section>
 
-<section class="slide" data-label="How we work" id="engineering-first-theory-demand">
-  <div class="kicker">Course philosophy</div>
-  <h2>Engineering first, theory on demand</h2>
+<section class="slide" data-label="The case" id="sawaqi-and-ghayth">
+  <div class="kicker">The case for four days</div>
+  <h2>Sawaqi Water Company gets 2,000 messages you will learn to read</h2>
   <div class="cols cols-2">
-    <div>
-      <ul class="bullets">
-        <li><b>~25% concepts and demos, ~75% coding.</b> Every session ends in a lab.</li>
-        <li><b>Modern from minute one.</b> Transformers from Day 1. TF-IDF appears only as a baseline to beat.</li>
-        <li><b>Measure, don't assume.</b> Every model gets evaluated before and after we change it.</li>
-        <li><b>Right tool for the job.</b> A 100M-parameter classifier often beats a 7B LLM on cost, latency <i>and</i> accuracy.</li>
-      </ul>
+    <div class="chat">
+      <div class="msg user"><span class="who">MSA</span><span class="ar">انقطعت المياه عن منزلنا في حي النسيم منذ الصباح</span></div>
+      <div class="msg user"><span class="who">Gulf</span><span class="ar">الماي مقطوع عندنا في النسيم من الصبح</span></div>
+      <div class="msg user"><span class="who">Arabizi</span>el mai maqtoo3 3indna fi el naseem min el sob7</div>
+      <div class="msg user"><span class="who">English</span>We have had no water at home in Al-Naseem since the morning</div>
     </div>
     <div class="stack">
-      <div class="card c-navy flat"><h4>You should already know</h4><p class="small mb0">Python, NumPy/pandas, train/test splits, basic scikit-learn.</p></div>
-      <div class="card c-teal flat"><h4>You don't need</h4><p class="small mb0">Prior transformer, PyTorch or GPU experience.</p></div>
-      <div class="card c-coral flat"><h4>You will leave with</h4><p class="small mb0">12 working notebooks, a capstone repo and a reusable evaluation habit.</p></div>
+      <div class="card c-teal flat"><h4>Ghayth, the language layer</h4><p class="small mb0">Route each message to one of eight departments, extract the account number, district and complaint type, find similar messages, draft replies from the tariff rule book.</p></div>
+      <div class="card c-coral flat"><h4>Four varieties, one customer</h4><p class="small mb0">Every result in this course is reported for each variety. An average hides who is failed.</p></div>
     </div>
   </div>
+  <aside class="notes"><p>Sawaqi is fictional and all its data is synthetic, generated with a fixed seed: 700 customers, 2,000 messages (MSA 35%, Gulf 30%, English 20%, Arabizi 15%). The four messages on the slide are one complaint, the same facts. Introduce the people: Hessa leads customer care and owns routing, Latifa writes the tariff rule book, Turki is the data protection officer, Ibrahim runs the service. Arabizi is Arabic written in Latin letters with digits for the sounds Latin lacks: 3 for ع, 7 for ح.</p></aside>
 </section>
 
-<section class="slide" data-label="Case study" id="intelligent-support-ticket-processing">
-  <div class="kicker">One case study, all week</div>
-  <h2>Intelligent Support Ticket Processing</h2>
-  <p class="lead">Given an English or Arabic customer message: identify the intent, find similar past cases, assign a category and priority, and draft a grounded reply.</p>
-  <div class="flow mt">
-    <div class="step c-teal"><b>Message</b><span class="ar">لم يصلني المبلغ المسترد حتى الآن</span></div>
-    <div class="arrow">→</div>
-    <div class="step c-teal"><b>Tokenize + embed</b>Day 1</div>
-    <div class="arrow">→</div>
-    <div class="step c-teal"><b>Classify</b>intent · category · priority<br><small>Day 1 → Day 3</small></div>
-    <div class="arrow">→</div>
-    <div class="step c-cyan"><b>Retrieve</b>similar tickets + policy<br><small>Day 1 → Day 2</small></div>
-    <div class="arrow">→</div>
-    <div class="step c-coral"><b>Generate</b>grounded JSON reply<br><small>Day 2 → Day 3</small></div>
-  </div>
-  <aside class="notes">Stress that every lab adds a component to the same system. By Day 3 they will have a pipeline they can reuse for their capstone.</aside>
-</section>
-
-<section class="slide" data-label="Data" id="realistic-bilingual-labelled">
-  <div class="kicker">The data we use</div>
-  <h2>Realistic, bilingual, labelled</h2>
-  <div class="cols" style="grid-template-columns: 1.6fr 1fr">
-    <table class="t small">
-      <tr><th style="width:46%">text</th><th>intent</th><th>category</th><th>priority</th></tr>
-      <tr><td>I need help getting a refund for my order</td><td>get_refund</td><td>REFUND</td><td>high</td></tr>
-      <tr><td>how do I change the delivery address??</td><td>change_shipping_address</td><td>SHIPPING</td><td>medium</td></tr>
-      <tr><td class="ar">أريد إلغاء اشتراكي في النشرة البريدية</td><td>newsletter_subscription</td><td>SUBSCRIPTION</td><td>low</td></tr>
-      <tr><td>you charged me twice, fix it NOW!!</td><td>payment_issue</td><td>PAYMENT</td><td>urgent</td></tr>
-    </table>
-    <div class="stack small">
-      <div class="card c-teal flat"><b>Tickets</b>: about 27k English customer-support messages (Bitext), 27 intents in 11 categories, each with an agent reply.</div>
-      <div class="card c-cyan flat"><b>Arabic test set</b>: hand-written MSA and Gulf-dialect tickets with the same labels.</div>
-      <div class="card c-coral flat"><b>Help-center KB</b>: short policy articles (refunds, shipping, accounts) used for RAG.</div>
-    </div>
-  </div>
-  <aside class="notes">Priority is a business rule layered on intent plus urgency cues. It's a good example of a label that comes from policy, not language. The data lives in labs/data and is prepared by labs/prepare_data.py.</aside>
-</section>
-
-<section class="slide" data-label="Agenda" id="day-1-agenda">
-  <div class="kicker">Today</div>
-  <h2>Day 1 agenda</h2>
-  <div class="agenda">
-    <div class="item"><span><b>Session 1 · Tokenization</b><small>Welcome, setup, from text to token IDs, Arabic specifics</small></span></div>
-    <div class="item"><span><b>Session 2 · Embeddings &amp; semantic search</b><small>Dense vectors, cosine similarity, pooling, retrieval metrics</small></span></div>
-    <div class="item"><span><b>Session 3 · Inside the transformer</b><small>Self-attention, positions, encoder vs. decoder, Hugging Face</small></span></div>
-    <div class="item"><span><b>Session 4 · Decision models</b><small>Zero-shot, embedding classifiers, metrics, thresholds</small></span></div>
-  </div>
-</section>
-
-<section class="slide" data-label="Setup" id="run-everything-before-you">
-  <div class="kicker">Lab environment</div>
-  <h2>Run everything before you need it</h2>
-  <div class="cols cols-2">
-    <div>
-      <ol class="bullets">
-        <li>Open the course repo in <b>Google Colab</b> (GPU runtime) <span class="muted">or</span> locally with <code>uv</code>.</li>
-        <li>Run <a href="https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/00_setup_check.ipynb" target="_blank" rel="noopener"><code>00_setup_check.ipynb</code></a>: it installs packages, checks the GPU and pre-downloads every model we use.</li>
-        <li>Each lab opens with a <b>Setup</b> cell and ends with <b>Checkpoint</b> questions.</li>
-        <li>Cells marked <b>✱ Stretch</b> are optional for fast finishers.</li>
-      </ol>
-    </div>
-    <pre class="code" data-file="terminal (local option)"><code class="language-bash">git clone https://github.com/SDAIAAcademy/applied-nlp
-cd applied-nlp/labs
-uv sync                 # creates .venv from pyproject
-uv run python prepare_data.py
-uv run jupyter lab</code></pre>
-  </div>
-  <div class="callout warn mt"><b>No GPU locally?</b> Days 1–2 run on CPU. On Day 3 the fine-tuning labs need a GPU, so use Colab for those.</div>
-</section>
-
-<!-- ======================= SESSION 1: TOKENIZATION ======================= -->
-<section class="slide section" data-session="1" id="tokenization-from-text-integers">
-  <div class="kicker">Session 1</div>
-  <h1>Tokenization: from text to integers</h1>
-  <ul class="bullets outcomes tight">
-    <li>Explain the tokenization pipeline and subword algorithms (BPE, WordPiece)</li>
-    <li>Inspect token IDs, special tokens, attention masks and context limits</li>
-    <li>Measure how tokenizers treat Arabic vs. English, and why it costs money</li>
-  </ul>
-  <div class="sess-no">01</div>
-</section>
-
-<section class="slide" id="models-never-see-text">
-  <div class="kicker">Why care?</div>
-  <h2>Models never see text. They see integers.</h2>
-  <div class="cols cols-2 mid">
-    <div>
-      <div class="small muted">Text</div>
-      <p style="font-size:34px">My refund hasn't arrived</p>
-      <div class="small muted">Tokens</div>
-      <div class="tokens"><span>My</span><span>␣ref</span><span>und</span><span>␣hasn</span><span>'t</span><span>␣arrived</span></div>
-      <div class="small muted mt">IDs</div>
-      <div class="tokens ids"><span>5159</span><span>1006</span><span>1263</span><span>12775</span><span>470</span><span>5284</span></div>
-      <p class="xsmall muted mt-s">Illustrative split. You'll see the exact one per tokenizer in the lab.</p>
-    </div>
-    <div class="stack">
-      <div class="card c-navy flat"><b>Cost</b>: APIs bill per token, so more tokens means a bigger bill.</div>
-      <div class="card c-teal flat"><b>Latency</b>: generation time grows with output tokens.</div>
-      <div class="card c-coral flat"><b>Context</b>: limits like 512 or 128k are counted in tokens, not words.</div>
-      <div class="card c-purple flat"><b>Quality</b>: a word shredded into 8 pieces is harder to model.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="what-tokenizer-actually-does">
-  <div class="kicker">The pipeline</div>
-  <h2>What a tokenizer actually does</h2>
-  <div class="flow">
-    <div class="step c-navy"><b>Normalize</b>Unicode NFKC, lowercase?, strip accents?</div>
-    <div class="arrow">→</div>
-    <div class="step c-navy"><b>Pre-tokenize</b>split on spaces / punctuation / bytes</div>
-    <div class="arrow">→</div>
-    <div class="step c-teal"><b>Model</b>BPE · WordPiece · Unigram</div>
-    <div class="arrow">→</div>
-    <div class="step c-coral"><b>Post-process</b>add [CLS] [SEP], chat tokens</div>
-    <div class="arrow">→</div>
-    <div class="step c-amber"><b>Encode</b>input_ids + attention_mask</div>
-  </div>
-  <div class="cols cols-3 mt">
-    <div class="card c-teal"><h4>BPE</h4><p class="small mb0">Starts from characters or <b>bytes</b> and merges the most frequent pairs. Used by GPT, Llama, Qwen and most LLMs.</p></div>
-    <div class="card c-cyan"><h4>WordPiece</h4><p class="small mb0">Like BPE, but merges by likelihood. Continuation pieces start with <code>##</code>. Used by BERT and AraBERT.</p></div>
-    <div class="card c-purple"><h4>Unigram (SentencePiece)</h4><p class="small mb0">Prunes a large vocabulary probabilistically and treats spaces as <code>▁</code>. Used by T5, XLM-R and mT5.</p></div>
-  </div>
-</section>
-
-<section class="slide" id="why-subwords-won">
-  <div class="kicker">Granularity trade-off</div>
-  <h2>Why subwords won</h2>
+<section class="slide" data-label="Three ways" id="three-ways-one-table">
+  <div class="kicker">Where the course goes</div>
+  <h2>Three ways to route a message, one table to choose with</h2>
   <table class="t">
-    <tr><th>Unit</th><th>Vocabulary</th><th>Unknown words</th><th>Sequence length</th><th>Verdict</th></tr>
-    <tr><td><b>Words</b></td><td>Huge (millions with Arabic morphology)</td><td>Frequent <code>[UNK]</code></td><td>Short</td><td>Brittle</td></tr>
-    <tr><td><b>Characters / bytes</b></td><td>Tiny (256 bytes)</td><td>None</td><td>Very long</td><td>Slow, hard to learn</td></tr>
-    <tr class="hl"><td><b>Subwords</b></td><td>30k–250k</td><td>None (byte fallback)</td><td>Moderate</td><td>The default</td></tr>
+    <tr><th>Approach</th><th>Built on</th><th>Macro F1</th><th>F1 by variety</th><th>CPU latency</th><th>Cost per 1,000</th></tr>
+    <tr><td>Classical baseline</td><td>Day 1</td><td colspan="4" rowspan="3">you fill these cells with your own runs, and defend a choice on Day 4</td></tr>
+    <tr><td>Prompted generative model</td><td>Day 2</td></tr>
+    <tr><td>Fine-tuned encoder</td><td>Day 3</td></tr>
   </table>
-  <div class="cols cols-2 mt">
-    <div>
-      <p class="small muted mb0">Frequent words stay whole</p>
-      <div class="tokens"><span>order</span><span>refund</span><span>account</span></div>
-    </div>
-    <div>
-      <p class="small muted mb0">Rare words decompose into known pieces</p>
-      <div class="tokens"><span>un</span><span>subscri</span><span>bing</span></div>
-    </div>
-  </div>
+  <div class="callout tip mt-s"><b>The habit to take home.</b> No model is chosen on a single number, and none without a baseline next to it.</div>
+  <aside class="notes"><p>This table is the capstone's first rubric criterion and outcome LO5. Day 1 fills the first row. Say plainly that the baseline may win: on some rows it does, and a defended "keep the baseline" is a full-mark answer. AI policy: assistants are off in the supervised checks and in today's Lab 1.4, they may hint but not write training or evaluation code in the other labs, and they are fully allowed in the capstone, which is defended live.</p></aside>
 </section>
 
-<section class="slide" id="learn-merges-from-corpus">
-  <div class="kicker">BPE in 60 seconds</div>
-  <h2>Learn merges from a corpus, then apply them in order</h2>
-  <div class="cols cols-2">
-    <table class="t small">
-      <tr><th>Step</th><th>Most frequent pair</th><th>Corpus after merge</th></tr>
-      <tr><td>0</td><td>–</td><td><code>l o w</code> · <code>l o w e r</code> · <code>n e w e s t</code></td></tr>
-      <tr><td>1</td><td><code>l</code> + <code>o</code></td><td><code>lo w</code> · <code>lo w e r</code> · <code>n e w e s t</code></td></tr>
-      <tr><td>2</td><td><code>lo</code> + <code>w</code></td><td><code>low</code> · <code>low e r</code> · <code>n e w e s t</code></td></tr>
-      <tr><td>3</td><td><code>e</code> + <code>s</code></td><td><code>low</code> · <code>low e r</code> · <code>n e w es t</code></td></tr>
-      <tr><td>…</td><td colspan="2">repeat until vocabulary size is reached</td></tr>
-    </table>
-    <div class="stack">
-      <div class="callout tip"><b>Key insight:</b> the vocabulary reflects the <b>training corpus</b>. A tokenizer trained mostly on English has few Arabic merges.</div>
-      <div class="callout note"><b>Byte-level BPE</b> starts from the 256 bytes, so nothing is ever unknown. But an Arabic letter takes 2 bytes in UTF-8, so Arabic can blow up to many tokens per word.</div>
-    </div>
-  </div>
+<!-- ======================= SESSION 1 ======================= -->
+<section class="slide section" id="s1" data-auto="section" data-session="1">
+  <aside class="notes"><p>Session 1 serves LO1. The evidence is a one-page note: token counts per variety and two failures traced to their cause. The lab writes the skeleton of that note.</p></aside>
 </section>
 
-<section class="slide" id="each-model-family-has">
-  <div class="kicker">Same text, different tokenizers</div>
-  <h2>Each model family has its own conventions</h2>
-  <div class="stack">
-    <div><p class="small mb0"><b>WordPiece</b> (BERT): continuation pieces start with <code>##</code></p>
-      <div class="tokens"><span>[CLS]</span><span>token</span><span>##ization</span><span>is</span><span>fun</span><span>[SEP]</span></div></div>
-    <div><p class="small mb0"><b>Byte-level BPE</b> (GPT-2, Qwen): a leading space is part of the token, shown as <code>Ġ</code></p>
-      <div class="tokens"><span>token</span><span>ization</span><span>Ġis</span><span>Ġfun</span></div></div>
-    <div><p class="small mb0"><b>SentencePiece Unigram</b> (XLM-R): word starts are marked with <code>▁</code></p>
-      <div class="tokens"><span>&lt;s&gt;</span><span>▁to</span><span>ken</span><span>ization</span><span>▁is</span><span>▁fun</span><span>&lt;/s&gt;</span></div></div>
+<section class="slide" data-label="Integers" id="models-read-integers" data-lo="LO1">
+  <div class="kicker">Tokenisation</div>
+  <h2>A model never sees text: it sees a list of integers</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Text</b>The meter is broken</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Pieces</b>The · meter · is · broken</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>Ids</b>785 · 16430 · 318 · 5445</div>
+    <div class="arrow">→</div>
+    <div class="step c-purple"><b>Vectors</b>one row of a table per id</div>
   </div>
-  <div class="callout warn mt"><b>Rule #1:</b> always use the tokenizer that ships with the model. A model fed IDs from another vocabulary sees garbage.</div>
-</section>
-
-<section class="slide" id="rich-morphology-many-ways">
-  <div class="kicker">Arabic is different</div>
-  <h2>Rich morphology and many ways to write a letter</h2>
-  <div class="cols cols-2">
-    <div class="stack">
-      <div class="card c-teal"><h4>One word, a whole sentence</h4>
-        <p class="ar" style="font-size:40px;margin:6px 0">وسيكتبونها</p>
-        <p class="small mb0">= <span class="ar">و + س + يكتب + ون + ها</span> : "and they will write it"</p></div>
-      <div class="card c-coral"><h4>Dialects and Arabizi</h4><p class="small mb0"><span class="ar">وين طلبي؟</span> (Gulf) vs. <span class="ar">أين طلبي؟</span> (MSA) vs. <i>"wen 6alabi"</i></p></div>
-    </div>
-    <table class="t small">
-      <tr><th>Variation</th><th>Example</th><th>Common normalization</th></tr>
-      <tr><td>Alef forms</td><td class="ar">أ إ آ ا</td><td>→ <span class="ar">ا</span></td></tr>
-      <tr><td>Taa marbuta</td><td class="ar">ة / ه</td><td>→ <span class="ar">ه</span> (search only)</td></tr>
-      <tr><td>Alef maqsura</td><td class="ar">ى / ي</td><td>→ <span class="ar">ي</span></td></tr>
-      <tr><td>Diacritics</td><td class="ar">طَلَبٌ</td><td>→ <span class="ar">طلب</span></td></tr>
-      <tr><td>Tatweel</td><td class="ar">طـــلب</td><td>→ <span class="ar">طلب</span></td></tr>
-    </table>
-  </div>
-  <div class="callout note mt small"><b>Normalize for search and matching</b>, but be careful normalizing text sent to an LLM. Its tokenizer was trained on raw text.</div>
-</section>
-
-<section class="slide" id="fertility-tokens-per-word">
-  <div class="kicker">A metric you should track</div>
-  <h2>Fertility: tokens per word</h2>
-  <div class="cols cols-2 mid">
-    <div>
-      <p>Fertility = <code>n_tokens / n_words</code>. Lower is usually better: cheaper, faster, more text fits in context.</p>
-      <ul class="bullets small">
-        <li>English-centric byte-level tokenizers can produce <b>several times more</b> tokens for Arabic than for English.</li>
-        <li>Multilingual (XLM-R, Qwen) and Arabic-specific (AraBERT, Jais, ALLaM) tokenizers close the gap.</li>
-        <li>Same message → different <b>bill</b> and different <b>context budget</b>.</li>
-      </ul>
-    </div>
-    <div class="figure">
-      <p class="small mb0"><b>Your lab task:</b> fill in this table</p>
-      <table class="t small mt-s">
-        <tr><th>Tokenizer</th><th class="num">EN fertility</th><th class="num">AR fertility</th></tr>
-        <tr><td>gpt2</td><td class="num">?</td><td class="num">?</td></tr>
-        <tr><td>google-bert/bert-base-multilingual-cased</td><td class="num">?</td><td class="num">?</td></tr>
-        <tr><td>FacebookAI/xlm-roberta-base</td><td class="num">?</td><td class="num">?</td></tr>
-        <tr><td>aubmindlab/bert-base-arabertv02</td><td class="num">?</td><td class="num">?</td></tr>
-        <tr><td>Qwen/Qwen2.5-0.5B-Instruct</td><td class="num">?</td><td class="num">?</td></tr>
-      </table>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="ids-masks-padding-truncation">
-  <div class="kicker">What the model receives</div>
-  <h2>IDs, masks, padding and truncation</h2>
-  <div class="cols cols-2">
-    <pre class="code s"><code class="language-python">from transformers import AutoTokenizer
-
-tok = AutoTokenizer.from_pretrained("FacebookAI/xlm-roberta-base")
-batch = tok(
-    ["Where is my order?", "أين طلبي؟ لم يصل بعد"],
-    padding=True,          # pad to longest in batch
-    truncation=True,       # cut at max_length
-    max_length=32,
-    return_tensors="pt",
-)
-batch["input_ids"].shape       # torch.Size([2, n])
-batch["attention_mask"][0]     # 1 = real token, 0 = pad
-tok.convert_ids_to_tokens(batch["input_ids"][1])
-tok.model_max_length           # 512</code></pre>
-    <div class="stack small">
-      <div class="card c-navy flat"><b>input_ids</b>: integer positions in the vocabulary.</div>
-      <div class="card c-teal flat"><b>attention_mask</b>: tells the model to ignore padding.</div>
-      <div class="card c-coral flat"><b>Truncation</b>: silent data loss. Check the length distribution of <i>your</i> data first.</div>
-      <div class="card c-purple flat"><b>Special tokens</b>: <code>&lt;s&gt;</code> <code>&lt;/s&gt;</code> <code>[CLS]</code> or chat markers like <code>&lt;|im_start|&gt;</code> carry meaning. Keep them.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="tokenization-mistakes-that-reach">
-  <div class="kicker">Engineering checklist</div>
-  <h2>Tokenization mistakes that reach production</h2>
-  <div class="cols cols-2">
-    <ul class="bullets small">
-      <li>Mixing a model with <b>another model's tokenizer</b></li>
-      <li><b>Truncating</b> the important part (e.g., the actual question at the end of a long email)</li>
-      <li>Estimating cost with <b>word counts</b> instead of token counts</li>
-      <li>Over-normalizing input to an LLM (removing diacritics or casing it relies on)</li>
-    </ul>
-    <ul class="bullets small">
-      <li>Forgetting the <b>chat template</b> for instruction models (Day 2)</li>
-      <li>Losing character <b>offsets</b> needed to highlight extracted spans</li>
-      <li>Assuming the context limit applies only to input. Output tokens count too.</li>
-      <li>Not testing on <b>dialect, typos, emoji and code-switched</b> text</li>
-    </ul>
-  </div>
-</section>
-
-<section class="slide lab top" data-lab="1.1" id="lab-1-1">
-  <div class="cols cols-2">
-    <div>
-      <div class="lab-tag">Lab 1.1 · 25 min</div>
-      <h2>Inspect English and Arabic tokenization</h2>
-      <a class="nb" href="https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_1_tokenization.ipynb" target="_blank" rel="noopener">labs/D1_1_tokenization.ipynb ↗</a>
-      <p class="small mt">You will compare five tokenizers on our support tickets and quantify the "Arabic token tax".</p>
-    </div>
-    <ul class="checklist">
-      <li>Tokenize a ticket, map IDs ↔ tokens, decode back <span class="min">5'</span></li>
-      <li>Inspect special tokens, padding, attention masks <span class="min">5'</span></li>
-      <li>Compute fertility for EN vs. AR across 5 tokenizers <span class="min">8'</span></li>
-      <li>Write an Arabic normalizer; measure its effect <span class="min">5'</span></li>
-      <li>Find the token-length percentile for <code>max_length</code> <span class="min">2'</span></li>
-      <li class="stretch">✱ Train a tiny BPE tokenizer on the tickets</li>
-    </ul>
-  </div>
-</section>
-
-<section class="slide quiz" id="ticket-is-60-words">
-  <div class="kicker">Checkpoint</div>
-  <h2>A ticket is 60 words in English and 60 words in Arabic. Using GPT-2's tokenizer, which is most likely?</h2>
-  <div class="opts">
-    <div class="opt" data-k="A">Arabic triggers <code>[UNK]</code> tokens and loses information</div>
-    <div class="opt" data-k="B">Both produce about the same number of tokens</div>
-    <div class="opt" data-k="C" data-ok>The Arabic version produces many more tokens</div>
-  </div>
-  <div class="why callout tip small"><b>C.</b> GPT-2 uses byte-level BPE trained mostly on English: no <code>[UNK]</code>s, but few Arabic merges, so Arabic text splits into many short byte pieces.</div>
-</section>
-
-
-<!-- ======================= SESSION 2: EMBEDDINGS ======================= -->
-<section class="slide section" data-session="2" id="embeddings-meaning-as-geometry">
-  <div class="kicker">Session 2</div>
-  <h1>Embeddings: meaning as geometry</h1>
-  <ul class="bullets outcomes tight">
-    <li>Explain dense vectors, cosine similarity and pooling</li>
-    <li>Choose an embedding model for a multilingual use case</li>
-    <li>Build and evaluate a semantic search over historical tickets</li>
+  <ul class="bullets small mt">
+    <li>The <b>tokeniser</b> is fixed before training and shipped with the model: change it and the model reads noise.</li>
+    <li>Everything a provider counts and charges is tokens, not words or characters.</li>
   </ul>
-  <div class="sess-no">02</div>
+  <aside class="notes"><p>The ids on the slide are illustrative. The point: the tokeniser is the first model in the pipeline and the only one nobody evaluates. Ask: what happens to a word the tokeniser has never seen? Collect guesses; the next slides answer.</p></aside>
 </section>
 
-<section class="slide" id="embedding-is-learned-coordinate">
-  <div class="kicker">From IDs to vectors</div>
-  <h2>An embedding is a learned coordinate</h2>
-  <div class="cols cols-2 mid">
-    <div>
-      <ul class="bullets small">
-        <li>A token ID indexes a row of an <b>embedding matrix</b> (vocab × d, e.g., 250k × 384).</li>
-        <li>Training pushes rows so that <b>things used similarly end up close</b>.</li>
-        <li>Transformers then make vectors <b>contextual</b>: the same token gets different vectors in different sentences.</li>
-        <li>A <b>sentence embedding</b> compresses a whole text into one vector, which is ideal for search and clustering.</li>
-      </ul>
-    </div>
-    <div class="figure">
-      <svg viewBox="0 0 600 380" font-family="IBM Plex Sans, sans-serif" font-size="15">
-        <rect x="0" y="0" width="600" height="380" fill="#fff"/>
-        <line x1="40" y1="350" x2="580" y2="350" stroke="#d4d0c5"/><line x1="40" y1="20" x2="40" y2="350" stroke="#d4d0c5"/>
-        <g fill="#00ae8d"><circle cx="120" cy="90" r="9"/><circle cx="150" cy="70" r="9"/><circle cx="105" cy="125" r="9"/><circle cx="165" cy="110" r="9"/></g>
-        <text x="90" y="45" fill="#00ae8d" font-weight="600">refunds</text>
-        <g fill="#e96852"><circle cx="430" cy="110" r="9"/><circle cx="470" cy="85" r="9"/><circle cx="455" cy="140" r="9"/><circle cx="500" cy="120" r="9"/></g>
-        <text x="420" y="60" fill="#e96852" font-weight="600">delivery</text>
-        <g fill="#625d9c"><circle cx="280" cy="270" r="9"/><circle cx="315" cy="300" r="9"/><circle cx="250" cy="300" r="9"/><circle cx="300" cy="245" r="9"/></g>
-        <text x="330" y="330" fill="#625d9c" font-weight="600">account / password</text>
-        <circle cx="140" cy="155" r="11" fill="#ffb548" stroke="#101820" stroke-width="2"/>
-        <text x="160" y="185" fill="#101820">"where is my money back?"</text>
-        <text x="160" y="205" fill="#101820" class="ar">"وين فلوسي؟"</text>
-        <path d="M140 155 L128 100" stroke="#101820" stroke-dasharray="4 4"/>
-      </svg>
-      <div class="caption">2-D projection for intuition. Real embeddings have 384 to 1024+ dimensions.</div>
+<section class="slide" data-label="Subwords" id="subwords-between" data-lo="LO1">
+  <div class="kicker">The unit</div>
+  <h2>Subwords sit between characters and words</h2>
+  <table class="t">
+    <tr><th>Unit</th><th>Vocabulary</th><th>A new word</th><th>Length of a message</th></tr>
+    <tr><td>Characters or bytes</td><td>tiny</td><td>always representable</td><td>very long</td></tr>
+    <tr><td>Whole words</td><td>millions, never complete</td><td>unknown</td><td>short</td></tr>
+    <tr class="hl"><td>Subwords</td><td>30,000 to 250,000</td><td>built from pieces</td><td>in between</td></tr>
+  </table>
+  <div class="tokens mt"><span>token</span><span>is</span><span>ation</span><span class="ar">ال</span><span class="ar">فات</span><span class="ar">ورة</span></div>
+  <p class="small muted">A frequent word is one piece. A rare word is several. A word from a language the tokeniser rarely saw is many.</p>
+  <aside class="notes"><p>Arabic is rich in forms: one stem takes prefixes and suffixes (the article, prepositions, pronouns), so a word-level vocabulary explodes. Subwords handle this well when the tokeniser was trained on Arabic. The last sentence on the slide is the whole lab.</p></aside>
+</section>
+
+<section class="slide" data-label="BPE" id="bpe-merges" data-lo="LO1">
+  <div class="kicker">How a vocabulary is learnt</div>
+  <h2>Byte-pair encoding merges the most frequent pair, again and again</h2>
+  <div class="cols cols-2">
+    <ol class="bullets small">
+      <li>Start from single characters or bytes.</li>
+      <li>Count every adjacent pair in the training text.</li>
+      <li>Merge the most frequent pair into one new piece.</li>
+      <li>Repeat until the vocabulary has the size you asked for.</li>
+    </ol>
+    <div class="stack">
+      <div class="card c-teal flat"><h4>What the merges remember</h4><p class="small mb0">The training text. English web text gives English pieces; Arabic text gives Arabic pieces.</p></div>
+      <div class="card c-purple flat"><h4>WordPiece</h4><p class="small mb0">The same idea with another score; it marks a continuing piece with <code>##</code> and has an <code>[UNK]</code> piece.</p></div>
     </div>
   </div>
+  <aside class="notes"><p>Byte-pair encoding as used for text comes from Sennrich and colleagues (2016); WordPiece is the variant BERT uses. Two tokenisers in the lab are byte-level BPE, one is WordPiece. Byte-level means the starting alphabet is the 256 bytes, so nothing is ever unknown. The price shows on the next slide.</p><p>Sources: Sennrich et al., Neural Machine Translation of Rare Words with Subword Units; Devlin et al., BERT.</p></aside>
 </section>
 
-<section class="slide" id="cosine-similarity-compare-directions">
+<section class="slide" data-label="Four varieties" id="tokens-per-variety" data-lo="LO1">
+  <div class="kicker">Measured in Lab 1.1 · 50 parallel messages</div>
+  <h2>The same complaint costs a different number of tokens in each variety</h2>
+  <table class="t">
+    <tr><th>Tokeniser</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th></tr>
+    <tr><td>GPT-2 (English web text)</td><td class="num">40.1</td><td class="num">32.7</td><td class="num">18.8</td><td class="num">11.8</td></tr>
+    <tr><td>Qwen3 (multilingual)</td><td class="num">15.0</td><td class="num">14.6</td><td class="num">19.4</td><td class="num">11.9</td></tr>
+    <tr><td>CAMeLBERT-mix (Arabic)</td><td class="num">9.7</td><td class="num">8.7</td><td class="num">25.5</td><td class="num">23.6</td></tr>
+  </table>
+  <p class="small muted">Mean tokens per message. Same facts in every column.</p>
+  <div class="callout warn small"><b>No row is good at Arabizi.</b> Nobody trained a tokeniser on it, so every tokeniser spells it out.</div>
+  <aside class="notes"><p>Numbers from the course's run of Lab 1.1 on data/parallel_50.csv: tokeniser files only, no model weights. Read it by row first: each tokeniser is shortest on the language of its training text. Then by column: Arabizi is expensive everywhere. The tokeniser files come from the public pages of GPT-2, Qwen3-0.6B and CAMeLBERT-mix on the Hugging Face Hub.</p><p>Sources: the three model pages on the Hugging Face Hub (tokeniser files).</p></aside>
+</section>
+
+<section class="slide" data-label="Bytes" id="gpt2-falls-back-to-bytes" data-lo="LO1">
+  <div class="kicker">Why 40 tokens</div>
+  <h2>A tokeniser that never saw Arabic falls back to bytes</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">5.3</div><div class="lbl">GPT-2 tokens per MSA word</div></div>
+    <div class="stat"><div class="big">2.0</div><div class="lbl">Qwen3 tokens per MSA word</div></div>
+    <div class="stat"><div class="big">1.3</div><div class="lbl">CAMeLBERT tokens per MSA word</div></div>
+  </div>
+  <ul class="bullets small mt">
+    <li>An Arabic letter is two bytes in UTF-8. With no merged pieces, a five-letter word is up to ten tokens.</li>
+    <li>Nothing breaks and nothing is unknown: the message is only three times longer, slower and more expensive.</li>
+  </ul>
+  <aside class="notes"><p>From the same run. This is the failure that does not raise an error, which is why it is found on the invoice. A model with a short context loses a third of it to the same message. Ask what the room's own provider uses; most modern multilingual models are near the middle number.</p></aside>
+</section>
+
+<section class="slide" data-label="Price" id="price-per-thousand" data-lo="LO1">
+  <div class="kicker">Tokens are money</div>
+  <h2>Price the difference, then look at what you are paying for</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Variety</th><th class="num">Message only</th><th class="num">With a 180-token prompt</th></tr>
+      <tr><td>MSA</td><td class="num">0.0030</td><td class="num">0.0390</td></tr>
+      <tr><td>Gulf</td><td class="num">0.0029</td><td class="num">0.0389</td></tr>
+      <tr><td>Arabizi</td><td class="num">0.0039</td><td class="num">0.0399</td></tr>
+      <tr><td>English</td><td class="num">0.0024</td><td class="num">0.0384</td></tr>
+    </table>
+    <div class="stack">
+      <div class="card c-coral flat"><h4>Message only</h4><p class="small mb0">Arabizi costs 1.62 times English.</p></div>
+      <div class="card c-teal flat"><h4>With the instructions</h4><p class="small mb0">The prompt is over 90% of the bill in every variety.</p></div>
+    </div>
+  </div>
+  <p class="small muted">USD per 1,000 messages at 0.20 USD per million input tokens, Qwen3 token counts.</p>
+  <aside class="notes"><p>The price is the published input price of the paid endpoint of the course's default chat model on OpenRouter, read on 13 November 2026 and saved in data/reference/prices.json; prices change, so the lab reads the file and participants replace it with their provider's. The token counts are Qwen3's, used as a stand-in for the hosted model's own tokeniser: the ratio is the lesson, not the cents. Two conclusions: variety matters for long texts, and for short messages the instructions matter more.</p><p>Sources: OpenRouter's public model list (prices).</p></aside>
+</section>
+
+<section class="slide" data-label="Spellings" id="one-word-many-spellings" data-lo="LO1">
+  <div class="kicker">Arabic orthography</div>
+  <h2>One word, many spellings: normalise before you match or count</h2>
+  <table class="t small">
+    <tr><th>What varies</th><th>As written</th><th>Normalised to</th></tr>
+    <tr><td>Diacritics and shadda</td><td class="ar">العَدّاد</td><td class="ar">العداد</td></tr>
+    <tr><td>Tatweel, the stretching mark</td><td class="ar">العـداد</td><td class="ar">العداد</td></tr>
+    <tr><td>Alef with hamza</td><td class="ar">أرجو · إغلاق</td><td class="ar">ارجو · اغلاق</td></tr>
+    <tr><td>Ta marbuta written as ha</td><td class="ar">الفاتورة · الفاتوره</td><td class="ar">الفاتوره</td></tr>
+    <tr><td>Alef maqsura for ya</td><td class="ar">فى</td><td class="ar">في</td></tr>
+    <tr><td>Arabic-Indic digits</td><td class="ar">٣٠٦١٠٧٤٦١٠</td><td>3061074610</td></tr>
+  </table>
+  <div class="callout note small mt-s"><b>Normalise for matching, keep the original for display.</b> The customer wrote it their way.</div>
+  <aside class="notes"><p>These are the six rules of the lab's normalise function. Normalising ta marbuta to ha merges a few distinct words; for search and classification the gain is larger than the loss. Libraries such as CAMeL Tools and PyArabic offer these operations; the lab writes them by hand in four lines so that nobody treats them as magic. In Sawaqi's archive, normalising takes the Arabic-script messages from 2,968 distinct word forms to 1,760.</p></aside>
+</section>
+
+<section class="slide" data-label="Two failures" id="two-failures-traced" data-lo="LO1">
+  <div class="kicker">Measured in Lab 1.1</div>
+  <h2>Two failures, each traced to its cause</h2>
+  <div class="cols cols-2">
+    <div class="card c-coral"><h4>One diacritic, one unknown word</h4>
+      <p class="small"><span class="ar">العَدّاد</span> becomes <code>[UNK]</code> for the Arabic tokeniser and 9 pieces instead of 5 for the multilingual one.</p>
+      <p class="small mb0"><b>Cause.</b> The training text had no diacritics, so no piece contains one.</p></div>
+    <div class="card c-amber"><h4>An account number at twice the price</h4>
+      <p class="small">A sentence with <span class="ar">٣٠٦١٠٧٤٦١٠</span> costs 25 tokens; with Western digits, 15.</p>
+      <p class="small mb0"><b>Cause.</b> Each Arabic-Indic digit is two bytes with no merged piece.</p></div>
+  </div>
+  <div class="cols cols-2 mt-s">
+    <div class="stat"><div class="big">1,052 → 0</div><div class="lbl">unknown pieces in 1,340 Arabic-script messages, before and after normalising</div></div>
+    <div class="stat"><div class="big">2,968 → 1,760</div><div class="lbl">distinct word forms, before and after</div></div>
+  </div>
+  <aside class="notes"><p>All four numbers are from the course's run of Lab 1.1, step 4. An unknown piece is information the model never receives: a classifier cannot route on a word it sees as [UNK]. The evidence for LO1 is exactly this: a failure and its cause, in one sentence each.</p></aside>
+</section>
+
+<section class="slide" data-label="Arabizi" id="arabizi-digits-for-letters" data-lo="LO1">
+  <div class="kicker">Dialect and Latin script</div>
+  <h2>Arabizi has no spelling, so every writer invents one</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Digit</th><th>Letter</th><th>Example</th></tr>
+      <tr><td>3</td><td class="ar">ع</td><td>3adad (meter)</td></tr>
+      <tr><td>7</td><td class="ar">ح</td><td>7sab (account)</td></tr>
+      <tr><td>5</td><td class="ar">خ</td><td>5azan (tank)</td></tr>
+      <tr><td>6 · 9</td><td class="ar">ط · ص</td><td>6ag6 (pressure) · 9a3eef (weak)</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>The same word arrives as <b>3adad</b>, <b>aadad</b>, <b>adad</b>: the archive has all three.</li>
+      <li>Dialect changes the words too: <span class="ar">الماء</span> is <span class="ar">الماي</span> or <span class="ar">المويه</span> in Gulf messages.</li>
+      <li>No tokeniser, and few models, were trained on it. Expect it to be the worst column of every table this week.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>In the synthetic archive about 15% of messages are Arabizi, with the spelling variation planted: digits kept or replaced by letters, vowels doubled or not. Tell the room that this is the honest part of the course: there is no trick that fixes Arabizi. There is measuring it, collecting more of it, and sending it to a person when the model is unsure.</p></aside>
+</section>
+
+<section class="slide" id="check-tokenisers" data-lo="LO1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Which change cuts the token bill most?</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">Sawaqi routes 60,000 messages a month with a hosted model. Each call sends 180 tokens of instructions and a message of about 15 tokens. Which single change cuts the bill most?</p>
+    <div class="opts">
+      <div class="opt" data-why="Looks at the variety gap in the message and misses that the message is a small part of each call">Translating Arabizi messages to English first</div>
+      <div class="opt" data-why="Treats normalising as a cost saver: it removes a few tokens per message, not the instructions">Removing diacritics and tatweel from every message</div>
+      <div class="opt" data-ok>Shortening the instructions from 180 to 90 tokens</div>
+      <div class="opt" data-why="Assumes a tokeniser can be swapped: it belongs to the model and cannot be chosen separately">Switching the hosted model to an Arabic tokeniser</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The instructions are sent with every message and are over 90% of the tokens. Halving them nearly halves the bill; no change to the message comes close.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. If the room picks the translation option, put the price table back up and ask them to compute 195 against 105 tokens. Option D is worth a minute: you choose a model, and its tokeniser comes with it.</p></aside>
+</section>
+
+<section class="slide lab" id="lab-1-1" data-auto="lab" data-lab="1.1">
+  <aside class="notes"><p>Walk the room. Usual problems: the first cell downloads three tokeniser files (a few megabytes) and a blocked network stops it, in which case the lab continues on the reference counts and says so; a normalise that forgets the dagger alef or lower-casing fails the third assertion; people print Arabic pieces of a byte-level tokeniser and think the garbled output is a bug. The note in artifacts/D1_1/note.md is the evidence: remind them to write the two cause sentences.</p></aside>
+</section>
+
+<!-- ======================= SESSION 2 ======================= -->
+<section class="slide section" id="s2" data-auto="section" data-session="2">
+  <aside class="notes"><p>Session 2 serves LO2. The evidence is a table of recall at 10 for each of the four varieties.</p></aside>
+</section>
+
+<section class="slide" data-label="Embeddings" id="meaning-as-a-point" data-lo="LO1 LO2">
+  <div class="kicker">Embeddings</div>
+  <h2>An embedding puts a text at a point; close points mean close meanings</h2>
+  <div class="cols cols-2">
+    <ul class="bullets">
+      <li>A token id selects a row of a table: its <b>embedding</b>.</li>
+      <li>A model mixes the rows of a message into one vector for the whole message.</li>
+      <li>Trained so that texts used alike land close together.</li>
+      <li>A <b>multilingual</b> model lands a message and its translation close together.</li>
+    </ul>
+    <div class="stack">
+      <div class="card c-teal flat"><h4>Close</h4><p class="small mb0"><span class="ar">الماي مقطوع</span> · no water at home · el mai maqtoo3</p></div>
+      <div class="card c-coral flat"><h4>Far</h4><p class="small mb0">no water at home · I was charged twice</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Keep the geometry simple: a few hundred to a few thousand numbers per text. What the numbers mean individually does not matter; distances do. "Used alike" is the training signal: pairs of texts that belong together (a question and its answer, a sentence and its translation) are pulled together, others pushed apart.</p></aside>
+</section>
+
+<section class="slide" data-label="Cosine" id="cosine-is-a-dot-product" data-lo="LO2">
   <div class="kicker">Similarity</div>
-  <h2>Cosine similarity: compare directions, not lengths</h2>
-  <div class="cols cols-2 mid">
-    <div>
-      <p style="font-size:40px; font-family: var(--mono); color: var(--navy)">cos(a, b) = a·b / (‖a‖‖b‖)</p>
-      <ul class="bullets small">
-        <li>Range −1 … 1. In practice most text pairs fall between 0 and 1.</li>
-        <li><b>Normalize once</b> (‖v‖ = 1) and cosine becomes a plain dot product, so a matrix multiply ranks the whole corpus.</li>
-        <li>Scores are <b>relative</b>. A 0.82 means nothing across models; compare rankings, not raw values.</li>
-      </ul>
-    </div>
-    <pre class="code"><code class="language-python">import numpy as np
-
-def cosine(a, b):
-    return a @ b / (np.linalg.norm(a) * np.linalg.norm(b))
-
-# normalized matrices: one matmul ranks everything
-E = corpus_emb / np.linalg.norm(corpus_emb, axis=1, keepdims=True)
-q = query_emb / np.linalg.norm(query_emb)
-scores = E @ q                    # shape: (n_docs,)
-top5 = np.argsort(-scores)[:5]</code></pre>
+  <h2>With unit vectors, similarity is one dot product</h2>
+  <div class="cols cols-2">
+    <pre class="code" data-file="Lab 1.2"><code class="language-python">E = G.embed(messages)        # (2000, d), rows of length 1
+q = G.embed([query])[0]      # (d,)
+scores = E @ q               # cosine similarity, 2000 at once
+top = np.argsort(-scores)[:10]</code></pre>
+    <ul class="bullets small">
+      <li><b>Cosine similarity</b> compares directions and ignores length: 1 the same, 0 unrelated.</li>
+      <li>Normalise every vector to length 1 once; then cosine is the dot product.</li>
+      <li>One matrix multiplication scores a query against the whole archive.</li>
+    </ul>
   </div>
+  <aside class="notes"><p>This is the whole of exact vector search. Everything a vector database adds is about doing this faster on more rows, filtering, and keeping it up to date. Let the room see that the mathematics is four lines.</p></aside>
 </section>
 
-<section class="slide" id="token-vectors-pooling-one">
-  <div class="kicker">Sentence embeddings</div>
-  <h2>Token vectors → pooling → one vector per text</h2>
+<section class="slide" data-label="Choosing" id="choosing-an-embedding-model" data-lo="LO2">
+  <div class="kicker">Which model</div>
+  <h2>Choose an embedding model on your own queries, in your own varieties</h2>
+  <table class="t small">
+    <tr><th>Question</th><th>Why it matters at Sawaqi</th></tr>
+    <tr><td>Which languages was it trained on?</td><td>An English-only model sees Arabic as noise</td></tr>
+    <tr><td>Are the weights open, and under which licence?</td><td>You may need to run it yourself later</td></tr>
+    <tr><td>How long a text does it take, how many dimensions?</td><td>Messages are short; memory is rows × dimensions</td></tr>
+    <tr><td>Where does it run, and what leaves the building?</td><td>Message text carries personal data</td></tr>
+    <tr><td>What does it score on <b>your</b> 40 queries?</td><td>A public leaderboard has no Gulf Arabizi</td></tr>
+  </table>
+  <aside class="notes"><p>The lab calls a hosted open-weight embedding model through one function; its name is a setting. A library such as Sentence Transformers runs open models on your own machine, which this course does not do in class: nothing is downloaded. On the fourth row: Day 2 masks personal fields before any text goes to a hosted model; for today's search lab the data is synthetic, and the rule is stated here so that nobody copies the pattern to real messages without masking.</p></aside>
+</section>
+
+<section class="slide" data-label="Two phases" id="index-once-query-often" data-lo="LO2">
+  <div class="kicker">The shape of every search system</div>
+  <h2>Index once, offline; answer every query online</h2>
   <div class="flow">
-    <div class="step c-navy"><b>Ticket</b>"refund not received"</div>
+    <div class="step c-navy"><b>Offline</b>normalise and embed 2,000 messages</div>
     <div class="arrow">→</div>
-    <div class="step c-teal"><b>Encoder</b>transformer (Session 3)</div>
+    <div class="step c-teal"><b>Index</b>store the vectors with their message ids</div>
     <div class="arrow">→</div>
-    <div class="step c-teal"><b>Token vectors</b>n × 384</div>
+    <div class="step c-cyan"><b>Online</b>embed the query with the same model</div>
     <div class="arrow">→</div>
-    <div class="step c-coral"><b>Pooling</b>mean over real tokens (or [CLS])</div>
-    <div class="arrow">→</div>
-    <div class="step c-amber"><b>Normalize</b>1 × 384, ‖v‖=1</div>
+    <div class="step c-purple"><b>Search</b>top 10 by similarity</div>
   </div>
   <div class="cols cols-2 mt">
-    <div class="card c-teal"><h4>Why not just average a raw BERT?</h4><p class="small mb0">You can, but it's mediocre. Sentence-embedding models are <b>further trained with contrastive pairs</b> (question ↔ answer, paraphrases), so similar meanings are pulled together and the rest pushed apart.</p></div>
-    <div class="card c-coral"><h4>Bi-encoder vs. cross-encoder</h4><p class="small mb0"><b>Bi-encoder</b>: embed each text separately. Fast, indexable, used for retrieval.<br><b>Cross-encoder</b>: read both texts together. Accurate, slow, used for reranking the top-k (Day 2).</p></div>
+    <div class="card c-teal flat"><h4>Flat index</h4><p class="small mb0">Compare with every row. Exact. Fine to about a million rows.</p></div>
+    <div class="card c-purple flat"><h4>Approximate index</h4><p class="small mb0">Visit a fraction of the rows (FAISS, LanceDB). Faster, and it can miss: measure its recall too.</p></div>
   </div>
+  <aside class="notes"><p>Two rules that cause most production bugs: the query must be embedded by the same model and the same normalisation as the archive, and a new model means re-embedding everything. At 2,000 rows the lab uses the matrix itself as the index; FAISS's flat inner-product index is the same operation.</p></aside>
 </section>
 
-<section class="slide" id="choosing-embedding-model">
-  <div class="kicker">Model selection</div>
-  <h2>Choosing an embedding model</h2>
-  <table class="t small">
-    <tr><th>Model</th><th>Languages</th><th class="num">Dim</th><th class="num">Params</th><th>Notes</th></tr>
-    <tr><td>sentence-transformers/all-MiniLM-L6-v2</td><td>English</td><td class="num">384</td><td class="num">22M</td><td>Tiny, fast baseline</td></tr>
-    <tr><td>paraphrase-multilingual-MiniLM-L12-v2</td><td>50+ incl. Arabic</td><td class="num">384</td><td class="num">118M</td><td>Simple, symmetric similarity</td></tr>
-    <tr class="hl"><td>intfloat/multilingual-e5-small</td><td>~100 incl. Arabic</td><td class="num">384</td><td class="num">118M</td><td>Needs <code>query:</code> / <code>passage:</code> prefixes. Our default.</td></tr>
-    <tr><td>BAAI/bge-m3</td><td>100+</td><td class="num">1024</td><td class="num">568M</td><td>Strong, 8k context, heavier</td></tr>
-  </table>
-  <div class="cols cols-3 mt small">
-    <div class="callout tip"><b>Check MTEB</b> for <i>retrieval</i> tasks in <i>your</i> language, then confirm on your own data.</div>
-    <div class="callout note"><b>Read the model card</b>: prefixes, max length, pooling, license.</div>
-    <div class="callout warn"><b>Never mix</b> vectors from two models in one index.</div>
-  </div>
-</section>
-
-<section class="slide" id="semantic-search-offline-indexing">
-  <div class="kicker">Architecture</div>
-  <h2>Semantic search = offline indexing + online query</h2>
+<section class="slide" data-label="Recall at 10" id="recall-at-ten" data-lo="LO2">
+  <div class="kicker">The metric</div>
+  <h2>Recall at 10: of the relevant messages a top-10 list could hold, how many it holds</h2>
   <div class="cols cols-2">
-    <div class="card c-teal"><h4>Index time (once / nightly)</h4>
-      <div class="flow v small mt-s">
-        <div class="step c-teal">Historical tickets + resolutions</div><div class="arrow">↓</div>
-        <div class="step c-teal">encode("passage: …"), normalize</div><div class="arrow">↓</div>
-        <div class="step c-teal">Store vectors + metadata (NumPy, FAISS, pgvector…)</div>
-      </div></div>
-    <div class="card c-coral"><h4>Query time (every request)</h4>
-      <div class="flow v small mt-s">
-        <div class="step c-coral">New ticket</div><div class="arrow">↓</div>
-        <div class="step c-coral">encode("query: …"), normalize</div><div class="arrow">↓</div>
-        <div class="step c-coral">Top-k by dot product → return cases + their resolutions</div>
-      </div></div>
-  </div>
-</section>
-
-<section class="slide" id="semantic-search-15-lines">
-  <div class="kicker">Code</div>
-  <h2>Semantic search in ~15 lines</h2>
-  <pre class="code"><code class="language-python">from sentence_transformers import SentenceTransformer
-import faiss
-
-model = SentenceTransformer("intfloat/multilingual-e5-small")
-
-docs = history["text"].tolist()
-doc_emb = model.encode([f"passage: {d}" for d in docs],
-                       normalize_embeddings=True, batch_size=64, show_progress_bar=True)
-
-index = faiss.IndexFlatIP(doc_emb.shape[1])      # inner product == cosine (normalized)
-index.add(doc_emb)
-
-def search(query, k=5):
-    q = model.encode([f"query: {query}"], normalize_embeddings=True)
-    scores, ids = index.search(q, k)
-    return history.iloc[ids[0]].assign(score=scores[0])
-
-search("لم يصلني المبلغ المسترد")   # Arabic query, English history</code></pre>
-  <aside class="notes">Point out that the Arabic query retrieves English tickets: multilingual models share one vector space across languages. That's cross-lingual retrieval for free, but it's also something to evaluate rather than assume.</aside>
-</section>
-
-<section class="slide" id="is-search-any-good">
-  <div class="kicker">Evaluation</div>
-  <h2>Is the search any good? Measure it.</h2>
-  <div class="cols cols-2">
-    <div>
-      <table class="t small">
-        <tr><th>Metric</th><th>Question it answers</th></tr>
-        <tr><td><b>Recall@k</b> / Hit@k</td><td>Is a relevant result anywhere in the top k?</td></tr>
-        <tr><td><b>Precision@k</b></td><td>What fraction of the top k is relevant?</td></tr>
-        <tr><td><b>MRR</b></td><td>How high is the <i>first</i> relevant result? (1/rank)</td></tr>
-        <tr><td><b>nDCG@k</b></td><td>Graded relevance with position discount</td></tr>
-      </table>
+    <div class="trace s">
+      <div class="ev user"><b>query</b>el majari 6af7a fi el rabwa</div>
+      <div class="ev model"><b>relevant</b>8 messages: sewage overflow in Al-Rabwa, in any variety</div>
+      <div class="ev result"><b>top 10</b>holds 2 of them</div>
+      <div class="ev final"><b>recall at 10</b>2 / min(10, 8) = 0.25</div>
     </div>
-    <div class="stack small">
-      <div class="callout tip"><b>Cheap relevance labels:</b> in our data, a retrieved ticket with the <b>same intent</b> as the query counts as relevant. You get an eval set for free.</div>
-      <div class="callout note"><b>Better:</b> 50–100 real queries with hand-judged relevant documents. Small, but it's ground truth.</div>
-      <div class="callout warn"><b>Leakage:</b> the query must not be in the index. Search with test tickets against train tickets.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="where-pure-semantic-search">
-  <div class="kicker">Failure modes</div>
-  <h2>Where pure semantic search fails</h2>
-  <div class="cols cols-2">
     <ul class="bullets small">
-      <li><b>Exact identifiers</b>: order #A-55821, product codes, IBANs. Embeddings blur these, so add keyword search (BM25) and combine → <b>hybrid</b>.</li>
-      <li><b>Negation</b>: "I <i>don't</i> want a refund" sits close to "I want a refund".</li>
-      <li><b>Length mismatch</b>: a 5-word query vs. a 2-page document; chunk the documents (Day 2).</li>
-    </ul>
-    <ul class="bullets small">
-      <li><b>Domain jargon</b> the model never saw → evaluate, then consider fine-tuning embeddings.</li>
-      <li><b>Cross-lingual gaps</b>: dialect queries against MSA or English documents. Test them explicitly.</li>
-      <li><b>Stale index</b>: new policies never re-embedded.</li>
+      <li>Divide by <code>min(10, relevant)</code>: a list of ten cannot hold fifteen.</li>
+      <li>Average over the queries of one variety, then report the four numbers side by side.</li>
+      <li>Relevance here is a rule (same complaint type, same district). In production it is a person's judgement, and it costs time.</li>
     </ul>
   </div>
+  <aside class="notes"><p>The example numbers are illustrative of the calculation; the lab computes the real ones. Forty labelled queries exist, ten per variety; the lab scores twenty and the stretch all forty. Stress the size: with five queries per variety, one query is worth 0.2 of recall. Small evaluation sets are for finding failures, not for ranking close systems.</p></aside>
 </section>
 
-<section class="slide lab top" data-lab="1.2" id="lab-1-2">
+<section class="slide" data-label="Baseline" id="ngram-baseline-by-variety" data-lo="LO2">
+  <div class="kicker">Measured in Lab 1.2 · 20 queries</div>
+  <h2>A character n-gram baseline finds its own script and little else</h2>
   <div class="cols cols-2">
-    <div>
-      <div class="lab-tag">Lab 1.2 · 25 min</div>
-      <h2>Build semantic search over historical tickets</h2>
-      <a class="nb" href="https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_2_embeddings_semantic_search.ipynb" target="_blank" rel="noopener">labs/D1_2_embeddings_semantic_search.ipynb ↗</a>
-      <p class="small mt">Embed thousands of tickets, search in English and Arabic, and put a number on retrieval quality.</p>
+    <div class="bars">
+      <div class="row"><span>English</span><div class="bar c-teal" style="--w:40%"></div><span class="val">0.40</span></div>
+      <div class="row"><span>MSA</span><div class="bar c-teal" style="--w:33%"></div><span class="val">0.33</span></div>
+      <div class="row"><span>Gulf</span><div class="bar c-teal" style="--w:29%"></div><span class="val">0.29</span></div>
+      <div class="row"><span>Arabizi</span><div class="bar c-coral" style="--w:2%"></div><span class="val">0.02</span></div>
     </div>
-    <ul class="checklist">
-      <li>Embed sentences; compute a similarity matrix and a heatmap <span class="min">5'</span></li>
-      <li>Compare mean pooling by hand with the library output <span class="min">5'</span></li>
-      <li>Index historical tickets with NumPy, then FAISS <span class="min">5'</span></li>
-      <li>Evaluate Hit@5 and MRR on test tickets (same-intent relevance) <span class="min">5'</span></li>
-      <li>Cross-lingual: Arabic queries → English history <span class="min">5'</span></li>
-      <li class="stretch">✱ Compare two embedding models, or plot a 2-D UMAP of intents</li>
+    <ul class="bullets small">
+      <li>Recall at 10 of TF-IDF over character 2- to 4-grams, no model.</li>
+      <li>The relevant messages are in all four varieties; shared letters find only the query's own.</li>
+      <li>Arabizi: every writer spells differently, so even its own script fails.</li>
+      <li><b>Your embedding model's row goes next to this one.</b> That table is the evidence.</li>
     </ul>
   </div>
+  <aside class="notes"><p>These four numbers are the course's run of Lab 1.2, step 1 and 4, and are deterministic. The embedding row is not on the slide on purpose: the course could not run a hosted embedding model while it was built, and a number from a scripted stand-in would mislead. Collect two or three embedding rows from the room after the lab and write them on the board. Expect a multilingual model to lift the cross-script cases most.</p></aside>
 </section>
 
-<section class="slide quiz" id="users-search-invoice-inv">
+<section class="slide" data-label="Limits" id="where-meaning-search-fails" data-lo="LO2">
+  <div class="kicker">Know the tool's edge</div>
+  <h2>Semantic search fails where there is no meaning to embed</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral"><h4>Identifiers</h4><p class="small mb0">An account number, a ticket, a meter serial. Use an exact lookup.</p></div>
+    <div class="card c-amber"><h4>Negation and numbers</h4><p class="small mb0">"No leak" and "a leak" are close. So are 14 days and 41 days.</p></div>
+    <div class="card c-purple"><h4>Rare varieties</h4><p class="small mb0">What the model rarely saw lands in the wrong place. Measure it per variety.</p></div>
+  </div>
+  <div class="callout tip mt"><b>Hybrid.</b> Run an exact or keyword search beside the vector search and merge the two rankings. The lab's stretch does it in eight lines.</div>
+  <aside class="notes"><p>The lab ends by searching for an account number through both searches. With character n-grams the digits match; with a real embedding model the result is usually poor, which is the point of the slide. Reciprocal rank fusion is the merge used in the stretch.</p></aside>
+</section>
+
+<section class="slide" id="check-semantic-search" data-lo="LO2">
   <div class="kicker">Checkpoint</div>
-  <h2>Users search for "invoice INV-2024-00731". Semantic search returns other invoices but not that one. Best fix?</h2>
-  <div class="opts">
-    <div class="opt" data-k="A" data-ok>Add keyword (BM25) search and merge the results: hybrid search</div>
-    <div class="opt" data-k="B">Lower the similarity threshold</div>
-    <div class="opt" data-k="C">Switch to a bigger embedding model</div>
+  <h2>An agent searches for an account number and gets nonsense</h2>
+  <div class="quiz" data-type="single" data-lo="LO2">
+    <p class="lead">Hessa's agents type an account number into Ghayth's semantic search and get ten unrelated messages. The same search works well for "brown water in Al-Qalaa". What do you change?</p>
+    <div class="opts">
+      <div class="opt" data-ok>Add an exact lookup on the account number beside the vector search</div>
+      <div class="opt" data-why="Believes a larger model understands identifiers: a random number has no meaning at any size">Move to a larger embedding model</div>
+      <div class="opt" data-why="Confuses the index with the representation: an exact index returns the same poor neighbours faster or slower">Replace the approximate index by a flat one</div>
+      <div class="opt" data-why="Assumes more context fixes it: the number is still a string of digits with no meaning to embed">Embed each message together with its customer's name</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Embeddings place texts by meaning, and an identifier has none. Exact fields need exact matching; a hybrid of both serves both kinds of query.</div>
   </div>
-  <div class="why callout tip small"><b>A.</b> Exact identifiers are a lexical problem. Embeddings capture "about invoices", and keyword search catches the exact ID.</div>
+  <aside class="notes"><p>Answer: A. Follow up: where would the exact lookup get the account number from, if it is buried in free text? From extraction, which is Day 2's Lab 2.2.</p></aside>
 </section>
 
-
-<!-- ======================= SESSION 3: TRANSFORMERS ======================= -->
-<section class="slide section" data-session="3" id="inside-transformer">
-  <div class="kicker">Session 3</div>
-  <h1>Inside the transformer</h1>
-  <ul class="bullets outcomes tight">
-    <li>Explain self-attention, multi-head attention and positional information</li>
-    <li>Distinguish encoder, decoder and encoder–decoder models and what each is for</li>
-    <li>Load any model from the Hugging Face Hub and inspect its outputs</li>
-  </ul>
-  <div class="sess-no">03</div>
+<section class="slide lab" id="lab-1-2" data-auto="lab" data-lab="1.2">
+  <aside class="notes"><p>Walk the room. This is the first lab that calls a hosted model: 21 requests in batches of 100 messages, cached afterwards. Usual problems: no key in .env or in the Colab secrets (the banner says STAND-IN and the embedding row is then only a second lexical search); a free model that is busy (wait a minute, run the cell again: finished batches are cached); a query embedded before the archive. Free endpoints allow 20 requests a minute and 50 a day without purchased credits, which this lab fits. Collect embedding rows from three tables for the board.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
 </section>
 
-<section class="slide" id="meaning-depends-context">
-  <div class="kicker">The problem attention solves</div>
-  <h2>Meaning depends on context</h2>
-  <div class="cols cols-2">
-    <div class="card c-teal"><h4>"You <u>charged</u> me twice for one order"</h4><p class="small mb0">→ billing, PAYMENT</p></div>
-    <div class="card c-coral"><h4>"My phone won't <u>charge</u> since the update"</h4><p class="small mb0">→ technical issue</p></div>
-  </div>
-  <div class="cols cols-2 mt">
-    <ul class="bullets small">
-      <li>A <b>static</b> embedding gives "charge" one vector, a blend of both meanings.</li>
-      <li>A transformer lets each token <b>look at every other token</b> and update its vector, so "charge" near "twice" and "order" becomes billing-flavoured.</li>
-    </ul>
-    <div class="callout tip small"><b>In the lab</b> you'll extract the contextual vector of the same word in two sentences and watch their cosine similarity drop.</div>
-  </div>
+<!-- ======================= SESSION 3 ======================= -->
+<section class="slide section" id="s3" data-auto="section" data-session="3">
+  <aside class="notes"><p>Session 3 completes LO1: attention is the third step of the pipeline after tokens and embeddings. The models in the lab are the course's own: about half a million parameters each, trained on a laptop processor on Sawaqi's synthetic messages, so that everyone can open them without a download.</p></aside>
 </section>
 
-<section class="slide" id="every-token-asks-advertises">
-  <div class="kicker">Self-attention</div>
-  <h2>Every token asks, advertises and shares</h2>
-  <div class="cols cols-2 mid">
-    <div>
-      <div class="stack small">
-        <div class="card c-teal flat"><b>Query (Q)</b>: "what am I looking for?"</div>
-        <div class="card c-coral flat"><b>Key (K)</b>: "what do I contain?"</div>
-        <div class="card c-purple flat"><b>Value (V)</b>: "what I pass on if you attend to me"</div>
-      </div>
-      <p style="font-family:var(--mono);font-size:34px;color:var(--navy);margin-top:26px">Attention(Q,K,V) = softmax(QKᵀ/√d)·V</p>
-    </div>
-    <div>
-      <ol class="bullets small">
-        <li>Project each token vector into Q, K, V (learned matrices).</li>
-        <li>Score every pair: <code>q_i · k_j</code>, scaled by √d.</li>
-        <li>Softmax each row into weights that sum to 1.</li>
-        <li>New vector = weighted sum of values.</li>
-      </ol>
-      <div class="callout note small mt">Cost grows with <b>n²</b> in sequence length, which is why context windows are limited and long contexts are expensive.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="attention-map-one-head">
-  <div class="kicker">Seeing it</div>
-  <h2>An attention map (one head, one layer)</h2>
-  <div class="cols cols-2 mid">
-    <div class="figure">
-      <svg viewBox="0 0 520 470" font-family="IBM Plex Mono, monospace" font-size="15">
-        <rect width="520" height="470" fill="#fff"/>
-        <g id="lbl" fill="#5b6472">
-          <text x="10" y="92">you</text><text x="10" y="152">charged</text><text x="10" y="212">me</text><text x="10" y="272">twice</text><text x="10" y="332">for</text><text x="10" y="392">order</text>
-        </g>
-        <g font-size="14" fill="#5b6472">
-          <text x="112" y="40">you</text><text x="160" y="40">charged</text><text x="242" y="40">me</text><text x="290" y="40">twice</text><text x="356" y="40">for</text><text x="410" y="40">order</text>
-        </g>
-        <g>
-          <!-- rows: query tokens; columns: keys; opacity ~ weight -->
-          <rect x="100" y="64" width="58" height="58" fill="#1c355e" opacity=".55"/><rect x="160" y="64" width="58" height="58" fill="#1c355e" opacity=".25"/><rect x="220" y="64" width="58" height="58" fill="#1c355e" opacity=".1"/><rect x="280" y="64" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="340" y="64" width="58" height="58" fill="#1c355e" opacity=".02"/><rect x="400" y="64" width="58" height="58" fill="#1c355e" opacity=".03"/>
-          <rect x="100" y="124" width="58" height="58" fill="#1c355e" opacity=".12"/><rect x="160" y="124" width="58" height="58" fill="#1c355e" opacity=".2"/><rect x="220" y="124" width="58" height="58" fill="#1c355e" opacity=".06"/><rect x="280" y="124" width="58" height="58" fill="#1c355e" opacity=".32"/><rect x="340" y="124" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="400" y="124" width="58" height="58" fill="#e96852" opacity=".75"/>
-          <rect x="100" y="184" width="58" height="58" fill="#1c355e" opacity=".3"/><rect x="160" y="184" width="58" height="58" fill="#1c355e" opacity=".3"/><rect x="220" y="184" width="58" height="58" fill="#1c355e" opacity=".3"/><rect x="280" y="184" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="340" y="184" width="58" height="58" fill="#1c355e" opacity=".02"/><rect x="400" y="184" width="58" height="58" fill="#1c355e" opacity=".03"/>
-          <rect x="100" y="244" width="58" height="58" fill="#1c355e" opacity=".04"/><rect x="160" y="244" width="58" height="58" fill="#1c355e" opacity=".5"/><rect x="220" y="244" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="280" y="244" width="58" height="58" fill="#1c355e" opacity=".25"/><rect x="340" y="244" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="400" y="244" width="58" height="58" fill="#1c355e" opacity=".12"/>
-          <rect x="100" y="304" width="58" height="58" fill="#1c355e" opacity=".03"/><rect x="160" y="304" width="58" height="58" fill="#1c355e" opacity=".1"/><rect x="220" y="304" width="58" height="58" fill="#1c355e" opacity=".03"/><rect x="280" y="304" width="58" height="58" fill="#1c355e" opacity=".07"/><rect x="340" y="304" width="58" height="58" fill="#1c355e" opacity=".2"/><rect x="400" y="304" width="58" height="58" fill="#1c355e" opacity=".55"/>
-          <rect x="100" y="364" width="58" height="58" fill="#1c355e" opacity=".05"/><rect x="160" y="364" width="58" height="58" fill="#1c355e" opacity=".42"/><rect x="220" y="364" width="58" height="58" fill="#1c355e" opacity=".02"/><rect x="280" y="364" width="58" height="58" fill="#1c355e" opacity=".08"/><rect x="340" y="364" width="58" height="58" fill="#1c355e" opacity=".13"/><rect x="400" y="364" width="58" height="58" fill="#1c355e" opacity=".3"/>
-        </g>
-        <text x="100" y="455" fill="#5b6472" font-size="13">rows = token attending (query) · columns = attended token (key)</text>
-      </svg>
-    </div>
-    <div>
-      <ul class="bullets small">
-        <li>"charged" puts weight on "order" and "twice": evidence for the <b>billing</b> sense.</li>
-        <li><b>Multi-head</b>: 12+ heads per layer each learn different patterns (syntax, coreference, position…).</li>
-        <li><b>Many layers</b> (6–80+) stack these updates.</li>
-      </ul>
-      <div class="callout warn small mt"><b>Caution:</b> attention weights are a <i>diagnostic</i>, not an explanation of the decision.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="transformer-is-same-block">
-  <div class="kicker">The block</div>
-  <h2>A transformer is the same block, stacked</h2>
-  <div class="cols cols-2 mid">
-    <div class="flow v">
-      <div class="step c-navy"><b>Token embeddings + positional information</b></div>
-      <div class="arrow">↓</div>
-      <div class="step c-teal" style="border-style:dashed"><b>× N layers</b>
-        <div class="flow v mt-s">
-          <div class="step c-teal">Multi-head self-attention → add &amp; normalize</div>
-          <div class="arrow">↓</div>
-          <div class="step c-teal">Feed-forward network (per token) → add &amp; normalize</div>
-        </div>
-      </div>
-      <div class="arrow">↓</div>
-      <div class="step c-coral"><b>Head</b> (task-specific): classify · predict mask · next token</div>
-    </div>
-    <div class="stack small">
-      <div class="card c-navy flat"><b>Positions</b>: attention is order-blind, so position must be injected. Older models use learned absolute positions; modern LLMs use <b>RoPE</b> (rotary), which extends better to long contexts.</div>
-      <div class="card c-teal flat"><b>Residual + norm</b>: lets very deep stacks train stably.</div>
-      <div class="card c-coral flat"><b>The head</b> is small. Pretraining learns the body, and <i>your</i> task usually only needs a new head (Day 3).</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="encoder-decoder-encoder-decoder">
-  <div class="kicker">Three families</div>
-  <h2>Encoder, decoder, encoder–decoder</h2>
-  <table class="t small">
-    <tr><th></th><th>Encoder-only</th><th>Decoder-only</th><th>Encoder–decoder</th></tr>
-    <tr><td><b>Attention</b></td><td>Bidirectional: sees left and right</td><td>Causal: sees only the past</td><td>Bidirectional encoder + causal decoder</td></tr>
-    <tr><td><b>Pretraining</b></td><td>Masked language modeling</td><td>Next-token prediction</td><td>Span corruption / denoising</td></tr>
-    <tr><td><b>Best at</b></td><td>Understanding: classification, NER, embeddings</td><td>Generation, chat, reasoning, tools</td><td>Translation, summarization</td></tr>
-    <tr><td><b>Examples</b></td><td>BERT, XLM-R, AraBERT, CAMeLBERT, ModernBERT</td><td>GPT, Llama, Qwen, Jais, ALLaM</td><td>T5, mT5, BART, AraT5</td></tr>
-    <tr class="hl"><td><b>In this course</b></td><td>Day 1 classifiers, Day 3 fine-tuning</td><td>Day 2 LLM apps, Day 3 LoRA</td><td>Mentioned only</td></tr>
-  </table>
-  <div class="callout tip mt small"><b>Rule of thumb:</b> if the output is a <b>label, span or vector</b>, start with an encoder. If the output is <b>free text</b>, you need a decoder.</div>
-</section>
-
-<section class="slide" id="masked-lm-vs-next">
-  <div class="kicker">Pretraining objective</div>
-  <h2>Masked LM vs. next-token prediction</h2>
-  <div class="cols cols-2">
-    <div class="card c-teal"><h4>Encoder: fill the blank</h4>
-      <div class="tokens mt-s"><span>My</span><span>&lt;mask&gt;</span><span>has</span><span>not</span><span>arrived</span><span>yet,</span><span>I</span><span>ordered</span><span>it</span><span>last</span><span>week</span></div>
-      <table class="t small mt-s"><tr><th>Prediction</th><th class="num">p</th></tr><tr><td>order</td><td class="num">0.40</td></tr><tr><td>package</td><td class="num">0.22</td></tr><tr><td>refund</td><td class="num">0.08</td></tr></table>
-      <p class="xsmall muted mt-s">Illustrative probabilities</p>
-    </div>
-    <div class="card c-coral"><h4>Decoder: continue the text</h4>
-      <div class="tokens mt-s"><span>My</span><span>order</span><span>has</span><span>not</span><span>…</span></div>
-      <table class="t small mt-s"><tr><th>Next token</th><th class="num">p</th></tr><tr><td>arrived</td><td class="num">0.52</td></tr><tr><td>been</td><td class="num">0.31</td></tr><tr><td>shipped</td><td class="num">0.07</td></tr></table>
-      <p class="xsmall muted mt-s">Tomorrow: sampling from this distribution</p>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="tokenizer-body-head">
-  <div class="kicker">Hugging Face mental model</div>
-  <h2>Tokenizer + body + head</h2>
-  <div class="cols cols-2">
-    <pre class="code s"><code class="language-python">from transformers import AutoTokenizer, AutoModel
-import torch
-
-name = "google-bert/bert-base-multilingual-cased"
-tok = AutoTokenizer.from_pretrained(name)
-model = AutoModel.from_pretrained(name, output_attentions=True)
-
-enc = tok("You charged me twice for one order", return_tensors="pt")
-with torch.no_grad():
-    out = model(**enc)
-
-out.last_hidden_state.shape  # (batch, seq_len, hidden) = (1, n, 768)
-len(out.attentions)          # 12 layers
-out.attentions[0].shape      # (1, heads=12, n, n)</code></pre>
-    <div class="stack small">
-      <table class="t">
-        <tr><th>Class</th><th>Head</th></tr>
-        <tr><td><code>AutoModel</code></td><td>none: hidden states</td></tr>
-        <tr><td><code>…ForSequenceClassification</code></td><td>label per text</td></tr>
-        <tr><td><code>…ForTokenClassification</code></td><td>label per token (NER)</td></tr>
-        <tr><td><code>…ForMaskedLM</code></td><td>fill-mask</td></tr>
-        <tr><td><code>…ForCausalLM</code></td><td>next token (LLMs)</td></tr>
-      </table>
-      <div class="callout note"><code>pipeline("task", model=…)</code> wraps tokenize → model → post-process for quick experiments.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="reading-model-card-like">
-  <div class="kicker">Practical model choice</div>
-  <h2>Reading a model card like an engineer</h2>
+<section class="slide" data-label="Attention" id="attention-ask-offer-take" data-lo="LO1">
+  <div class="kicker">Attention</div>
+  <h2>Every token asks, every token offers, and each takes a weighted mix</h2>
   <div class="cols cols-3">
-    <div class="card c-navy"><h4>Fit</h4><ul class="small"><li>Languages and dialects covered</li><li>Training data domain</li><li>Max sequence length</li></ul></div>
-    <div class="card c-teal"><h4>Cost</h4><ul class="small"><li>Parameters → memory, latency</li><li>CPU-viable? Quantized versions?</li><li>Throughput at your batch size</li></ul></div>
-    <div class="card c-coral"><h4>Risk</h4><ul class="small"><li><b>License</b> (commercial use?)</li><li>Known biases and limitations</li><li>Maintained? Reproducible revision?</li></ul></div>
+    <div class="card c-teal"><h4>Query</h4><p class="small mb0">What this token is looking for.</p></div>
+    <div class="card c-cyan"><h4>Key</h4><p class="small mb0">What each token offers to be found by.</p></div>
+    <div class="card c-purple"><h4>Value</h4><p class="small mb0">What a token hands over when it is chosen.</p></div>
   </div>
-  <div class="callout tip mt small"><b>Pin the revision</b> in production: <code>from_pretrained(name, revision="&lt;commit-sha&gt;")</code>, because models on the Hub can change under you.</div>
+  <pre class="code mt" data-file="one head"><code class="language-python">weights = softmax(Q @ K.T / sqrt(d_k))   # (tokens, tokens): each row sums to 1
+output  = weights @ V                     # each token: a weighted average of the values</code></pre>
+  <aside class="notes"><p>Say it with the sentence from the lab: in "the meter is stopped although we use water", the word for "stopped" needs to know what is stopped. Its query matches the key of "meter"; it takes most of its mix from that value. Query, key and value are three linear layers applied to the same token vectors. Introduced in "Attention Is All You Need" (2017).</p><p>Sources: Vaswani et al., Attention Is All You Need.</p></aside>
 </section>
 
-<section class="slide lab top" data-lab="1.3" id="lab-1-3">
+<section class="slide" data-label="By hand" id="attention-by-hand" data-lo="LO1">
+  <div class="kicker">Lab 1.3, step 2</div>
+  <h2>Attention is eight lines, and the lab checks yours against the model's</h2>
   <div class="cols cols-2">
-    <div>
-      <div class="lab-tag">Lab 1.3 · 25 min</div>
-      <h2>Open the black box</h2>
-      <a class="nb" href="https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_3_transformers_inside.ipynb" target="_blank" rel="noopener">labs/D1_3_transformers_inside.ipynb ↗</a>
-      <p class="small mt">Look at hidden states and attention, implement attention in NumPy, and watch context change a word's vector.</p>
-    </div>
-    <ul class="checklist">
-      <li>Implement scaled dot-product attention in 10 lines of NumPy <span class="min">6'</span></li>
-      <li>Inspect hidden-state and attention shapes for a ticket <span class="min">4'</span></li>
-      <li>Plot an attention heatmap for chosen layer/head <span class="min">5'</span></li>
-      <li>Contextual embeddings: "charge" in two contexts <span class="min">5'</span></li>
-      <li>Fill-mask in English and Arabic with XLM-R <span class="min">5'</span></li>
-      <li class="stretch">✱ Causal mask: compare encoder vs. decoder attention patterns</li>
+    <pre class="code s" data-file="Lab 1.3"><code class="language-python">def attention_weights(q, k, causal=False):
+    scores = q @ k.T / math.sqrt(q.shape[-1])
+    if causal:                       # a decoder may not look ahead
+        future = ~torch.ones_like(scores, dtype=torch.bool).tril()
+        scores = scores.masked_fill(future, float("-inf"))
+    return scores.softmax(-1)</code></pre>
+    <ul class="bullets small">
+      <li>Dividing by the square root of the head's width keeps the softmax from saturating.</li>
+      <li>The <b>causal mask</b> is the only difference between an encoder's attention and a decoder's.</li>
+      <li>The check: your weights equal the model's own for layer 0, head 0, to five decimals.</li>
     </ul>
   </div>
+  <aside class="notes"><p>Minus infinity before the softmax becomes a weight of exactly zero after it. Point at the one "if": everything else about the two model families follows from that line and from what they were trained to predict.</p></aside>
 </section>
 
-<section class="slide quiz" id="you-need-route-2">
+<section class="slide" data-label="Blocks" id="heads-layers-blocks" data-lo="LO1">
+  <div class="kicker">The whole model</div>
+  <h2>A transformer is that operation, several heads wide and several layers deep</h2>
+  <div class="cols cols-2">
+    <div class="flow v">
+      <div class="step c-navy"><b>Token and position embeddings</b>one vector per token</div>
+      <div class="arrow">↓</div>
+      <div class="step c-teal"><b>Attention, several heads</b>each head looks for something else</div>
+      <div class="arrow">↓</div>
+      <div class="step c-cyan"><b>Feed-forward layer</b>each token on its own</div>
+      <div class="arrow">↓</div>
+      <div class="step c-purple"><b>Repeat for every layer</b>then a head for the task</div>
+    </div>
+    <table class="t small">
+      <tr><th>The course encoder</th><th class="num">Value</th></tr>
+      <tr><td>Layers × heads</td><td class="num">2 × 4</td></tr>
+      <tr><td>Width</td><td class="num">128</td></tr>
+      <tr><td>Vocabulary</td><td class="num">2,000</td></tr>
+      <tr><td>Parameters</td><td class="num">529,408</td></tr>
+      <tr><td>Of which token embeddings</td><td class="num">256,000</td></tr>
+    </table>
+  </div>
+  <aside class="notes"><p>Residual connections and layer normalisation hold it together and are in the code (labs/tinytf.py, 150 lines) for anyone who wants to read it. A published base-size encoder has the same parts at 12 layers, 12 heads, width 768 and about 110 million parameters. Half of the small model is its embedding table: at this size the vocabulary dominates.</p></aside>
+</section>
+
+<section class="slide" data-label="Two views" id="encoder-sees-both-ways" data-lo="LO1">
+  <div class="kicker">One mask apart</div>
+  <h2>An encoder reads both ways; a decoder only looks back</h2>
+  <div class="cols cols-2">
+    <div class="card c-teal"><h4>Encoder</h4>
+      <p class="small">Every token attends to every token. In the lab's sentence, 36% of the first layer's attention goes to later tokens.</p>
+      <p class="small mb0"><b>Trained to</b> fill in a hidden token from both sides.</p></div>
+    <div class="card c-coral"><h4>Decoder</h4>
+      <p class="small">A token attends to itself and earlier tokens. Attention to later tokens: exactly 0.</p>
+      <p class="small mb0"><b>Trained to</b> predict the next token from the left side.</p></div>
+  </div>
+  <div class="callout note small mt"><b>An attention map shows where a head looked.</b> It is not an explanation of the model's decision.</div>
+  <aside class="notes"><p>The 36% and the 0 are from the course's run of Lab 1.3, step 3, on the sentence "العداد واقف مع اننا نستخدم الماي". The callout matters: people over-read attention maps. They are a tool for checking mechanics (is the mask right, does a head attend to padding), not for explaining why a message was sent to billing. An encoder-decoder model has both stacks; it is used for translation and is not built in this course.</p></aside>
+</section>
+
+<section class="slide" data-label="Two games" id="fill-gap-or-continue" data-lo="LO1">
+  <div class="kicker">Measured in Lab 1.3</div>
+  <h2>Fill the gap, or predict what comes next</h2>
+  <div class="cols cols-2">
+    <div class="trace s">
+      <div class="ev user"><b>encoder</b>the water [MASK] is very weak on the second floor</div>
+      <div class="ev final"><b>fills</b>"pressure" first: it has read the rest of the sentence</div>
+    </div>
+    <div class="trace s">
+      <div class="ev user"><b>decoder</b>the water</div>
+      <div class="ev final"><b>continues</b>several openings stay likely: smells, coming, pressure, was</div>
+    </div>
+  </div>
+  <ul class="bullets small mt">
+    <li>A decision about a whole message wants the whole message in view: an <b>encoder</b> with a small head.</li>
+    <li>Writing text token by token is what a <b>decoder</b> is for; it can also be asked to decide, at a price.</li>
+  </ul>
+  <aside class="notes"><p>From the course's run of Lab 1.3, step 4, on the course's own small models, which know Sawaqi's messages and nothing else: ask them about anything else and they answer with water. That is a feature for teaching: the room can see where the knowledge comes from. The same contrast holds for large published models.</p></aside>
+</section>
+
+<section class="slide" data-label="Families" id="which-family-for-which-job" data-lo="LO1 LO5">
+  <div class="kicker">Choosing a family</div>
+  <h2>Match the family to the job before you match the model</h2>
+  <table class="t small">
+    <tr><th>Job at Sawaqi</th><th>Family</th><th>Why</th></tr>
+    <tr><td>Route a message to one of eight departments</td><td>Encoder + classification head</td><td>One pass, eight scores, milliseconds on a processor</td></tr>
+    <tr><td>Tag each word (a district, an account number)</td><td>Encoder + token-classification head</td><td>One score per token</td></tr>
+    <tr><td>Find similar messages</td><td>Encoder trained for embeddings</td><td>One vector per message</td></tr>
+    <tr><td>Draft a reply, extract into JSON without training data</td><td>Decoder, prompted</td><td>Writes text; needs no labels; costs per token</td></tr>
+  </table>
+  <aside class="notes"><p>A head is a small layer on top of the encoder's vectors: on the pooled vector for a classification, on every token's vector for token classification (the metric library seqeval scores that kind of output). Day 3 builds the first row. Day 2 uses the last row for extraction and for routing without labels, and then asks what it costs.</p></aside>
+</section>
+
+<section class="slide" id="check-which-family" data-lo="LO1">
   <div class="kicker">Checkpoint</div>
-  <h2>You need to route 2 million tickets per day into 27 intents with low latency. Which family do you start with?</h2>
-  <div class="opts">
-    <div class="opt" data-k="A">An encoder–decoder translation model</div>
-    <div class="opt" data-k="B" data-ok>An encoder (e.g., XLM-R or a multilingual MiniLM) with a classification head</div>
-    <div class="opt" data-k="C">A 70B decoder LLM with a prompt listing all intents</div>
+  <h2>Two million messages a day, eight departments</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">A national utility must label 2 million messages a day with one of eight departments, on its own servers without graphics processors, and has 50,000 labelled messages. Which design fits?</p>
+    <div class="opts">
+      <div class="opt" data-why="Reaches for the largest model: a decoder generates token by token and is far too slow and costly at this volume on processors">A large prompted decoder that writes the department name</div>
+      <div class="opt" data-why="Mixes up the families: an encoder-decoder is built to produce text such as a translation, not a single label">An encoder-decoder that translates the message into a label</div>
+      <div class="opt" data-why="Uses the embedding as the decision: nearest-neighbour search works, but it stores and searches 50,000 vectors per message where a head needs eight scores">An embedding model and a search over all labelled messages</div>
+      <div class="opt" data-ok>A small encoder with a classification head, fine-tuned on the labels</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The task is one decision per message with plenty of labels: an encoder reads the message once in both directions and a head returns eight scores, fast enough for processors.</div>
   </div>
-  <div class="why callout tip small"><b>B.</b> The output is a label, the volume is high and latency matters. Small encoders are cheap, fast and accurate after fine-tuning. Keep the LLM for cases where you need generated text.</div>
+  <aside class="notes"><p>Answer: D. Then ask what should be tried before it. A linear baseline on word counts, which is the next session: with 50,000 labels it may already be good enough.</p></aside>
 </section>
 
+<section class="slide lab" id="lab-1-3" data-auto="lab" data-lab="1.3">
+  <aside class="notes"><p>Walk the room. Nothing is downloaded and no key is needed. Usual problems: forgetting the square root (the assertion against the model's weights fails with a clear message); masking with zero instead of minus infinity (rows no longer match); encoding the decoder's input with the [CLS] token, which it was not trained with (use cls=False as the lab says). Remind people that Arabic tokens print right to left in a list and that this is display, not data.</p></aside>
+</section>
 
-<!-- ======================= SESSION 4: DECISION MODELS ======================= -->
-<section class="slide section" data-session="4" id="decision-models-when-answer">
-  <div class="kicker">Session 4</div>
-  <h1>Decision models: when the answer is a label</h1>
-  <ul class="bullets outcomes tight">
-    <li>Build zero-shot and embedding-based classifiers for ticket intent</li>
-    <li>Evaluate with per-class precision/recall/F1 and confusion matrices</li>
-    <li>Use thresholds to abstain and route uncertain cases to humans</li>
+<!-- ======================= SESSION 4 ======================= -->
+<section class="slide section" id="s4" data-auto="section" data-session="4">
+  <aside class="notes"><p>Session 4 opens LO5: the first row of the three-way comparison. The lab is AI-off: it is the kind of work the supervised check asks for.</p></aside>
+</section>
+
+<section class="slide" data-label="Decisions" id="most-nlp-is-a-decision" data-lo="LO5">
+  <div class="kicker">Decision models</div>
+  <h2>Most language work in production is a decision, not a paragraph</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Classification</h4><p class="small mb0">One label for a message: a department, urgent or not, a language variety.</p></div>
+    <div class="card c-cyan"><h4>Token classification</h4><p class="small mb0">One label per word: this is a district, this is an account number.</p></div>
+    <div class="card c-purple"><h4>Ranking</h4><p class="small mb0">An order over candidates: which earlier messages are most alike.</p></div>
+  </div>
+  <ul class="bullets small mt">
+    <li>A decision has a right answer, so it can be scored on thousands of examples.</li>
+    <li>It runs on every message, so its latency and cost are multiplied by the volume.</li>
   </ul>
-  <div class="sess-no">04</div>
+  <aside class="notes"><p>Routing is the decision this course follows through all three approaches. Ask where in the room's own organisations a paragraph-writing model is really doing a classification job at a paragraph's price.</p></aside>
 </section>
 
-<section class="slide" id="most-production-nlp-is">
-  <div class="kicker">Why this matters</div>
-  <h2>Most production NLP is classification</h2>
-  <div class="cols cols-2 mid">
-    <div class="flow v">
-      <div class="step c-navy"><b>Text</b>"you charged me twice, fix it NOW"</div>
-      <div class="arrow">↓</div>
-      <div class="step c-teal"><b>Decision model</b>label + confidence</div>
-      <div class="arrow">↓</div>
-      <div class="step c-coral"><b>Action</b>route to Billing queue · priority = urgent · SLA 2h</div>
-    </div>
+<section class="slide" data-label="Baselines" id="baseline-first" data-lo="LO5">
+  <div class="kicker">Baselines first</div>
+  <h2>Build the cheapest thing that could work, and make everything else beat it</h2>
+  <div class="cols cols-2">
+    <ul class="bullets">
+      <li>It takes an hour and sets the floor.</li>
+      <li>It shows whether the labels and the split are sound before a larger model hides the problem.</li>
+      <li>It is the fallback when the larger model is down, slow or withdrawn.</li>
+      <li>Sometimes it wins. Then you are done.</li>
+    </ul>
+    <div class="card c-coral"><h4>Without a baseline</h4><p class="small mb0">"The model scores 0.84" means nothing. Is that 20 points above word counts, or 1 point below?</p></div>
+  </div>
+  <aside class="notes"><p>This is the first durable idea of the course and the one assessors look for in the capstone: a comparison without a baseline row loses most of the first criterion. Give the room permission to be unimpressed by large models.</p></aside>
+</section>
+
+<section class="slide" data-label="Features" id="words-and-character-ngrams" data-lo="LO5">
+  <div class="kicker">The baseline's eyes</div>
+  <h2>Count words and character n-grams; weigh the rare ones up</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 1.4"><code class="language-python">make_union(
+    TfidfVectorizer(preprocessor=G.normalise,
+                    ngram_range=(1, 2)),         # words and pairs
+    TfidfVectorizer(preprocessor=G.normalise,
+                    analyzer="char_wb",
+                    ngram_range=(2, 4)))         # pieces of words
+# then LogisticRegression(C=10, max_iter=1000)</code></pre>
     <ul class="bullets small">
-      <li>Routing, triage, prioritization</li>
-      <li>Sentiment and complaint detection</li>
-      <li>Content moderation and spam</li>
-      <li>Compliance flags (PII present?)</li>
-      <li>Guardrails on LLM inputs and outputs</li>
+      <li><b>TF-IDF</b>: a word counts more when few messages contain it.</li>
+      <li><b>Character n-grams</b> survive a typo, a glued prefix (<span class="ar">بالفاتوره</span>) and an Arabizi spelling that varies.</li>
+      <li>A <b>linear model</b> gives each feature one weight per department: you can read why it decided.</li>
+      <li>400 messages give 13,005 features.</li>
     </ul>
   </div>
-  <div class="callout tip mt small">Decision models are <b>measurable, fast, cheap and auditable</b>. They are often the backbone that LLM features sit on.</div>
+  <aside class="notes"><p>The preprocessor is this morning's normalise: Session 1 pays off here. Without it the baseline's macro F1 on this data drops by about five points, which is worth showing if a participant asks whether normalising matters. Logistic regression is a single layer; scikit-learn trains it in under a second.</p></aside>
 </section>
 
-<section class="slide" id="six-ways-classify-ticket">
-  <div class="kicker">The ladder</div>
-  <h2>Six ways to classify a ticket</h2>
-  <table class="t small">
-    <tr><th>Approach</th><th>Labelled data</th><th>Latency / cost</th><th>Typical quality</th><th>When</th></tr>
-    <tr><td>1 · Keyword rules</td><td>none</td><td>µs / free</td><td>brittle</td><td>Hard constraints, bootstrapping</td></tr>
-    <tr><td>2 · TF-IDF + logistic regression</td><td>hundreds+</td><td>µs / free</td><td>decent baseline</td><td><b>Always run it</b> as a baseline</td></tr>
-    <tr><td>3 · Zero-shot (NLI / label embeddings)</td><td>none</td><td>ms / low</td><td>fair</td><td>Cold start, changing labels</td></tr>
-    <tr class="hl"><td>4 · Frozen embeddings + linear head</td><td>tens–hundreds</td><td>ms / low</td><td>good</td><td>Fast, strong default</td></tr>
-    <tr><td>5 · Fine-tuned encoder</td><td>hundreds–thousands</td><td>ms / low</td><td>best per $</td><td>Day 3</td></tr>
-    <tr><td>6 · LLM prompting</td><td>few examples</td><td>100s ms–s / $$</td><td>good, variable</td><td>Day 2: low volume, nuance</td></tr>
-  </table>
-</section>
-
-<section class="slide" id="reuse-model-trained-does">
-  <div class="kicker">Zero-shot classification</div>
-  <h2>Reuse a model trained for "does A imply B?"</h2>
+<section class="slide" data-label="Macro F1" id="macro-f1-by-hand" data-lo="LO5">
+  <div class="kicker">The metric, by hand</div>
+  <h2>Macro F1 gives every department one vote, however small</h2>
   <div class="cols cols-2">
-    <div>
-      <p class="small">An NLI model scores whether a <b>premise</b> entails a <b>hypothesis</b>. Turn each label into a hypothesis:</p>
-      <div class="card c-teal flat small"><b>Premise</b>: "I was billed twice for the same order"<br><b>Hypothesis</b>: "This customer message is about <u>payment</u>."</div>
-      <ul class="bullets small mt">
-        <li>No training data needed; labels can change at runtime.</li>
-        <li><b>Label wording matters a lot</b>: "billing problem" ≠ "PAYMENT".</li>
-        <li>Cost scales with the number of labels (one pass per label).</li>
-      </ul>
-    </div>
-    <pre class="code s"><code class="language-python">import torch
-from transformers import pipeline
-
-clf = pipeline(
-    "zero-shot-classification",
-    model="MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-    dtype=torch.float32,   # checkpoint is fp16: slow on CPU
-)
-labels = ["refund", "delivery", "payment problem",
-          "account access", "order changes", "invoice"]
-clf("لقد تم خصم المبلغ مرتين من بطاقتي",
-    candidate_labels=labels,
-    hypothesis_template="This customer message is about {}.")
-# {'labels': [...], 'scores': [...]}  label wording changes the ranking</code></pre>
-  </div>
-</section>
-
-<section class="slide" id="best-value-effort-classifier">
-  <div class="kicker">Embeddings + a linear head</div>
-  <h2>The best value-for-effort classifier</h2>
-  <div class="cols cols-2">
-    <pre class="code s"><code class="language-python">from sentence_transformers import SentenceTransformer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
-
-enc = SentenceTransformer("intfloat/multilingual-e5-small")
-X_tr = enc.encode(["query: " + t for t in train.text], normalize_embeddings=True)
-X_te = enc.encode(["query: " + t for t in test.text],  normalize_embeddings=True)
-
-clf = LogisticRegression(max_iter=2000, C=4.0)
-clf.fit(X_tr, train.intent)
-
-pred = clf.predict(X_te)
-proba = clf.predict_proba(X_te).max(axis=1)   # confidence
-print(classification_report(test.intent, pred, digits=3))</code></pre>
-    <div class="stack small">
-      <div class="callout tip"><b>Encoder is frozen:</b> encode once, then train in seconds on CPU. Swapping classifiers is cheap.</div>
-      <div class="callout note"><b>Bonus:</b> the same vectors power search. One embedding pass, two features.</div>
-      <div class="callout warn"><b>Compare</b> against TF-IDF + LR. If the gain is small, ask why.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="accuracy-is-not-enough">
-  <div class="kicker">Evaluation</div>
-  <h2>Accuracy is not enough</h2>
-  <div class="cols cols-2">
-    <div>
-      <table class="t small">
-        <tr><th>Metric</th><th>Meaning for "complaint" class</th></tr>
-        <tr><td><b>Precision</b></td><td>Of tickets we flagged as complaint, how many were?</td></tr>
-        <tr><td><b>Recall</b></td><td>Of real complaints, how many did we catch?</td></tr>
-        <tr><td><b>F1</b></td><td>Harmonic mean of the two</td></tr>
-        <tr><td><b>Macro-F1</b></td><td>Average over classes: rare classes count equally</td></tr>
-        <tr><td><b>Weighted-F1</b></td><td>Average weighted by class frequency</td></tr>
-      </table>
-    </div>
-    <div class="stack small">
-      <div class="callout warn"><b>Imbalance trap:</b> if 95% of tickets are "other", a model that always says "other" has 95% accuracy and zero use.</div>
-      <div class="callout tip"><b>Confusion matrix</b> shows <i>which</i> classes get mixed up (e.g., <code>get_refund</code> vs <code>track_refund</code>). That's where you focus labelling and fixes.</div>
-      <div class="callout note"><b>Slice it:</b> report English vs. Arabic, short vs. long, dialect vs. MSA.</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="let-model-say-i">
-  <div class="kicker">Thresholds and abstention</div>
-  <h2>Let the model say "I'm not sure"</h2>
-  <div class="cols cols-2 mid">
-    <div class="figure">
-      <svg viewBox="0 0 560 340" font-family="IBM Plex Sans, sans-serif" font-size="15">
-        <rect width="560" height="340" fill="#fff"/>
-        <line x1="60" y1="290" x2="530" y2="290" stroke="#5b6472"/><line x1="60" y1="30" x2="60" y2="290" stroke="#5b6472"/>
-        <text x="200" y="325" fill="#5b6472">confidence threshold →</text>
-        <text x="14" y="40" fill="#5b6472" font-size="13">100%</text><text x="22" y="292" fill="#5b6472" font-size="13">0%</text>
-        <path d="M60 110 C 200 100, 330 80, 420 60 S 510 45, 530 40" stroke="#00ae8d" stroke-width="4" fill="none"/>
-        <path d="M60 40 C 220 45, 330 70, 400 120 S 500 230, 530 270" stroke="#e96852" stroke-width="4" fill="none"/>
-        <line x1="340" y1="30" x2="340" y2="290" stroke="#ffb548" stroke-width="3" stroke-dasharray="6 6"/>
-        <text x="350" y="275" fill="#b97800" font-weight="600">chosen τ</text>
-        <text x="380" y="52" fill="#00ae8d" font-weight="600">accuracy on accepted</text>
-        <text x="120" y="70" fill="#e96852" font-weight="600">coverage (auto-handled)</text>
-      </svg>
-      <div class="caption">Raising the threshold improves accuracy on what you keep, but more goes to humans.</div>
-    </div>
-    <div>
-      <pre class="code s"><code class="language-python">def route(text, tau=0.6):
-    p = clf.predict_proba(embed([text]))[0]
-    i = p.argmax()
-    if p[i] &lt; tau:
-        return {"intent": None, "action": "human_review"}
-    return {"intent": clf.classes_[i], "conf": float(p[i])}</code></pre>
-      <ul class="bullets small mt">
-        <li>Pick τ from <b>validation</b> data, not test.</li>
-        <li>Thresholds can be <b>per class</b>: stricter for costly errors.</li>
-        <li>Raw probabilities are often <b>over-confident</b>. Calibrate if the score drives decisions.</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="not-all-errors-cost">
-  <div class="kicker">Think like the business</div>
-  <h2>Not all errors cost the same</h2>
-  <div class="cols cols-3">
-    <div class="card c-coral"><h4>Missed urgent complaint</h4><p class="small mb0">Customer churns, social-media escalation. <b>High cost</b>, so optimize recall for <code>complaint</code> and <code>payment_issue</code>.</p></div>
-    <div class="card c-amber"><h4>Wrong queue</h4><p class="small mb0">An agent re-routes it, costing minutes. <b>Medium cost</b>.</p></div>
-    <div class="card c-teal"><h4>Newsletter mislabeled</h4><p class="small mb0">Barely noticed. <b>Low cost</b>, so automate aggressively.</p></div>
-  </div>
-  <div class="callout tip mt">Write the <b>cost table first</b>, then pick metrics and thresholds that minimise expected cost. That's what you defend in your capstone.</div>
-</section>
-
-<section class="slide lab top" data-lab="1.4" id="lab-1-4">
-  <div class="cols cols-2">
-    <div>
-      <div class="lab-tag">Lab 1.4 · 30 min</div>
-      <h2>Ticket classification + Day 1 integration</h2>
-      <a class="nb" href="https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_4_decision_models.ipynb" target="_blank" rel="noopener">labs/D1_4_decision_models.ipynb ↗</a>
-      <p class="small mt">Climb the ladder (TF-IDF → zero-shot → embeddings + LR), evaluate properly, add abstention, and combine it with this morning's search.</p>
-    </div>
-    <ul class="checklist">
-      <li>TF-IDF + logistic regression baseline <span class="min">5'</span></li>
-      <li>Zero-shot NLI on categories; try two label wordings <span class="min">7'</span></li>
-      <li>Embeddings + logistic regression on intents <span class="min">5'</span></li>
-      <li>Report, confusion matrix, EN vs. AR slice <span class="min">5'</span></li>
-      <li>Coverage–accuracy curve; choose τ on validation <span class="min">4'</span></li>
-      <li>Integrate: <code>process_ticket()</code> = classify + top-3 similar <span class="min">4'</span></li>
-      <li class="stretch">✱ kNN-vote classifier from the search index; compare errors</li>
+    <table class="t small">
+      <tr><th>Department</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th></tr>
+      <tr><td>billing (large)</td><td class="num">0.90</td><td class="num">0.90</td><td class="num">0.90</td></tr>
+      <tr><td>supply (large)</td><td class="num">0.80</td><td class="num">1.00</td><td class="num">0.89</td></tr>
+      <tr><td>connections (small)</td><td class="num">1.00</td><td class="num">0.20</td><td class="num">0.33</td></tr>
+      <tr class="hl"><td>Macro F1</td><td></td><td></td><td class="num">0.71</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li><b>Precision</b>: of the messages sent to a department, how many belonged there.</li>
+      <li><b>Recall</b>: of the messages that belonged there, how many arrived.</li>
+      <li><b>F1</b> = 2PR / (P + R). <b>Macro</b>: the plain mean over departments.</li>
+      <li>Accuracy would hide the small department; macro F1 puts it on the slide.</li>
     </ul>
   </div>
+  <aside class="notes"><p>The table is a worked example, not Sawaqi's numbers: (0.90 + 0.89 + 0.33) / 3 = 0.71. The lab asks participants to write macro F1 without scikit-learn and checks it against the library. The supervised entry and exit checks ask for this calculation by hand.</p></aside>
 </section>
 
-<!-- ======================= WRAP-UP ======================= -->
-<section class="slide" data-label="Day 1 wrap-up" id="what-you-built-today">
-  <div class="kicker">Day 1 deliverable</div>
-  <h2>What you built today</h2>
-  <div class="flow">
-    <div class="step c-navy"><b>Ticket</b>EN or AR</div>
-    <div class="arrow">→</div>
-    <div class="step c-teal"><b>Embed</b>multilingual-e5-small</div>
-    <div class="arrow">→</div>
-    <div class="step c-teal"><b>Search</b>top-k similar historical cases</div>
-    <div class="arrow">→</div>
-    <div class="step c-coral"><b>Classify</b>intent + confidence → abstain</div>
-    <div class="arrow">→</div>
-    <div class="step c-amber"><b>Evaluate</b>Hit@5, MRR, macro-F1, by language</div>
+<section class="slide" data-label="By variety" id="baseline-by-variety" data-lo="LO5">
+  <div class="kicker">Measured in Lab 1.4 · 403 test messages</div>
+  <h2>The baseline scores 0.85, and half of that for Arabizi</h2>
+  <div class="cols cols-2">
+    <div class="bars">
+      <div class="row"><span>All</span><div class="bar c-navy" style="--w:85%"></div><span class="val">0.85</span></div>
+      <div class="row"><span>MSA</span><div class="bar c-teal" style="--w:94%"></div><span class="val">0.94</span></div>
+      <div class="row"><span>Gulf</span><div class="bar c-teal" style="--w:86%"></div><span class="val">0.86</span></div>
+      <div class="row"><span>English</span><div class="bar c-teal" style="--w:81%"></div><span class="val">0.81</span></div>
+      <div class="row"><span>Arabizi</span><div class="bar c-coral" style="--w:42%"></div><span class="val">0.42</span></div>
+    </div>
+    <div class="stack">
+      <div class="stat"><div class="big">4 ms</div><div class="lbl">median per message on one laptop processor; 5 ms at the 95th percentile</div></div>
+      <div class="card c-coral flat"><h4>Report every row</h4><p class="small mb0">"0.85" is true and hides one customer in eight.</p></div>
+    </div>
   </div>
-  <div class="cols cols-3 mt">
-    <div class="card c-teal"><h4>Remember</h4><p class="small mb0">Tokens drive cost and context. Measure fertility for Arabic.</p></div>
-    <div class="card c-cyan"><h4>Remember</h4><p class="small mb0">Embeddings + a linear head is a strong default. Always compare with a baseline.</p></div>
-    <div class="card c-coral"><h4>Remember</h4><p class="small mb0">Pick thresholds from error costs, on validation data.</p></div>
-  </div>
+  <aside class="notes"><p>Macro F1 on the held-out test split from the course's run of Lab 1.4: trained on 402 labelled messages, split by customer. Latency will differ on each laptop; the order of magnitude will not. This row is what Day 2's prompted model and Day 3's fine-tuned encoder must beat, and "beat" has four columns.</p></aside>
 </section>
 
-<section class="slide" data-label="Capstone" id="form-teams-2-3">
-  <div class="kicker">Capstone: start thinking</div>
-  <h2>Form teams of 2–3 by the end of today</h2>
-  <div class="cols cols-3">
-    <div class="card c-teal"><h4>1 · Ticket Assistant</h4><p class="small mb0">Classify tickets, retrieve similar cases, draft grounded replies.</p></div>
-    <div class="card c-cyan"><h4>2 · Arabic Document Intelligence</h4><p class="small mb0">Extract and categorize information from Arabic documents; answer questions with evidence.</p></div>
-    <div class="card c-coral"><h4>3 · Voice of Customer</h4><p class="small mb0">Classify feedback, cluster issues with embeddings, generate insight summaries.</p></div>
+<section class="slide" data-label="Thin cells" id="no-examples-no-skill" data-lo="LO5">
+  <div class="kicker">Why Arabizi fails</div>
+  <h2>A model cannot learn a pair it has no examples of</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Department</th><th class="num">Arabizi messages in training</th><th class="num">Arabizi test messages right</th></tr>
+      <tr><td>supply</td><td class="num">11</td><td class="num">8 of 16</td></tr>
+      <tr><td>billing</td><td class="num">7</td><td class="num">9 of 10</td></tr>
+      <tr><td>meters</td><td class="num">4</td><td class="num">4 of 7</td></tr>
+      <tr><td>quality</td><td class="num">2</td><td class="num">0 of 3</td></tr>
+      <tr><td>wastewater</td><td class="num">0</td><td class="num">0 of 2</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Accuracy on Arabizi is 0.57; macro F1 is 0.42, because the empty departments count in full.</li>
+      <li>The fix is not a cleverer model first. It is labels where there are none, or a person for those messages.</li>
+    </ul>
   </div>
-  <div class="callout tip mt"><b>Tonight (optional, 30 min):</b> pick a use case and find or describe your data. Bring one sentence: <i>"Our system takes ___ and produces ___, measured by ___."</i></div>
+  <aside class="notes"><p>From the first and third cells of Lab 1.4. The training split holds 40 Arabizi messages out of 402, and none for connections or wastewater. Day 3's first lab turns this table into a check to run before any training.</p></aside>
 </section>
 
-<section class="slide dark" data-label="Next" id="llms-applied-nlp-systems">
+<section class="slide" data-label="Abstain" id="abstain-and-hand-off" data-lo="LO5 LO6">
+  <div class="kicker">A router may say "I do not know"</div>
+  <h2>Below a confidence threshold, hand the message to a person</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th class="num">Threshold</th><th class="num">Handed off</th><th class="num">Accuracy on the rest</th></tr>
+      <tr><td class="num">0.3</td><td class="num">40 of 403</td><td class="num">0.94</td></tr>
+      <tr><td class="num">0.4</td><td class="num">79</td><td class="num">0.97</td></tr>
+      <tr><td class="num">0.5</td><td class="num">128</td><td class="num">0.98</td></tr>
+      <tr><td class="num">0.6</td><td class="num">168</td><td class="num">1.00</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Every point on this table is a staffing decision: people cost more than mistakes, or the reverse.</li>
+      <li>At 0.5, 31 of the 51 Arabizi messages go to a person.</li>
+      <li>The threshold belongs in the model card, with its hand-off rate. Day 3 writes it there.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the stretch of Lab 1.4. A linear model's probability is not perfectly calibrated, yet it orders messages well enough to choose a threshold on validation data. Hessa owns this number, not the engineer: the engineer shows the table.</p></aside>
+</section>
+
+<section class="slide" id="check-macro-f1" data-lo="LO5">
+  <div class="kicker">Checkpoint</div>
+  <h2>One number went up. Did the router get better?</h2>
+  <div class="quiz" data-type="single" data-lo="LO5">
+    <p class="lead">A new version raises test macro F1 from 0.85 to 0.87: MSA 0.94 to 0.97, Gulf 0.86 to 0.90, English 0.81 to 0.84, Arabizi 0.42 to 0.31. What do you report?</p>
+    <div class="opts">
+      <div class="opt" data-why="Reads the average only: it rose because the large varieties rose, while one customer group lost a quarter of its score">An improvement of two points, ready to ship</div>
+      <div class="opt" data-ok>A gain for three varieties, a loss for Arabizi, and a hand-off rule for Arabizi</div>
+      <div class="opt" data-why="Treats the small group as noise: 51 messages are few, but an 11-point drop on them is a pattern to investigate, not to ignore">No real change, since the Arabizi test set is too small to matter</div>
+      <div class="opt" data-why="Throws away a real gain: three varieties improved, and the Arabizi loss can be contained with a hand-off rule">A regression that must be rolled back in full</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The average hides a group that got worse. A hand-off rule for that group lets the other three keep their gain.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. The numbers after the arrow are invented for the question; the "before" numbers are the lab's. If the room argues for option C, agree that 51 messages give a wide interval, then ask what they would do to find out: more Arabizi test messages.</p></aside>
+</section>
+
+<section class="slide lab" id="lab-1-4" data-auto="lab" data-lab="1.4">
+  <aside class="notes"><p>AI assistants off for this lab: say it aloud and ask people to close them. Walk the room. Usual problems: a macro F1 that divides by all eight departments when one never appears in a subgroup (the lab's rule: leave out a label that is in neither list); timing the batch instead of one message at a time; forgetting sublinear_tf, which changes the numbers slightly. The saved predictions feed Labs 2.4, 3.2 and 3.4; a supplied copy exists, so nobody is blocked tomorrow.</p></aside>
+</section>
+
+<!-- ======================= CLOSING ======================= -->
+<section class="slide" data-label="Recap" id="day-1-recap">
+  <div class="kicker">Day 1 recap</div>
+  <h2>Text became numbers, and you have a number to beat</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li><b>Tokens</b> are the unit of cost; the same message costs up to three times more in a variety the tokeniser never saw.</li>
+      <li><b>Normalise</b> before matching: 1,052 unknown pieces became 0.</li>
+      <li><b>Embeddings</b> search by meaning; identifiers need an exact lookup.</li>
+    </ul>
+    <ul class="bullets small">
+      <li><b>Attention</b>: an encoder reads both ways, a decoder looks back.</li>
+      <li><b>Baseline</b>: macro F1 0.85, Arabizi 0.42, 4 ms a message.</li>
+      <li><b>Report by variety</b>, always.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Ask each table for the one number from today they would put in front of Hessa. Then the follow-up task for tonight, ten minutes: finish the two cause sentences in the tokeniser note.</p></aside>
+</section>
+
+<section class="slide dark" data-label="Tomorrow" id="tomorrow-generate">
   <div class="kicker">Tomorrow · Day 2</div>
-  <h1>LLMs &amp; Applied NLP Systems</h1>
-  <p class="lead mt">From predicting labels to generating grounded, structured answers.</p>
-  <div class="cols cols-4 gap-s mt">
-    <div class="card c-teal"><h4>Generative LLMs</h4><p class="small mb0">Next-token prediction, chat templates, decoding</p></div>
-    <div class="card c-cyan"><h4>Structured outputs</h4><p class="small mb0">Prompting, few-shot, validated JSON</p></div>
-    <div class="card c-coral"><h4>RAG</h4><p class="small mb0">Chunking, retrieval, reranking, grounding</p></div>
-    <div class="card c-amber"><h4>Model selection</h4><p class="small mb0">Encoder vs. LLM: accuracy, latency, cost</p></div>
-  </div>
+  <h2>Generate: replies, extraction and a prompted router, each with a measure</h2>
+  <p class="lead">Sample from a decoder and count what it invents, mask personal fields and extract into a validated schema, ground replies in the tariff rule book, and put two open-weight models in one table with today's baseline.</p>
+  <aside class="notes"><p>Tomorrow's labs call a hosted chat model. Ask everyone to check their key tonight with the setup notebook. Every lab tomorrow starts from supplied files; nothing from today is required.</p></aside>
 </section>

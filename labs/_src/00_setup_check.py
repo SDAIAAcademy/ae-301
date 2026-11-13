@@ -1,131 +1,72 @@
 # %% [markdown]
 # # Lab 0 · Setup check
 #
-# Run this notebook **before Day 1** (it takes 5–15 minutes, mostly downloads). It:
+# Run this notebook **before Day 1**. It takes about two minutes. It checks the Python packages, reads the
+# course data, loads the course's two small models, fetches the three tokeniser files of Lab 1.1 and calls
+# the hosted model once. Nothing downloads a language model: the only downloads are three tokeniser files
+# of a few megabytes.
 #
-# - installs packages on Colab and prepares the course data,
-# - checks your Python packages and whether a GPU is available,
-# - downloads every model used in the labs into the local Hugging Face cache, so class time isn't spent waiting,
-# - runs a 30-second smoke test of embeddings and the LLM.
-#
-# On Colab: **Runtime → Change runtime type → T4 GPU** first. Locally: `cd labs && uv sync && uv run jupyter lab`.
+# Locally: `cd labs && uv sync && uv run jupyter lab`. In Colab: run the first cell; add
+# `OPENROUTER_API_KEY` in the Secrets panel and allow notebook access.
 
 # %%
-import os, sys, subprocess
-from pathlib import Path
-
-IN_COLAB = "google.colab" in sys.modules
-if IN_COLAB:
-    REPO_URL = "https://github.com/SDAIAAcademy/applied-nlp.git"
-    if not Path("/content/applied-nlp").exists():
-        subprocess.run(["git", "clone", "-q", REPO_URL, "/content/applied-nlp"], check=True)
-    os.chdir("/content/applied-nlp/labs")
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements-colab.txt"], check=True)
-else:
-    while not Path("nlp_utils.py").exists() and Path.cwd() != Path.cwd().parent:
-        os.chdir("..")  # solutions/ notebooks run from labs/
-if not Path("data/tickets_train.csv").exists():
-    subprocess.run([sys.executable, "prepare_data.py"], check=True)
-sys.path.insert(0, os.getcwd())
-
-import nlp_utils as U
-U.set_seed(42)
-print("device:", U.device(), "| quick mode:", U.QUICK)
+#@setup
+G.banner("Setup check")
 
 # %% [markdown]
-# ## 1 · Packages and hardware
+# ## 1 · Packages
 
 # %%
 import importlib
 import platform
 
-packages = ["torch", "transformers", "tokenizers", "datasets", "accelerate", "peft",
-            "sentence_transformers", "faiss", "rank_bm25", "sklearn", "pandas", "pydantic",
-            "openai", "gradio"]
-rows = []
-for name in packages:
+print("Python", platform.python_version(), "|", platform.system())
+missing = []
+for name in ["numpy", "pandas", "sklearn", "torch", "tokenizers", "huggingface_hub", "openai", "pydantic", "fastapi", "httpx", "matplotlib"]:
     try:
         mod = importlib.import_module(name)
-        rows.append((name, getattr(mod, "__version__", "ok")))
-    except ImportError as e:
-        rows.append((name, f"MISSING ({e.__class__.__name__})"))
-
-import pandas as pd
-import torch
-
-print("Python", platform.python_version(), "|", platform.system())
-if torch.cuda.is_available():
-    props = torch.cuda.get_device_properties(0)
-    print(f"GPU: {props.name}, {props.total_memory / 1e9:.1f} GB")
-else:
-    print("No CUDA GPU: Days 1-2 run fine on CPU; use Colab with a T4 for Labs 3.2 and 3.3.")
-pd.DataFrame(rows, columns=["package", "version"])
+        print(f"  ✅ {name} {getattr(mod, '__version__', '')}")
+    except ImportError:
+        missing.append(name)
+        print(f"  ❌ {name} is missing")
+assert not missing, f"install the missing packages: {missing} (locally: uv sync; in Colab: run the first cell again)"
 
 # %% [markdown]
-# ## 2 · Data
-#
-# `prepare_data.py` downloaded the Bitext customer-support dataset and wrote the splits below. Arabic tickets are hand-written (MSA and Gulf dialect).
+# ## 2 · The case data and the course's models
 
 # %%
-summary = []
-for split in ["train", "val", "test", "history", "ar_test"]:
-    df = U.load_tickets(split)
-    summary.append({"split": split, "rows": len(df), "intents": df.intent.nunique(), "lang": df.lang.iloc[0]})
-print("KB sections:", len(U.load_kb()))
-pd.DataFrame(summary)
+import tinytf as T
+
+m = G.messages()
+print(len(m), "messages |", m["split"].value_counts().to_dict())
+print(m["variety"].value_counts().to_dict())
+assert len(m) == 2000 and len(G.rules()) == 10 and len(G.jsonl("queries.jsonl")) == 40
+tok = T.load_tokenizer()
+for name in ["ghayth-enc-tiny.pt", "ghayth-dec-tiny.pt"]:
+    print(f"  ✅ {name}: {T.count_params(T.load(G.MODELS / name)):,} parameters")
+router, labels = T.load_classifier(G.MODELS / "ghayth-enc-routing-full.pt")
+print("  ✅ the supplied fine-tuned encoder routes to", len(labels), "departments")
 
 # %% [markdown]
-# ## 3 · Download every model used in the labs
-#
-# Already-downloaded models are skipped. Total is roughly 6 GB with the 1.5B LLM (GPU), less on CPU.
+# ## 3 · Tokeniser files from the Hub (Lab 1.1)
 
 # %%
-from huggingface_hub import snapshot_download
-
-models = [
-    U.MODELS["embed"], U.MODELS["nli"], U.MODELS["encoder"], U.MODELS["reranker"], U.MODELS["lora_base"],
-    "gpt2", "google-bert/bert-base-multilingual-cased", "FacebookAI/xlm-roberta-base", "aubmindlab/bert-base-arabertv02",
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-]
-if torch.cuda.is_available():
-    models.append(U.MODELS["llm_gpu"])
-
-skip = ["*.onnx", "*.h5", "*.msgpack", "*.ot", "*.tflite", "onnx/*", "openvino/*", "*.gguf", "coreml/*"]
-failed = []
-for m in models:
-    for attempt in range(3):  # the Hub occasionally drops connections; retry
-        try:
-            snapshot_download(m, ignore_patterns=skip)
-            print(f"ok    {m}")
-            break
-        except Exception as e:
-            err = e
-    else:
-        failed.append(m)
-        print(f"FAIL  {m}: {str(err)[:200]}")
-print("All models downloaded." if not failed else f"Re-run this cell later for: {failed}")
+toks = G.hub_tokenisers()
+for name, t in toks.items():
+    print(f"  ✅ {name}: {t.get_vocab_size():,} entries")
+if len(toks) < 3:
+    print("  A tokeniser file could not be fetched (a blocked network?). Lab 1.1 then uses the reference counts.")
 
 # %% [markdown]
-# ## 4 · Smoke test
+# ## 4 · One call to the hosted model (Day 2) and one embedding (Lab 1.2)
 #
-# One embedding similarity and one LLM reply. If you set `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` in `labs/.env`, the LLM call goes to that OpenAI-compatible endpoint instead of the local model.
+# Without a working key the labs still run: a scripted stand-in answers and every lab says so in its first
+# line. Its numbers are not a model's, so get a key before Day 2. Free endpoints have a daily request limit;
+# `ANLP_QUICK=1` keeps every lab inside it.
 
 # %%
-docs = ["Where is my refund?", "How do I change my password?", "I want to cancel my order"]
-queries = ["لم يصلني المبلغ المسترد حتى الآن", "كيف أغير كلمة المرور؟"]
-D = U.embed(docs, prefix="passage: ")
-Q = U.embed(queries, prefix="query: ")
-for q, scores in zip(queries, Q @ D.T):
-    print(f"{q}  ->  {docs[scores.argmax()]}   scores={scores.round(3)}")
-
-llm = U.get_llm()
-reply = llm.chat([{"role": "user", "content": "In one short sentence: what is a support ticket?"}], max_new_tokens=40)
-print(reply)
-print(llm.last_usage)
-
-# %% [markdown]
-# ## You're ready
-#
-# If every package shows a version, every model says `ok`, and the smoke test printed a reply, you're set for Day 1.
-
-Each Arabic query should retrieve the matching English sentence: cross-lingual retrieval, which we use all week. Notice how close the scores are (all around 0.75–0.86). e5 similarities are compressed into a narrow range, so compare **rankings**, not absolute values.
+r = G.chat([{"role": "user", "content": "Reply with the single word: ready"}], max_tokens=5)
+print("chat:", "STAND-IN (no working key)" if r["standin"] else f"{r['model']} answered {r['text']!r} in {r['latency_s']} s")
+v = G.embed(["الماي مقطوع عندنا من الصبح"])
+print("embedding:", "STAND-IN (no working key)" if G.standin() else f"{G.EMBED_MODEL}, {v.shape[1]} dimensions")
+print("\nSetup check finished.", "You are ready for all three days." if not G.standin() else "Days 1 and 3 will run as they are; fix the key before Day 2.")

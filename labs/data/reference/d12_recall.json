@@ -1,0 +1,16 @@
+{
+ "char n-grams": {
+  "msa": 0.329,
+  "gulf": 0.288,
+  "arabizi": 0.02,
+  "en": 0.4,
+  "all": 0.259
+ },
+ "embedding": {
+  "msa": 0.209,
+  "gulf": 0.333,
+  "arabizi": 0.02,
+  "en": 0.467,
+  "all": 0.257
+ }
+}

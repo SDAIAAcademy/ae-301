@@ -1,0 +1,23 @@
+[
+ {
+  "setting": "focused",
+  "exact": 0.6,
+  "overlap": 0.86,
+  "replies_with_invented_detail": 2,
+  "replies": 20
+ },
+ {
+  "setting": "balanced",
+  "exact": 0.1,
+  "overlap": 0.418,
+  "replies_with_invented_detail": 8,
+  "replies": 20
+ },
+ {
+  "setting": "loose",
+  "exact": 0.0,
+  "overlap": 0.285,
+  "replies_with_invented_detail": 11,
+  "replies": 20
+ }
+]

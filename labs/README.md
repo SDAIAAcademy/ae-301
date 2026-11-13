@@ -1,72 +1,95 @@
-# Applied NLP Engineering: labs
+# Applied Natural Language Processing Engineering: labs
 
-Hands-on notebooks for the SDAIA Academy **Applied NLP Engineering** bootcamp (AI Engineering track). Every lab builds a piece of one system: an **intelligent support-ticket assistant** for English and Arabic customer messages.
+Hands-on notebooks for the SDAIA Academy course **AE-301 Applied Natural Language Processing Engineering (الهندسة التطبيقية لمعالجة اللغات الطبيعية)**. Every lab builds a piece of **Ghayth (غيث)**, the language layer of **Sawaqi Water Company**, a fictional regional water utility whose customers write in Modern Standard Arabic, Gulf dialect, Arabic in Latin script (Arabizi) and English. Each lab starts from supplied files, so none depends on an earlier one.
+
+**Nothing downloads a language model.** Generative and embedding models are free hosted open-weight models reached over an API. The models you open, fine-tune and adapt are the course's own small encoder and decoder (about half a million parameters each, in `models/`), which train on a laptop processor in under a minute. A laptop CPU or a Colab CPU runtime is enough for all three days.
 
 ## Quick start
 
-**Google Colab (recommended for Day 3)**
-1. Open a notebook from the [course page](https://sdaiaacademy.github.io/applied-nlp/), or directly: `https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/<notebook>.ipynb`.
-2. *Runtime → Change runtime type → T4 GPU*, then run the first cell. It clones this repository, installs `requirements-colab.txt` and prepares the data.
+**1 · Get a free OpenRouter key** at <https://openrouter.ai/keys>. Free models (ids ending in `:free`) allow 20 requests a minute and 50 a day; an account that has bought at least 10 credits gets 1,000 free-model requests a day, and free models do not spend the credits. Identical requests are replayed from `labs/cache/`, so running a cell again costs nothing. With a fresh free key, set `ANLP_QUICK=1` on Day 2: the labs then use smaller samples that fit the daily limit.
 
-**Local (CPU is fine for Days 1–2)**
+**2a · Google Colab**
+1. Open a notebook from the [course page](https://sdaiaacademy.github.io/applied-nlp/), or directly: `https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/<notebook>.ipynb`.
+2. In the 🔑 **Secrets** panel add `OPENROUTER_API_KEY` and turn on notebook access.
+3. Run the first cell. It clones this repository and installs `requirements-colab.txt`.
+
+**2b · Local**
 ```bash
 git clone https://github.com/SDAIAAcademy/applied-nlp
 cd applied-nlp/labs
-uv sync                        # creates .venv from pyproject.toml
-uv run python prepare_data.py  # downloads Bitext and writes data/*.csv
+cp .env.example .env           # then paste your key into .env
+uv sync                        # creates .venv from pyproject.toml (uv.lock pins every version)
 uv run jupyter lab
 ```
-Run `00_setup_check.ipynb` once before Day 1: it downloads every model so class time isn't spent waiting.
+Run `00_setup_check.ipynb` once before Day 1.
 
-On a flaky or offline classroom network, set `HF_HUB_OFFLINE=1` after running the setup check: models then load from the local cache without waiting on the Hub.
+## Models and settings
 
-Set `APPLIED_NLP_QUICK=1` to shrink every workload (smaller samples, a few training steps). Useful on slow laptops and for checking that notebooks run.
+| Setting (`.env`) | Default | Notes |
+|---|---|---|
+| `OPENROUTER_API_KEY` | none | or `LLM_API_KEY` with `LLM_BASE_URL` for any provider that serves the OpenAI API shape |
+| `ANLP_MODEL` | `google/gemma-4-31b-it:free` | the chat model of Day 2; any free open-weight chat model |
+| `ANLP_SMALL_MODEL` | `liquid/lfm-3-1.7b:free` | the second model of Lab 2.4 |
+| `ANLP_EMBED_MODEL` | `nvidia/nemotron-3.5-embed-1b:free` | the embedding model of Lab 1.2; any hosted open multilingual embedding model |
+| `ANLP_FALLBACKS` | `google/gemma-4-26b-a4b-it:free` | tried in order when a free model is busy |
+| `ANLP_QUICK` | `0` | `1` shrinks samples and epochs: a free daily quota, a slow laptop, a quick check |
+| `ANLP_CACHE` | `1` | `0` sends every request to the model again |
+| `ANLP_STANDIN` | `0` | `1` never calls a model |
+
+Free models change often. If a default has disappeared or is busy, pick another free open-weight model from the provider's list and set it here. Model names are examples, not endorsements.
+
+**The stand-in.** When no key works, a scripted stand-in answers in place of the hosted model, and the first line of every lab says so. It is a keyword script, not a model: it lets every cell run, and its scores, latencies and token counts say nothing about a model. The reference results in `data/reference/` for Labs 1.2, 2.1, 2.2, 2.3 and 2.4 were produced with it, because the course was built without access to a hosted model; replace them with your own runs.
 
 ## Notebooks
 
-| Day | Session | Notebook | Runtime |
+| Day | Session | Notebook | Needs a hosted model |
 |---|---|---|---|
-| 0 | Setup | [`00_setup_check.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/00_setup_check.ipynb) | CPU/GPU |
-| 1 | Tokenization | [`D1_1_tokenization.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_1_tokenization.ipynb) | CPU |
-| 1 | Embeddings & semantic search | [`D1_2_embeddings_semantic_search.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_2_embeddings_semantic_search.ipynb) | CPU |
-| 1 | Inside the transformer | [`D1_3_transformers_inside.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_3_transformers_inside.ipynb) | CPU |
-| 1 | Decision models | [`D1_4_decision_models.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_4_decision_models.ipynb) | CPU |
-| 2 | Generative LLMs | [`D2_1_generative_llms.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_1_generative_llms.ipynb) | CPU (GPU faster) |
-| 2 | Prompting & structured outputs | [`D2_2_prompting_structured_outputs.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_2_prompting_structured_outputs.ipynb) | CPU (GPU faster) |
-| 2 | RAG | [`D2_3_rag.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_3_rag.ipynb) | CPU (GPU faster) |
-| 2 | Model selection & evaluation | [`D2_4_model_selection_evaluation.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_4_model_selection_evaluation.ipynb) | CPU (GPU faster) |
-| 3 | Fine-tuning data prep | [`D3_1_finetuning_data_prep.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_1_finetuning_data_prep.ipynb) | CPU |
-| 3 | Fine-tune an encoder | [`D3_2_finetune_encoder.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_2_finetune_encoder.ipynb) | **GPU** |
-| 3 | LoRA for an LLM | [`D3_3_lora_llm.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_3_lora_llm.ipynb) | **GPU** |
-| 3 | Evaluate & deploy | [`D3_4_evaluate_deploy.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_4_evaluate_deploy.ipynb) | CPU |
+| 0 | Setup | [`00_setup_check.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/00_setup_check.ipynb) | one call |
+| 1 | Tokenisation | [`D1_1_tokenisers.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_1_tokenisers.ipynb) | no (three tokeniser files from the Hub) |
+| 1 | Embeddings and semantic search | [`D1_2_semantic_search.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_2_semantic_search.ipynb) | embeddings, 21 requests |
+| 1 | Inside the transformer | [`D1_3_attention.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_3_attention.ipynb) | no |
+| 1 | Decision models | [`D1_4_baseline.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_4_baseline.ipynb) | no · **AI assistants off** |
+| 2 | Generative language models | [`D2_1_sampling.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_1_sampling.ipynb) | chat, 60 requests (24 in quick mode) |
+| 2 | Prompting and structured outputs | [`D2_2_extraction.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_2_extraction.ipynb) | chat, about 230 requests (about 45 in quick mode) |
+| 2 | Retrieval-augmented generation | [`D2_3_rag.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_3_rag.ipynb) | chat, 16 requests |
+| 2 | Model selection and evaluation | [`D2_4_model_selection.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_4_model_selection.ipynb) | chat, 80 requests (40 in quick mode) |
+| 3 | Fine-tuning data | [`D3_1_splits.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_1_splits.ipynb) | no |
+| 3 | Fine-tuning an encoder | [`D3_2_finetune_encoder.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_2_finetune_encoder.ipynb) | no |
+| 3 | Low-rank and quantised adapters | [`D3_3_lora.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_3_lora.ipynb) | no |
+| 3 | Evaluate and deploy | [`D3_4_service.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_4_service.ipynb) | no |
 
-Exercises are marked **✏️ Exercise** and raise `NotImplementedError` until you fill them in. Complete reference versions are in `solutions/`. Cells marked **✱ Stretch** are optional.
+Exercises are marked **✏️ Exercise** and raise `NotImplementedError` until you fill them in. The cell after each exercise has a safety net: when the exercise is not done, it takes a reference result, so the rest of the notebook still runs. Complete versions are in `solutions/`. Cells marked **✱ Stretch** are optional. Each lab writes its outputs to `artifacts/<lab>/`; a later lab that compares with an earlier one reads your own output when it exists and the supplied copy in `data/reference/` otherwise.
 
-Labs that evaluate an intent classifier save their test predictions to `artifacts/predictions/`; Lab 3.4 turns them into one leaderboard.
+**AI policy.** Assistants are off in the supervised checks and in Lab 1.4. In the other labs an assistant may hint; it does not write your training or evaluation code. In the capstone assistants are allowed in full, and the work is defended live.
 
-## Data
+## The case study: Sawaqi Water Company
 
-`prepare_data.py` builds everything in `data/`:
+Synthetic and deterministic (`prepare_data.py`, standard library only, fixed seed); no real person, account or phone number.
 
-| File | Content |
+| Data | File | Contents |
+|---|---|---|
+| Customers | `data/customers.csv` | 700 customers with invented names, phone numbers (`05` and eight digits) and account numbers (`30` and eight digits) |
+| Messages | `data/messages.csv` | 2,000 messages: MSA 33%, Gulf 34%, English 21%, Arabizi 12%; department (8), complaint type (16), gold account number and district |
+| Split | `data/split.csv` | by customer: `train` (402 messages the contact centre labelled), `val` (301), `test` (403), `pool` (894: the rest of the archive, used for search, never for its routing labels) |
+| Parallel messages | `data/parallel_50.csv` | 50 messages written in all four varieties with the same facts (Lab 1.1) |
+| Search queries | `data/queries.jsonl` | 40 queries, 10 per variety, with their relevant messages (Lab 1.2) |
+| Gold fields | `data/extraction_200.jsonl` | 200 test messages with account number, district and complaint type (Lab 2.2) |
+| Rule book | `data/rules/R-01 … R-10` | the tariff rules, each in English and Arabic; `data/rule_questions.jsonl` has 16 questions, 4 of which the rules do not answer (Lab 2.3) |
+| Reply tasks | `data/reply_tasks.jsonl` | ten messages with the facts a reply may use (Lab 2.1) |
+| Smoke test | `data/smoke_test.jsonl` | 20 test messages and 4 edge cases that must go to a person (Lab 3.4) |
+| Reference results | `data/reference/` | results of the course's solution runs, for the safety nets and for labs that compare with an earlier lab; the published prices read on the date inside `prices.json` |
+| Models | `models/` | the course tokeniser (2,000 entries), encoder and decoder, and the encoder fine-tuned for routing; `_tools/pretrain_tiny.py` trained them |
+
+The planted problems and the expected numbers of every lab are in `solutions/answer_key.md`, for the trainer.
+
+## Helpers
+
+| Module | What it holds |
 |---|---|
-| `tickets_train.csv` / `_val` / `_test` | Bitext customer-support messages (EN), 27 intents, 11 categories, 200 / 40 / 40 per intent |
-| `tickets_history.csv` | 8,000 resolved tickets with agent responses (search and RAG index) |
-| `tickets_ar_test.csv` | 108 hand-written Arabic tickets (MSA and Gulf dialect), same labels |
-| `labels.json` | Label lists and the intent → category map |
-| `kb/*.md` | Help-center articles of **DemoMart**, a fictional store (RAG knowledge base) |
-| `rag_eval.csv` | Questions with the KB section that answers them (2 are unanswerable) |
+| `ghayth.py` | paths, quick mode, loading the data, `normalise`, scores by variety, latency percentiles, one cached call to a hosted model (`chat`, `embed`), published prices, the stand-in, the safety nets (`attempt`, `reference`, `supplied`) and the Day 1 baseline (`baseline`) |
+| `tinytf.py` | the course's small transformer in about 150 lines: attention with a causal switch, the encoder and decoder, a classifier, and reference versions of Lab 3.3's adapter code |
+| `capstone/` | the starter kit of the capstone: the service as one file, an evaluation script that writes timestamped logs, the assessor's batch format and a README template |
 
-`priority` (low / medium / high / urgent) is a business rule: a base level per intent, raised one level when the message shows urgency or anger. Source: [Bitext customer-support dataset](https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset) (CDLA-Sharing-1.0). The Arabic tickets, KB and evaluation questions were written for this course.
+Delete `artifacts/` and `cache/` before running the course's `academy check`, which reports them as files that are not part of the course.
 
-## Using a stronger LLM
-
-By default the labs run Qwen2.5-1.5B-Instruct on a GPU or Qwen2.5-0.5B-Instruct on CPU. To use any OpenAI-compatible endpoint (vLLM, Ollama, or a hosted provider), copy `.env.example` to `.env` and fill it in. Check your organisation's data policy before sending ticket text to an external service.
-
-## Editing the notebooks
-
-Notebooks are generated from `_src/*.py` (percent format). Edit the source, then run:
-```bash
-uv run python _tools/py2nb.py            # rebuild all (student + solutions)
-uv run python _tools/py2nb.py D2_3_rag   # rebuild one
-```
+**Windows and long folder paths.** If an import fails with "The filename or extension is too long", keep the virtual environment in a short folder: set `UV_PROJECT_ENVIRONMENT` to a short path (a folder at the root of your drive) before `uv sync`.

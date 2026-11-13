@@ -1,0 +1,74 @@
+[
+ {
+  "tokeniser": "gpt2",
+  "variety": "msa",
+  "tokens_per_message": 40.06,
+  "tokens_per_word": 5.33
+ },
+ {
+  "tokeniser": "gpt2",
+  "variety": "gulf",
+  "tokens_per_message": 32.66,
+  "tokens_per_word": 5.1
+ },
+ {
+  "tokeniser": "gpt2",
+  "variety": "arabizi",
+  "tokens_per_message": 18.82,
+  "tokens_per_word": 2.24
+ },
+ {
+  "tokeniser": "gpt2",
+  "variety": "en",
+  "tokens_per_message": 11.78,
+  "tokens_per_word": 1.13
+ },
+ {
+  "tokeniser": "qwen3",
+  "variety": "msa",
+  "tokens_per_message": 15.0,
+  "tokens_per_word": 1.99
+ },
+ {
+  "tokeniser": "qwen3",
+  "variety": "gulf",
+  "tokens_per_message": 14.64,
+  "tokens_per_word": 2.29
+ },
+ {
+  "tokeniser": "qwen3",
+  "variety": "arabizi",
+  "tokens_per_message": 19.44,
+  "tokens_per_word": 2.31
+ },
+ {
+  "tokeniser": "qwen3",
+  "variety": "en",
+  "tokens_per_message": 11.9,
+  "tokens_per_word": 1.14
+ },
+ {
+  "tokeniser": "camelbert",
+  "variety": "msa",
+  "tokens_per_message": 9.7,
+  "tokens_per_word": 1.29
+ },
+ {
+  "tokeniser": "camelbert",
+  "variety": "gulf",
+  "tokens_per_message": 8.72,
+  "tokens_per_word": 1.36
+ },
+ {
+  "tokeniser": "camelbert",
+  "variety": "arabizi",
+  "tokens_per_message": 25.54,
+  "tokens_per_word": 3.03
+ },
+ {
+  "tokeniser": "camelbert",
+  "variety": "en",
+  "tokens_per_message": 23.62,
+  "tokens_per_word": 2.26
+ }
+]

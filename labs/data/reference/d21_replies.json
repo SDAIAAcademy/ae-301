@@ -1,0 +1,362 @@
+[
+ {
+  "task": "r01",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48211. A crew will reach you within 4 hours."
+ },
+ {
+  "task": "r01",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48211. A crew will reach you within 4 hours."
+ },
+ {
+  "task": "r01",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48211. A crew will reach you within 4 hours."
+ },
+ {
+  "task": "r01",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thanks for letting us know. Reference: SW-48211. A crew will reach you within 4 hours. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r01",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thanks for letting us know. Reference: SW-48211. A crew will reach you within 4 hours. This is covered under rule R-11."
+ },
+ {
+  "task": "r01",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Reference: SW-48211. A crew will reach you within 4 hours. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r02",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48212. The work will finish within 48 hours."
+ },
+ {
+  "task": "r02",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48212."
+ },
+ {
+  "task": "r02",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thanks for letting us know. We have opened SW-48212 for you. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r02",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thanks for letting us know. We have opened SW-48212 for you."
+ },
+ {
+  "task": "r02",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48212. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r02",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. We have opened SW-48212 for you. Your engineer, Ahmed, will call you on 0500000000."
+ },
+ {
+  "task": "r03",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48213."
+ },
+ {
+  "task": "r03",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48213. This is covered under rule R-11."
+ },
+ {
+  "task": "r03",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Reference: SW-48213. This is covered under rule R-11."
+ },
+ {
+  "task": "r03",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Reference: SW-48213."
+ },
+ {
+  "task": "r03",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48213."
+ },
+ {
+  "task": "r03",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48213. Your engineer, Ahmed, will call you on 0500000000."
+ },
+ {
+  "task": "r04",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48214. The work will finish within 48 hours."
+ },
+ {
+  "task": "r04",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48214."
+ },
+ {
+  "task": "r04",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. We have opened SW-48214 for you. This is covered under rule R-11."
+ },
+ {
+  "task": "r04",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48214."
+ },
+ {
+  "task": "r04",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48214. The work will finish within 48 hours."
+ },
+ {
+  "task": "r04",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Reference: SW-48214. Your engineer, Ahmed, will call you on 0500000000."
+ },
+ {
+  "task": "r05",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48215."
+ },
+ {
+  "task": "r05",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48215. This is covered under rule R-11."
+ },
+ {
+  "task": "r05",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thanks for letting us know. Reference: SW-48215. This is covered under rule R-11."
+ },
+ {
+  "task": "r05",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48215."
+ },
+ {
+  "task": "r05",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thanks for letting us know. Reference: SW-48215. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r05",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "Thanks for letting us know. We have opened SW-48215 for you. This is covered under rule R-11."
+ },
+ {
+  "task": "r06",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48216."
+ },
+ {
+  "task": "r06",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48216."
+ },
+ {
+  "task": "r06",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. We have opened SW-48216 for you. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r06",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thanks for letting us know. We have opened SW-48216 for you."
+ },
+ {
+  "task": "r06",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Reference: SW-48216. The work will finish within 48 hours."
+ },
+ {
+  "task": "r06",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Reference: SW-48216. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r07",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48217. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r07",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48217. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r07",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thanks for letting us know. We have opened SW-48217 for you. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r07",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thanks for letting us know. We have opened SW-48217 for you. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r07",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thanks for letting us know. We have opened SW-48217 for you. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r07",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Your request is logged as SW-48217. A crew will reach you within 3 hours."
+ },
+ {
+  "task": "r08",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48218."
+ },
+ {
+  "task": "r08",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48218."
+ },
+ {
+  "task": "r08",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. We have opened SW-48218 for you."
+ },
+ {
+  "task": "r08",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. We have opened SW-48218 for you. You will receive a credit of 50 SAR."
+ },
+ {
+  "task": "r08",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thanks for letting us know. Reference: SW-48218. The work will finish within 48 hours."
+ },
+ {
+  "task": "r08",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "Thanks for letting us know. Your request is logged as SW-48218. Your engineer, Ahmed, will call you on 0500000000."
+ },
+ {
+  "task": "r09",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48219."
+ },
+ {
+  "task": "r09",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48219."
+ },
+ {
+  "task": "r09",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thanks for letting us know. We have opened SW-48219 for you."
+ },
+ {
+  "task": "r09",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. We have opened SW-48219 for you."
+ },
+ {
+  "task": "r09",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "We are sorry for the trouble. Reference: SW-48219."
+ },
+ {
+  "task": "r09",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. Reference: SW-48219. The work will finish within 48 hours."
+ },
+ {
+  "task": "r10",
+  "setting": "focused",
+  "sample": 0,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48220."
+ },
+ {
+  "task": "r10",
+  "setting": "focused",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. Your request is logged as SW-48220."
+ },
+ {
+  "task": "r10",
+  "setting": "balanced",
+  "sample": 0,
+  "reply": "Thanks for letting us know. We have opened SW-48220 for you. This is covered under rule R-11."
+ },
+ {
+  "task": "r10",
+  "setting": "balanced",
+  "sample": 1,
+  "reply": "We are sorry for the trouble. We have opened SW-48220 for you."
+ },
+ {
+  "task": "r10",
+  "setting": "loose",
+  "sample": 0,
+  "reply": "Thanks for letting us know. Your request is logged as SW-48220. This is covered under rule R-11."
+ },
+ {
+  "task": "r10",
+  "setting": "loose",
+  "sample": 1,
+  "reply": "Thank you for contacting Sawaqi. We have opened SW-48220 for you. The work will finish within 48 hours."
+ }
+]

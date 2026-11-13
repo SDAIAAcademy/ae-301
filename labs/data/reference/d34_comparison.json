@@ -1,0 +1,38 @@
+[
+ {
+  "approach": "baseline: word and character counts, linear",
+  "macro_f1": 0.847,
+  "msa": 0.938,
+  "gulf": 0.856,
+  "arabizi": 0.42,
+  "en": 0.808,
+  "test set": "403 messages"
+ },
+ {
+  "approach": "prompted model (google/gemma-4-31b-it)",
+  "macro_f1": 0.672,
+  "msa": 0.48,
+  "gulf": 0.433,
+  "arabizi": 0.435,
+  "en": 0.495,
+  "test set": "40 messages"
+ },
+ {
+  "approach": "fine-tuned encoder, every weight",
+  "macro_f1": 0.629,
+  "msa": 0.682,
+  "gulf": 0.658,
+  "arabizi": 0.276,
+  "en": 0.59,
+  "test set": "403 messages"
+ },
+ {
+  "approach": "fine-tuned encoder, low-rank adapter",
+  "macro_f1": 0.502,
+  "msa": 0.426,
+  "gulf": 0.547,
+  "arabizi": 0.216,
+  "en": 0.552,
+  "test set": "403 messages"
+ }
+]

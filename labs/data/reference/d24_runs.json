@@ -1,0 +1,486 @@
+{
+ "larger": [
+  {
+   "label": "billing",
+   "latency_s": 0.0018,
+   "prompt_tokens": 185,
+   "completion_tokens": 1
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0011,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0007,
+   "prompt_tokens": 203,
+   "completion_tokens": 4
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0006,
+   "prompt_tokens": 191,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0006,
+   "prompt_tokens": 195,
+   "completion_tokens": 4
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0006,
+   "prompt_tokens": 203,
+   "completion_tokens": 4
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0006,
+   "prompt_tokens": 190,
+   "completion_tokens": 2
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 2
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0006,
+   "prompt_tokens": 186,
+   "completion_tokens": 5
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 186,
+   "completion_tokens": 1
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 186,
+   "completion_tokens": 5
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0006,
+   "prompt_tokens": 187,
+   "completion_tokens": 5
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 188,
+   "completion_tokens": 2
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 4
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 184,
+   "completion_tokens": 4
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 197,
+   "completion_tokens": 1
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0006,
+   "prompt_tokens": 196,
+   "completion_tokens": 2
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 184,
+   "completion_tokens": 1
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0006,
+   "prompt_tokens": 195,
+   "completion_tokens": 5
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 2
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 181,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 181,
+   "completion_tokens": 1
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 178,
+   "completion_tokens": 1
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 5
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 1
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 182,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 199,
+   "completion_tokens": 4
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 190,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 196,
+   "completion_tokens": 1
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 193,
+   "completion_tokens": 4
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 204,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 200,
+   "completion_tokens": 4
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 2
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 2
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 183,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 190,
+   "completion_tokens": 1
+  }
+ ],
+ "smaller": [
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 185,
+   "completion_tokens": 4
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0007,
+   "prompt_tokens": 203,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 4
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 4
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0006,
+   "prompt_tokens": 203,
+   "completion_tokens": 1
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 190,
+   "completion_tokens": 1
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0006,
+   "prompt_tokens": 191,
+   "completion_tokens": 2
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0006,
+   "prompt_tokens": 186,
+   "completion_tokens": 4
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 186,
+   "completion_tokens": 1
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 186,
+   "completion_tokens": 2
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 2
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 188,
+   "completion_tokens": 5
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 1
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 184,
+   "completion_tokens": 4
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 197,
+   "completion_tokens": 5
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0006,
+   "prompt_tokens": 196,
+   "completion_tokens": 2
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "leaks",
+   "latency_s": 0.0005,
+   "prompt_tokens": 184,
+   "completion_tokens": 1
+  },
+  {
+   "label": "wastewater",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 5
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 4
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 181,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0008,
+   "prompt_tokens": 181,
+   "completion_tokens": 4
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 178,
+   "completion_tokens": 1
+  },
+  {
+   "label": "payments",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 2
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 191,
+   "completion_tokens": 1
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 182,
+   "completion_tokens": 1
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 199,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 190,
+   "completion_tokens": 4
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 196,
+   "completion_tokens": 1
+  },
+  {
+   "label": "meters",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 193,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 204,
+   "completion_tokens": 1
+  },
+  {
+   "label": "billing",
+   "latency_s": 0.0005,
+   "prompt_tokens": 200,
+   "completion_tokens": 1
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0005,
+   "prompt_tokens": 195,
+   "completion_tokens": 2
+  },
+  {
+   "label": "connections",
+   "latency_s": 0.0005,
+   "prompt_tokens": 189,
+   "completion_tokens": 2
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 187,
+   "completion_tokens": 1
+  },
+  {
+   "label": "quality",
+   "latency_s": 0.0005,
+   "prompt_tokens": 183,
+   "completion_tokens": 1
+  },
+  {
+   "label": "supply",
+   "latency_s": 0.0005,
+   "prompt_tokens": 190,
+   "completion_tokens": 1
+  }
+ ]
+}

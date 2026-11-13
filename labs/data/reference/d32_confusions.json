@@ -1,0 +1,27 @@
+[
+ [
+  "supply",
+  "quality",
+  13
+ ],
+ [
+  "payments",
+  "billing",
+  11
+ ],
+ [
+  "supply",
+  "payments",
+  8
+ ],
+ [
+  "leaks",
+  "payments",
+  6
+ ],
+ [
+  "billing",
+  "payments",
+  6
+ ]
+]

@@ -1,0 +1,10 @@
+{"id": "r01", "department": "leaks", "message": "There is a big water leak in the street outside my house in Al-Rabwa", "facts": {"ticket": "SW-48211", "crew_eta_hours": 4}}
+{"id": "r02", "department": "supply", "message": "الماي مقطوع عندنا في النسيم من الصبح", "facts": {"ticket": "SW-48212", "planned_interruption": "no"}}
+{"id": "r03", "department": "billing", "message": "I got a bill for 1340 SAR and I don't understand why it is so high", "facts": {"ticket": "SW-48213", "last_month_bill_sar": 410}}
+{"id": "r04", "department": "meters", "message": "ابي تفحصون العداد يحسب غلط", "facts": {"ticket": "SW-48214", "test_fee_sar": 150}}
+{"id": "r05", "department": "payments", "message": "I would like to pay 2210 SAR in monthly instalments", "facts": {"ticket": "SW-48215", "max_instalments": 6}}
+{"id": "r06", "department": "quality", "message": "The water coming out of the tap is brown", "facts": {"ticket": "SW-48216", "lab_visit_days": 2}}
+{"id": "r07", "department": "wastewater", "message": "المجاري طافحه بالشارع في الغدير", "facts": {"ticket": "SW-48217", "crew_eta_hours": 3}}
+{"id": "r08", "department": "connections", "message": "I bought the house and want the account moved to my name", "facts": {"ticket": "SW-48218", "fee_sar": 0}}
+{"id": "r09", "department": "supply", "message": "el mai maqtoo3 3indna fi el manhal min el sob7", "facts": {"ticket": "SW-48219", "planned_interruption": "yes"}}
+{"id": "r10", "department": "billing", "message": "I was charged twice for the same bill", "facts": {"ticket": "SW-48220", "refund_days": 7}}

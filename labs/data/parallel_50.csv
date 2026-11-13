@@ -1,0 +1,51 @@
+id,complaint_type,msa,gulf,arabizi,en
+P01,high_bill,فاتورة هذا الشهر مرتفعة جدا مقارنة بالأشهر السابقة في حي القلعة,الفاتورة هالشهر مره غاليه مو طبيعي، احنا في القلعة,"el fatoora hal shahar mara ghalya mo 6abee3i, e7na fi el qal3a","This month's bill is much higher than usual, we live in Al-Qalaa"
+P02,high_bill,وصلتني فاتورة بمبلغ 1340 ريال ولا أعرف سبب هذا الارتفاع,جتني فاتوره 1340 ريال وش السالفه؟,jatni fatoora 1340 riyal wesh el salfa?,I got a bill for 1340 SAR and I don't understand why it is so high
+P03,high_bill,أعترض على قيمة الفاتورة الأخيرة لأن استهلاكنا لم يتغير,معترض على الفاتوره الاخيره، استهلاكنا نفسه ما تغير,"m3tared 3la el fatoora el a5eera, esthlakna nafsah ma taghayar","I dispute my last bill, our usage has not changed"
+P04,duplicate_charge,تم خصم مبلغ الفاتورة مرتين من حسابي البنكي,انخصم مني مبلغ الفاتوره مرتين,ankhasam mni mablagh el fatoora martain,I was charged twice for the same bill
+P05,duplicate_charge,ظهرت الفاتورة نفسها مكررة في كشف الحساب,الفاتوره طالعه لي مكرره بالكشف,el fatoora 6al3a li mkarara bil kashf,The same bill appears twice on my statement
+P06,duplicate_charge,دفعت 1675 ريال مرتين وأطلب استرداد المبلغ المكرر,دفعت 1675 ريال مرتين ابي ترجعون الزياده,dfa3t 1675 riyal martain abi tarj3oon el ziyada,I paid 1675 SAR twice and want the duplicate refunded
+P07,payment_failed,حاولت السداد عبر التطبيق لكن العملية فشلت,حاولت اسدد من التطبيق وطلع لي خطأ,7awalt asadid min el ta6beeq w 6ala3 li 5a6a,I tried to pay in the app but the payment failed
+P08,payment_failed,خصم المبلغ من البطاقة لكن الفاتورة ما زالت غير مدفوعة,انسحب المبلغ من البطاقه بس الفاتوره للحين مو مدفوعه,ansa7ab el mablagh min el ba6aqa bs el fatoora lil7een mo madfoo3a,The money left my card but the bill still shows unpaid
+P09,payment_failed,لا تظهر خيارات الدفع في الموقع منذ يومين,خيارات الدفع ما تطلع بالموقع من يومين,5iyarat el daf3 ma t6la3 bil mawqi3 min yomain,The payment options have not shown on the website for two days
+P10,installment_request,أرغب في تقسيط مبلغ 1675 ريال على عدة أشهر,ابي اقسط مبلغ 1675 ريال على كم شهر,abi aqasit mablagh 1675 riyal 3la kam shahar,I would like to pay 1675 SAR in monthly instalments
+P11,installment_request,هل يمكن جدولة المتأخرات لأن دخلي محدود,ممكن تجدولون المتأخرات؟ الدخل محدود,mumkin tjadwloon el muta2a5irat? el da5l ma7dood,Can you schedule my arrears? My income is limited
+P12,installment_request,أطلب خطة سداد للفاتورة المتأخرة,ابغى خطة سداد للفاتوره المتأخره,abgha 5i6at sadad lil fatoora el mit2a5ra,I am asking for a payment plan for my overdue bill
+P13,leak_street,يوجد تسرب مياه كبير في الشارع أمام منزلي في حي الورود,فيه تسريب ماي قوي بالشارع قدام بيتي في الورود,fee tasreeb mai gawi bil share3 gidam baiti fi el wurood,There is a big water leak in the street outside my house in Al-Wurood
+P14,leak_street,الماء يتدفق من أنبوب مكسور عند تقاطع القلعة منذ 2 أيام,الماي يطلع من ماسوره مكسوره عند تقاطع القلعة من 2 ايام,el mai y6la3 min masoora maksoora 3ind ta2a6o3 el qal3a min 2 ayam,Water has been pouring from a broken pipe at the Al-Qalaa junction for 2 days
+P15,leak_street,هناك هدر للمياه في الحديقة العامة بسبب كسر في الخط,فيه ماي ضايع بالحديقه العامه بسبب كسر بالخط,fee mai 9aye3 bil 7adeeqa bsabab kasr bil 5a6,Water is being wasted in the public park because of a broken main
+P16,leak_meter,يوجد تسرب عند العداد خارج المنزل,فيه تسريب عند العداد برا البيت,fee tasreeb 3ind el 3adad barra el bait,There is a leak at the meter outside the house
+P17,leak_meter,الماء يتسرب من وصلة العداد ويبلل الرصيف,الماي يسرب من وصلة العداد والرصيف كله مويه,el mai ysarib min wislat el 3adad wel ra9eef kilah moya,Water is dripping from the meter connection and the pavement is wet
+P18,leak_meter,صندوق العداد ممتلئ بالماء منذ أسبوع,صندوق العداد مليان ماي من اسبوع,9andooq el 3adad malyan mai min usboo3,The meter box has been full of water for a week
+P19,no_water,انقطعت المياه عن منزلنا في حي القلعة منذ الصباح,الماي مقطوع عندنا في القلعة من الصبح,el mai maqtoo3 3indna fi el qal3a min el sob7,We have had no water at home in Al-Qalaa since the morning
+P20,no_water,لا توجد مياه في الحي بأكمله منذ 6 أيام,الحي كله ما فيه ماي من 6 ايام,el 7ai kilah ma feeh mai min 6 ayam,The whole neighbourhood has had no water for 6 days
+P21,no_water,متى ستعود المياه؟ لم يصلنا أي إشعار بالانقطاع,متى يرجع الماي؟ محد بلغنا عن القطع,mata yirja3 el mai? ma7ad ballaghna 3an el qa6i3,When will the water come back? Nobody told us about the cut
+P22,no_water,خزان المنزل فارغ والمياه مقطوعة ولدينا كبار سن,الخزان فاضي والماي مقطوع وعندنا كبار سن,el 5azan fa9i wel mai maqtoo3 w 3indna kibar sin,"Our tank is empty, the water is off and we have elderly people at home"
+P23,low_pressure,ضغط المياه ضعيف جدا في الطابق الثاني,ضغط الماي مره ضعيف بالدور الثاني,6ag6 el mai mara 9a3eef bil door el thani,The water pressure is very weak on the second floor
+P24,low_pressure,المياه تصل ضعيفة في أوقات الذروة في الياسمين,الماي يجي ضعيف وقت الذروه في الياسمين,el mai yiji 9a3eef wagt el thurwa fi el yasmeen,The water comes through weakly at peak times in Al-Yasmeen
+P25,low_pressure,الخزان لا يمتلئ بسبب ضعف الضغط,الخزان ما يتعبى من ضعف الضغط,el 5azan ma yit3abba min 9a3f el 6ag6,Our tank does not fill because the pressure is low
+P26,discoloured,المياه تخرج بلون بني من الصنبور,الماي يطلع لونه بني من الحنفيه,el mai y6la3 loonah bunni min el 7anafiya,The water coming out of the tap is brown
+P27,discoloured,لون الماء أصفر بعد عودة الإمداد في حي الشرفة,الماي صاير لونه اصفر بعد ما رجع في الشرفة,el mai 9ayer loonah a9far ba3d ma rija3 fi el shurfa,The water turned yellow after the supply came back in Al-Shurfa
+P28,discoloured,توجد رواسب في المياه ونخشى على الأطفال,فيه رواسب بالماي وخايفين على العيال,fee rawasib bil mai w 5aifeen 3la el 3iyal,There is sediment in the water and we worry about the children
+P29,bad_smell,للمياه رائحة كريهة تشبه رائحة الكلور,الماي ريحته خايسه كأنها كلور,el mai re7tah 5aisa ka2anha chlor,"The water smells bad, like chlorine"
+P30,bad_smell,طعم الماء غريب منذ 4 أيام,طعم الماي غريب من 4 ايام,6a3m el mai ghareeb min 4 ayam,The water has tasted strange for 4 days
+P31,bad_smell,رائحة المياه في الغدير لا تحتمل,ريحة الماي في الغدير ما تنطاق,re7at el mai fi el ghadeer ma tin6aq,The smell of the water in Al-Ghadeer is unbearable
+P32,meter_fault,العداد لا يتحرك رغم استخدام المياه,العداد واقف مع اننا نستخدم الماي,el 3adad waqif ma3 ina nista5dim el mai,The meter does not move even when we use water
+P33,meter_fault,شاشة العداد الذكي مطفأة,شاشة العداد الذكي طافيه,shashat el 3adad el thaki 6afya,The smart meter's screen is blank
+P34,meter_fault,أطلب فحص العداد لأنه يسجل استهلاكا غير صحيح,ابي تفحصون العداد يحسب غلط,abi tif7soon el 3adad y7sib ghala6,"Please test my meter, it records the wrong usage"
+P35,meter_fault,الفاتورة مرتفعة وأعتقد أن العداد معطل,الفاتوره غاليه واحس العداد خربان,el fatoora ghalya w a7is el 3adad 5arban,My bill is high and I think the meter is broken
+P36,meter_reading,القراءة في الفاتورة لا تطابق قراءة العداد,القراءه بالفاتوره غير عن قراءة العداد,el qira2a bil fatoora ghair 3an qira2at el 3adad,The reading on the bill does not match the meter
+P37,meter_reading,أرسل لكم قراءة العداد الحالية وهي 96348,هذي قراءة العداد الحين 96348,hathi qira2at el 3adad el 7een 96348,Here is my current meter reading: 96348
+P38,meter_reading,لم يأت قارئ العداد منذ شهرين,قارئ العداد ما جا من شهرين,qari2 el 3adad ma ja min shahrain,The meter reader has not come for two months
+P39,new_connection,أرغب في توصيل المياه لمنزل جديد في حي النسيم,ابي توصيل ماي لبيت جديد في النسيم,abi taw9eel mai l bait jdeed fi el naseem,I want a water connection for a new house in Al-Naseem
+P40,new_connection,ما هي متطلبات طلب عداد جديد لمحل تجاري,وش المطلوب عشان عداد جديد لمحل؟,wesh el ma6loob 3ashan 3adad jdeed l ma7al?,What do I need to apply for a new meter for a shop?
+P41,new_connection,قدمت طلب توصيل منذ 4 أيام ولم يتم الرد,قدمت طلب توصيل من 4 ايام ومحد رد,gaddamt 6alab taw9eel min 4 ayam w ma7ad rad,I applied for a connection 4 days ago and have had no reply
+P42,ownership_transfer,اشتريت المنزل وأرغب في نقل الحساب باسمي,شريت البيت وابي انقل الحساب باسمي,shareet el bait w abi anqil el 7sab bismi,I bought the house and want the account moved to my name
+P43,ownership_transfer,أطلب إغلاق الحساب لأنني انتقلت من الشقة,ابي اسكر الحساب طلعت من الشقه,abi askir el 7sab 6la3t min el shiqa,"Please close my account, I have moved out of the flat"
+P44,ownership_transfer,كيف أنقل عداد المياه إلى المستأجر الجديد,كيف انقل العداد للمستأجر الجديد؟,kaif anqil el 3adad lil musta2jir el jdeed?,How do I transfer the meter to the new tenant?
+P45,sewage_overflow,مياه الصرف الصحي تطفح في الشارع في حي النسيم,المجاري طافحه بالشارع في النسيم,el majari 6af7a bil share3 fi el naseem,Sewage is overflowing into the street in Al-Naseem
+P46,sewage_overflow,غرفة التفتيش تفيض أمام المدرسة,المنهل فايض قدام المدرسه,el manhal fayi9 gidam el madrasa,The manhole in front of the school is overflowing
+P47,sewage_overflow,رائحة الصرف الصحي قوية وتوجد مياه راكدة,ريحة المجاري قويه وفيه مويه واقفه,re7at el majari gawya w fee moya waqfa,There is a strong sewage smell and standing water
+P48,sewage_blockage,يوجد انسداد في خط الصرف الخاص بالمنزل,البيت فيه انسداد بخط المجاري,el bait feeh insidad b 5a6 el majari,The sewer line of the house is blocked
+P49,sewage_blockage,المياه لا تنصرف من المطبخ والحمام,المويه ما تنزل بالمطبخ والحمام,el moya ma tinzil bil ma6ba5 wel 7ammam,Water is not draining from the kitchen and bathroom
+P50,sewage_blockage,أطلب سيارة شفط لأن البيارة ممتلئة,ابي وايت شفط البياره فل,abi wait shaf6 el bayara full,"I need a suction truck, the septic tank is full"
