@@ -226,7 +226,7 @@ for cid in ids:                 # a customer goes whole
       <div class="card c-purple flat"><h4>Keep the best validation epoch</h4><p class="small mb0">Score the validation split after every epoch and keep those weights.</p></div>
     </div>
   </div>
-  <aside class="notes"><p>AdamW at a learning rate of 0.001 for this small model; a published base-size encoder wants about 0.00002. The token masking is a cheap augmentation: in the course's experiments it raised the test score of this encoder from about 0.53 to about 0.63. Say this openly: it is a trick found by measuring on validation data, which is how such things should be found.</p></aside>
+  <aside class="notes"><p>AdamW at a learning rate of 0.001 for this small model; a published base-size encoder wants about 0.00002. The token masking is a cheap augmentation: in the course's build experiments the encoder scored about 0.53 on the test split without it and about 0.63 with it. Say this openly, and say how such a choice should be made in their own work: on the validation split, with the test split measured once afterwards, as this session's checkpoints insist.</p></aside>
 </section>
 
 <section class="slide" data-label="Validation" id="pick-the-epoch-on-validation" data-lo="LO4">
@@ -260,7 +260,7 @@ for cid in ids:                 # a customer goes whole
       <li>What would change it: far more labels, or an encoder pretrained on far more Arabic. The stretch tries the second in Colab.</li>
     </ul>
   </div>
-  <aside class="notes"><p>From the course's run of Lab 3.2, step 3. Do not soften this slide. The honest reading: a small model trained on a laptop is a teaching instrument, and on this data the cheap model is the better engineering choice. Published Arabic encoders are a hundred to two hundred times larger and pretrained on billions of words; on real customer text they usually beat a bag of words, and participants should measure that claim, not take it from this slide. The mechanics they practise here are identical.</p></aside>
+  <aside class="notes"><p>From the course's run of Lab 3.2, step 3. The supplied full fine-tuning run used on the adapter slide and in the final table scored 0.63 on the same split: runs differ by about 0.03 between machines, which is why the order of the rows, not the second decimal, is the result. Do not soften this slide. The honest reading: a small model trained on a laptop is a teaching instrument, and on this data the cheap model is the better engineering choice. Published Arabic encoders are a hundred to two hundred times larger and pretrained on billions of words; on real customer text they usually beat a bag of words, and participants should measure that claim, not take it from this slide. The mechanics they practise here are identical.</p></aside>
 </section>
 
 <section class="slide" data-label="Confusions" id="read-the-confusion-matrix" data-lo="LO4">

@@ -76,7 +76,7 @@
     <tr><td class="num">1.5</td><td class="num">0.108</td><td class="num">7.63</td><td>unlikely tokens get drawn</td></tr>
   </table>
   <p class="small muted">Next token after <span class="ar">الماي</span> ("the water"). The scores are divided by the temperature before the softmax. At 0, providers take the top token.</p>
-  <aside class="notes"><p>Real numbers from the course's run of Lab 2.1, step 1, on the course's own small decoder: same model, same scores, four ways of drawing. Entropy in bits: 0 means one certain token, 7.6 bits is like choosing among roughly 190 equally likely tokens. The model did not get more creative at 1.5; your dice did.</p></aside>
+  <aside class="notes"><p>Real numbers from the course's run of Lab 2.1, step 1, on the course's own small decoder: same model, same scores, four ways of drawing. Entropy in bits: 0 means one certain token, 7.6 bits is like choosing among roughly 200 equally likely tokens. The model did not get more creative at 1.5; your dice did.</p></aside>
 </section>
 
 <section class="slide" data-label="Top-p" id="top-p-cuts-the-tail" data-lo="LO5">
@@ -97,7 +97,7 @@ out = out / out.sum()</code></pre>
       <li>Use one knob at a time, and write down both.</li>
     </ul>
   </div>
-  <aside class="notes"><p>The 73 and 3 are from the same run, counted as the tokens that hold 99% of the probability after the cut. This is the lab's first exercise. Common settings: temperature 0 for decisions and extraction; around 0.7 with top-p 0.9 for drafting.</p></aside>
+  <aside class="notes"><p>The 73 and 3 are from the same run: the number of tokens left in the nucleus at each setting. This is the lab's first exercise. Common settings: temperature 0 for decisions and extraction; around 0.7 with top-p 0.9 for drafting.</p></aside>
 </section>
 
 <section class="slide" data-label="Consistency" id="consistency-is-measurable" data-lo="LO5">

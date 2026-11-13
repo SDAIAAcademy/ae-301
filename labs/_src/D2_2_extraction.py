@@ -330,6 +330,9 @@ print(len(examples) // 4, "more tokens per call, roughly")
 # 1. The model returns valid JSON every time. What have you still not measured?
 # 2. Why does the validator need the mapping of this message, and not only a pattern for placeholders?
 # 3. A message has no account number and the model returns one. Which number in the table shows it?
+# 4. Classify each field this lab handles (name, phone number, account number, district, complaint type) with
+#    Sawaqi's rule R-10 and the levels of the national Data Classification Policy, read at its official
+#    address in the course sources. Which fields may reach the hosted model unmasked?
 #
 # <details><summary>Answers</summary>
 #
@@ -338,6 +341,10 @@ print(len(examples) // 4, "more tokens per call, roughly")
 # 2. A pattern accepts `[ACCOUNT_3]` in a message that has one account. Only the mapping says which
 #    placeholders exist in this message.
 # 3. Precision of the account number: a returned value where the gold holds none is a false positive.
+# 4. R-10 places customer records at the Restricted level. The name, the phone number and the account number
+#    identify a customer: they are masked. The district and the complaint type on their own do not, and the
+#    model needs them, so they leave unmasked. Check the levels and their definitions in the policy itself
+#    before you classify real data.
 #
 # </details>
 #
