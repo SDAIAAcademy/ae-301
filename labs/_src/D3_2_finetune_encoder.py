@@ -1,358 +1,261 @@
 # %% [markdown]
-# # Lab 3.2 · Fine-tune a ticket intent classifier
+# # Lab 3.2 · Fine-tune the course encoder for routing
 #
-# Day 3 · Session 2 (Fine-tune a decision model) · **25 min** · GPU runtime recommended (Colab T4)
+# Day 3 · Session 2 (Fine-tuning an encoder) · 25 min. The third way to route: take an encoder that has
+# already read Sawaqi's archive without labels, put a small classification head on it, and train both on the
+# labelled messages. You write the head and the training loop, pick the epoch on the validation split, score
+# the test split by variety and read the confusion matrix.
 #
-# **What you'll build**
-# - A multilingual DistilBERT ("DistilmBERT") fine-tuned on our 27 intents with the Hugging Face `Trainer`, early stopping and best-checkpoint selection.
-# - An honest test: English and Arabic, compared with the Day 1 frozen-embeddings baseline (e5 + logistic regression).
-# - A saved model folder (`artifacts/intent-distilmbert/`) that Lab 3.4 serves behind a demo.
-#
-# About 5 minutes of training on a T4. **Start training first, then read the code while it runs.**
+# **Reference state.** `models/ghayth-enc-tiny.pt` (the course encoder: small, Arabic-capable because it was
+# pretrained on these messages in four varieties, without labels), `models/ghayth-bpe.json` and the split in
+# `data/split.csv`. The baseline's predictions come from your Lab 1.4 or from `data/reference/`. Nothing is
+# downloaded; training takes about two minutes on a laptop processor (seconds in quick mode).
 #
 # **Tasks**
-# - [ ] 1 · Load the saved dataset; build the model with label maps (3')
-# - [ ] 2 · Train with Trainer + early stopping (8')
-# - [ ] 3 · Plot train/val loss and macro-F1 per epoch (3')
-# - [ ] 4 · Test once: English and Arabic; compare to Day 1 embeddings + LR (6')
-# - [ ] 5 · Save model + tokenizer + label maps; reload; predict (5')
-# - [ ] ✱ Data-size ablation: 10 / 25 / 80 per class; plot F1 vs. data
+# - [ ] 1 · Load the encoder and encode a batch (4')
+# - [ ] 2 · A classification head and a training loop (9')
+# - [ ] 3 · Macro F1 overall and by variety (5')
+# - [ ] 4 · Read the confusion matrix (7')
+# - [ ] ✱ Stretch · Run the same notebook on a published Arabic encoder in Colab with a GPU
 
 # %%
-import os, sys, subprocess
-from pathlib import Path
+#@setup
+G.banner("Lab 3.2")
 
-IN_COLAB = "google.colab" in sys.modules
-if IN_COLAB:
-    REPO_URL = "https://github.com/SDAIAAcademy/applied-nlp.git"
-    if not Path("/content/applied-nlp").exists():
-        subprocess.run(["git", "clone", "-q", REPO_URL, "/content/applied-nlp"], check=True)
-    os.chdir("/content/applied-nlp/labs")
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements-colab.txt"], check=True)
-else:
-    while not Path("nlp_utils.py").exists() and Path.cwd() != Path.cwd().parent:
-        os.chdir("..")  # solutions/ notebooks run from labs/
-if not Path("data/tickets_train.csv").exists():
-    subprocess.run([sys.executable, "prepare_data.py"], check=True)
-sys.path.insert(0, os.getcwd())
-
-import nlp_utils as U
-U.set_seed(42)
-print("device:", U.device(), "| quick mode:", U.QUICK)
+# %% [markdown]
+# ## 1 · Load the encoder and encode a batch (4')
 
 # %%
+import copy
 import json
-import shutil
+import time
+from datetime import datetime, timezone
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import torch
-from datasets import Dataset, DatasetDict, load_from_disk
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, f1_score
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding,
-                          EarlyStoppingCallback, Trainer, TrainingArguments, pipeline)
+import torch.nn as nn
+import torch.nn.functional as F
 
-pd.set_option("display.max_colwidth", 80)
-MODEL_NAME = U.MODELS["encoder"]  # distilbert/distilbert-base-multilingual-cased
-USE_FP16 = torch.cuda.is_available()  # fp16 only on a GPU; never on CPU
-print("fp16:", USE_FP16)
+import tinytf as T
+
+G.seed()
+tok = T.load_tokenizer()
+LABELS = G.DEPARTMENTS
+train, val, test = G.messages("train"), G.messages("val"), G.messages("test")
+
+
+def tensors(df):
+    return T.encode(tok, list(df["text"])), torch.tensor([LABELS.index(d) for d in df["department"]])
+
+
+(xtr, ytr), (xva, yva), (xte, yte) = tensors(train), tensors(val), tensors(test)
+encoder = T.load(G.MODELS / "ghayth-enc-tiny.pt")
+with torch.no_grad():
+    hidden = encoder(xtr[:4])
+print("token ids:", tuple(xtr[:4].shape), "→ hidden states:", tuple(hidden.shape), "| 0 is padding")
+print("train", len(xtr), "| val", len(xva), "| test", len(xte), "| encoder parameters:", f"{T.count_params(encoder):,}")
 
 # %% [markdown]
-# ## 1 · Load the saved dataset; build the model with label maps (3')
+# ## 2 · A classification head and a training loop (9')
 #
-# We load the `DatasetDict` and label maps saved in Lab 3.1. If you skipped Lab 3.1 (or are on a fresh Colab runtime), the next cell rebuilds them with the same logic: same seed, same ≤ 80 per intent sample, same `max_length` rule.
-
-# %%
-DS_DIR = U.ARTIFACTS / "intent_ds"
-LABELS_FILE = U.ARTIFACTS / "intent_labels.json"
-tok = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-
-def build_intent_ds(n_per_intent=80, seed=42):
-    """Same steps as Lab 3.1: label maps -> DatasetDict -> tokenize (max_length = p99, multiple of 8)."""
-    frames = {"train": U.load_tickets("train"), "validation": U.load_tickets("val"),
-              "test": U.load_tickets("test"), "test_ar": U.load_tickets("ar_test")}
-    frames["train_small"] = (frames["train"].sample(frac=1, random_state=seed)
-                             .groupby("intent").head(n_per_intent)
-                             .sort_values(["intent", "ticket_id"]).reset_index(drop=True))
-    labels = sorted(frames["train"].intent.unique())
-    label2id = {l: i for i, l in enumerate(labels)}
-    lens = [len(x) for x in tok(pd.concat([frames["train"].text, frames["test_ar"].text]).tolist())["input_ids"]]
-    max_len = int(min(128, 8 * np.ceil(np.percentile(lens, 99) / 8)))
-    ds = DatasetDict({k: Dataset.from_pandas(df.assign(label=df.intent.map(label2id))[["ticket_id", "text", "label", "lang"]],
-                                             preserve_index=False)
-                      for k, df in frames.items()})
-    ds = ds.map(lambda b: tok(b["text"], truncation=True, max_length=max_len), batched=True)
-    info = {"label2id": label2id, "id2label": {str(i): l for l, i in label2id.items()}, "max_length": max_len,
-            "model_name": MODEL_NAME, "n_per_intent_small": n_per_intent, "seed": seed}
-    U.ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    ds.save_to_disk(str(DS_DIR))
-    LABELS_FILE.write_text(json.dumps(info, indent=2), encoding="utf-8")
-    return ds, info
-
-
-if DS_DIR.exists() and LABELS_FILE.exists():
-    ds = load_from_disk(str(DS_DIR))
-    info = json.loads(LABELS_FILE.read_text(encoding="utf-8"))
-    print("loaded artifacts/intent_ds")
-else:
-    ds, info = build_intent_ds()
-    print("rebuilt artifacts/intent_ds")
-
-label2id = info["label2id"]
-id2label = {int(i): l for i, l in info["id2label"].items()}
-MAX_LEN = info["max_length"]
-print({k: len(v) for k, v in ds.items()}, "| MAX_LEN =", MAX_LEN)
-
-# %% [markdown]
-# **Which training set?** We train on `train_small` (80 per intent, 2,160 tickets) by default. It is closer to a real labelling budget and trains in ~2 minutes on a T4. Switch `TRAIN_SPLIT = "train"` (200 per intent) to see how much more data buys: usually a small gain on English (it's templated) and a bit more on Arabic, at 2.5× the training time.
+# The encoder returns one vector per token. A message needs one vector: the **mean of the real tokens**
+# (padding left out). A linear layer turns that vector into eight scores.
 #
-# Quick mode (CPU smoke test) uses a tiny subset and caps the number of steps. Its scores are **not** representative.
+# ✏️ **Exercise** · Complete `Router.forward`: run the encoder, average the hidden states over the positions
+# where `ids != 0`, apply dropout and the head. Then write `train_epoch(model, opt, x, y)`: one pass over the
+# shuffled data in batches of 32 with cross-entropy; return the mean loss.
 
 # %%
-TRAIN_SPLIT = "train_small"   # or "train" for the full 200 per intent
+class Router(nn.Module):
+    def __init__(self, encoder: T.TinyTransformer, n_labels: int):
+        super().__init__()
+        self.encoder = encoder
+        self.drop = nn.Dropout(0.1)
+        self.head = nn.Linear(encoder.cfg.d, n_labels)
 
-train_ds = ds[TRAIN_SPLIT]
-val_ds = ds["validation"]
-if U.QUICK:
-    train_ds = train_ds.shuffle(seed=42).select(range(540))   # ~20 per intent
-    val_ds = val_ds.shuffle(seed=42).select(range(216))
-print("train:", len(train_ds), "| validation:", len(val_ds))
+    def forward(self, ids):
+        # BEGIN SOLUTION
+        mask = ids != 0
+        h = self.encoder(ids, mask)
+        pooled = (h * mask[..., None]).sum(1) / mask.sum(1, keepdim=True).clamp(min=1)
+        return self.head(self.drop(pooled))
+        # END SOLUTION
 
-model = AutoModelForSequenceClassification.from_pretrained(
-    MODEL_NAME, num_labels=len(label2id), id2label=id2label, label2id=label2id)
-print(f"{sum(p.numel() for p in model.parameters()) / 1e6:.0f}M parameters | head:", model.classifier)
+
+def train_epoch(model, opt, x, y) -> float:
+    # BEGIN SOLUTION
+    model.train()
+    perm, total = torch.randperm(len(x)), 0.0
+    for s in range(0, len(x), 32):
+        idx = perm[s:s + 32]
+        loss = F.cross_entropy(model(x[idx]), y[idx])
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        total += loss.item() * len(idx)
+    return total / len(x)
+    # END SOLUTION
+
+
+# %%
+def predict(model, x) -> list[str]:
+    model.eval()
+    with torch.no_grad():
+        return [LABELS[i] for i in model(x).argmax(-1).tolist()]
+
+
+def macro_f1(model, x, y) -> float:
+    return float(G.by_variety([LABELS[i] for i in y.tolist()], predict(model, x), [None] * len(y)).iloc[0]["macro_f1"])
+
+
+MASK_ID = tok.token_to_id("[MASK]")
+
+
+def fine_tune(epochs: int, lr: float = 1e-3):
+    """Trains every weight; keeps the weights of the epoch with the best validation macro F1.
+
+    In every epoch 15% of the input tokens are replaced by [MASK], as in the encoder's pretraining:
+    with 400 labelled messages the model would otherwise learn single words by heart.
+    """
+    G.seed()
+    model = Router(T.load(G.MODELS / "ghayth-enc-tiny.pt"), len(LABELS))
+    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
+    log, best, best_state = [], -1.0, None
+    for ep in range(epochs):
+        loss = train_epoch(model, opt, T.mask_tokens(xtr, MASK_ID), ytr)
+        f1 = macro_f1(model, xva, yva)
+        log.append({"epoch": ep + 1, "train_loss": round(loss, 4), "val_macro_f1": f1,
+                    "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+        if f1 > best:
+            best, best_state = f1, copy.deepcopy(model.state_dict())
+    model.load_state_dict(best_state)
+    return model, log
+
+
+EPOCHS = G.pick(40, 4)
+t0 = time.perf_counter()
+try:
+    model, log = fine_tune(EPOCHS)
+    y_pred = predict(model, xte)
+    G.keep("d32_log", log)
+except NotImplementedError:
+    print("↩️  Exercise not done yet: using the supplied fine-tuned encoder and its log")
+    model, _ = T.load_classifier(G.MODELS / "ghayth-enc-routing-full.pt")
+    log = G.reference("d32_log")
+    y_pred = predict(model, xte)
+print(pd.DataFrame(log)[["epoch", "train_loss", "val_macro_f1"]].iloc[4::5].to_string(index=False))
+best_epoch = max(log, key=lambda e: e["val_macro_f1"])["epoch"]
+print(f"best validation macro F1 at epoch {best_epoch} of {len(log)} | {time.perf_counter() - t0:.0f} s on this processor")
+assert log[-1]["train_loss"] < log[0]["train_loss"]
 
 # %% [markdown]
-# The load report says the pre-training head (`vocab_*`) is unused and the new classification head (`pre_classifier`, `classifier`) is newly initialized. That is expected: the head is the only part that starts from random.
+# 🔍 The training loss keeps falling after the validation score has stopped rising. The loop kept the weights
+# of the best validation epoch. Why is it the validation split that chooses, and not the test split?
 
 # %% [markdown]
-# ## 2 · Train with Trainer + early stopping (8')
+# ## 3 · Macro F1 overall and by variety (5')
 #
-# The recipe from the slide:
-# - `compute_metrics` turns logits into accuracy and **macro-F1** on the validation set after every epoch.
-# - `load_best_model_at_end` + `metric_for_best_model="macro_f1"` keep the best epoch, not the last.
-# - `EarlyStoppingCallback(patience=2)` stops if validation macro-F1 doesn't improve for 2 evaluations.
-# - `warmup_steps=0.1`: in transformers v5 a float < 1 means "10% of the steps" (the old `warmup_ratio` argument was removed).
-# - `fp16` only when a GPU is available.
+# ✏️ **Exercise** · Build `scores`: a dictionary from `"baseline"` and `"fine-tuned encoder"` to the macro F1
+# overall and by variety on the test split, as `G.by_variety(...)` returns it, turned into a dictionary from
+# variety to macro F1. The baseline's predictions are in `baseline`.
 
 # %%
-def compute_metrics(p):
-    preds = p.predictions.argmax(-1)
-    return {"accuracy": accuracy_score(p.label_ids, preds),
-            "macro_f1": f1_score(p.label_ids, preds, average="macro")}
+baseline = pd.read_csv(G.supplied("baseline_predictions.csv", "D1_4")).set_index("msg_id").loc[test["msg_id"]]
 
 
-collator = DataCollatorWithPadding(tok)
-RUN_DIR = U.CACHE / "runs" / "intent"
-
-args = TrainingArguments(
-    output_dir=str(RUN_DIR), learning_rate=3e-5, num_train_epochs=4, warmup_steps=0.1,
-    per_device_train_batch_size=U.pick(32, 16), per_device_eval_batch_size=64, weight_decay=0.01,
-    fp16=USE_FP16, seed=42, max_steps=U.pick(-1, 102),  # quick: 3 short epochs on CPU
-    eval_strategy="epoch", save_strategy="epoch", logging_strategy="epoch", save_total_limit=1,
-    load_best_model_at_end=True, metric_for_best_model="macro_f1", report_to="none")
-
-trainer = Trainer(model=model, args=args, train_dataset=train_ds, eval_dataset=val_ds,
-                  processing_class=tok, data_collator=collator, compute_metrics=compute_metrics,
-                  callbacks=[EarlyStoppingCallback(early_stopping_patience=2)])
-train_result = trainer.train()
-print(train_result.metrics)
-
-# %% [markdown]
-# ## 3 · Plot train/val loss and macro-F1 per epoch (3')
-#
-# `trainer.state.log_history` is a list of dicts: training logs have `loss`, evaluation logs have `eval_loss` and `eval_macro_f1`.
-
-# %%
-hist = pd.DataFrame(trainer.state.log_history)
-train_log = hist.dropna(subset=["loss"])[["epoch", "loss"]] if "loss" in hist else pd.DataFrame(columns=["epoch", "loss"])
-eval_log = hist.dropna(subset=["eval_loss"])[["epoch", "eval_loss", "eval_macro_f1", "eval_accuracy"]]
-print(eval_log.round(3).to_string(index=False))
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
-ax1.plot(train_log.epoch, train_log.loss, "o-", label="train")
-ax1.plot(eval_log.epoch, eval_log.eval_loss, "o-", label="validation")
-ax1.set_title("Loss per epoch"); ax1.set_xlabel("epoch"); ax1.set_ylabel("cross-entropy loss"); ax1.legend()
-ax2.plot(eval_log.epoch, eval_log.eval_macro_f1, "o-", color="tab:green")
-ax2.set_title("Validation macro-F1 per epoch"); ax2.set_xlabel("epoch"); ax2.set_ylabel("macro-F1")
-fig.tight_layout()
-plt.show()
-print("best checkpoint:", trainer.state.best_model_checkpoint, "| best macro-F1:", trainer.state.best_metric)
-
-# %% [markdown]
-# 🔍 **Look at:** are both losses still falling (train longer), or does validation loss turn up while train loss keeps falling (overfitting: the best checkpoint saves you)? On our templated data, validation macro-F1 is usually high after 1–2 epochs.
-
-# %% [markdown]
-# ## 4 · Test once: English and Arabic; compare to Day 1 (6')
-#
-# Everything above was chosen on **validation**. Now we touch the test sets once. The Arabic test set is a **zero-shot cross-lingual** test: the model saw only English tickets. Expect a drop.
-
-# %%
-test_en = ds["test"] if not U.QUICK else ds["test"].shuffle(seed=42).select(range(270))
-test_ar = ds["test_ar"]
+def variety_scores(y_pred) -> dict:
+    return G.by_variety(test["department"], y_pred, test["variety"]).set_index("variety")["macro_f1"].to_dict()
 
 
-def predict_split(split):
-    out = trainer.predict(split)
-    probs = torch.softmax(torch.tensor(out.predictions, dtype=torch.float32), dim=-1).numpy()
-    return pd.DataFrame({"ticket_id": split["ticket_id"], "lang": split["lang"], "text": split["text"],
-                         "y_true": [id2label[i] for i in split["label"]],
-                         "y_pred": [id2label[i] for i in probs.argmax(-1)],
-                         "confidence": probs.max(-1)})
-
-
-preds_en, preds_ar = predict_split(test_en), predict_split(test_ar)
-ft_scores = {lang: f1_score(p.y_true, p.y_pred, average="macro") for lang, p in [("EN", preds_en), ("AR", preds_ar)]}
-print({k: round(v, 3) for k, v in ft_scores.items()}, "| n:", len(preds_en), len(preds_ar))
-print(classification_report(preds_en.y_true, preds_en.y_pred, digits=3, zero_division=0)[-300:])
-
-# %% [markdown]
-# ✏️ **Exercise:** where does Arabic lose the most?
-# 1. Compute per-intent F1 for EN and for AR (`classification_report(..., output_dict=True, zero_division=0)`).
-# 2. Put them in one DataFrame with a `drop = EN − AR` column and show the 5 intents with the largest drop.
-
-# %%
 # BEGIN SOLUTION
-rep_en = classification_report(preds_en.y_true, preds_en.y_pred, output_dict=True, zero_division=0)
-rep_ar = classification_report(preds_ar.y_true, preds_ar.y_pred, output_dict=True, zero_division=0)
-per_intent = pd.DataFrame({"f1_en": {k: rep_en[k]["f1-score"] for k in label2id if k in rep_en},
-                           "f1_ar": {k: rep_ar[k]["f1-score"] for k in label2id if k in rep_ar}})
-per_intent["drop"] = per_intent.f1_en - per_intent.f1_ar
-print(per_intent.sort_values("drop", ascending=False).head(5).round(3))
+scores = {"baseline": variety_scores(baseline["y_pred"]), "fine-tuned encoder": variety_scores(y_pred)}
 # END SOLUTION
 
-# %% [markdown]
-# ✏️ **Exercise:** list the 5 **most confident mistakes** across both languages (text, true, predicted, confidence). Confident mistakes are the dangerous ones in production: a confidence threshold won't catch them.
-
 # %%
-# BEGIN SOLUTION
-errors = pd.concat([preds_en, preds_ar]).query("y_true != y_pred")
-print(errors.sort_values("confidence", ascending=False)[["lang", "text", "y_true", "y_pred", "confidence"]]
-      .head(5).round(3).to_string(index=False))
-# END SOLUTION
+try:
+    scores
+except NameError:
+    scores = {"baseline": variety_scores(baseline["y_pred"]), "fine-tuned encoder": variety_scores(y_pred)}
+table = pd.DataFrame(scores).T.rename(columns={"all": "macro_f1"})
+print(table.to_string())
+out = G.lab_dir("D3_2")
+table.to_csv(out / "encoder_vs_baseline.csv")
+predictions = pd.DataFrame({"msg_id": test["msg_id"], "variety": test["variety"], "y_true": test["department"], "y_pred": y_pred})
+predictions.to_csv(out / "encoder_predictions.csv", index=False)
+(out / "train_log.json").write_text(json.dumps(log, indent=1), encoding="utf-8")
+G.keep_file(out / "encoder_predictions.csv")
+G.keep("d32_scores", scores)
+assert table.loc["fine-tuned encoder", "macro_f1"] > (0.1 if G.QUICK else 0.5)
 
 # %% [markdown]
-# **Compare with Day 1.** Lab 1.4 saved predictions for "e5 + LogReg" (frozen multilingual embeddings + logistic regression). If that file exists we compare on the same tickets; otherwise we retrain that baseline here, on the **same training tickets** as the fine-tuned model, which is the fairer comparison anyway.
-
-# %%
-saved = U.load_predictions()
-ours = pd.concat([preds_en, preds_ar])
-
-if "e5 + LogReg" in saved:
-    base = saved["e5 + LogReg"][0]
-    base = base[base.ticket_id.isin(ours.ticket_id)]
-    base_note = "Day 1 file (trained on the full train set)"
-else:
-    tr = train_ds.to_pandas()
-    E_tr = U.embed(tr.text, cache_key=f"d32_{TRAIN_SPLIT}_{len(tr)}")
-    lr = LogisticRegression(max_iter=2000, C=10).fit(E_tr, tr.label.map(id2label))
-    E_te = U.embed(ours.text, cache_key=f"d32_test_{len(ours)}")
-    base = ours[["ticket_id", "lang", "y_true"]].assign(y_pred=lr.predict(E_te))
-    base_note = f"recomputed here on {TRAIN_SPLIT} ({len(tr)} tickets)"
-
-common = ours.merge(base[["ticket_id", "lang", "y_pred"]], on=["ticket_id", "lang"], suffixes=("", "_base"))
-rows = []
-for lang, g in common.groupby("lang"):
-    rows.append({"lang": lang, "n": len(g),
-                 "e5 + LogReg": f1_score(g.y_true, g.y_pred_base, average="macro"),
-                 "Fine-tuned DistilmBERT": f1_score(g.y_true, g.y_pred, average="macro")})
-print("baseline:", base_note)
-pd.DataFrame(rows).round(3)
+# 🔍 Read the table by column, not only the first one. Where did 400 labels and a pretrained encoder beat
+# word counts, and where not? This is the third row of the comparison the course asks you to defend.
 
 # %% [markdown]
-# 🔍 **Look at:** on English both approaches are high (templated data, near-duplicates). The interesting column is Arabic: e5 was trained with multilingual sentence-similarity objectives, so its frozen embeddings often transfer to Arabic *better* than a model fine-tuned only on English. Fine-tuning made the representations specific to English tickets. A few hundred real Arabic examples (or the synthetic ones from Lab 3.1, after review) usually close much of the gap.
-
-# %% [markdown]
-# ## 5 · Save model + tokenizer + label maps; reload; predict (5')
+# ## 4 · Read the confusion matrix (7')
 #
-# A model folder is only useful if it contains everything needed to rebuild predictions: weights, tokenizer, and the label maps (stored in `config.json` as `id2label`/`label2id`; we also keep our JSON file next to it).
-
-# %%
-OUT = U.ARTIFACTS / "intent-distilmbert"
-trainer.save_model(str(OUT))          # weights + config (with id2label / label2id)
-tok.save_pretrained(str(OUT))
-shutil.copy(LABELS_FILE, OUT / "intent_labels.json")
-print(sorted(p.name for p in OUT.iterdir()))
-
-clf = pipeline("text-classification", model=str(OUT), device=0 if torch.cuda.is_available() else -1,
-               truncation=True, max_length=MAX_LEN)
-
-# %% [markdown]
-# ✏️ **Exercise:** use the reloaded `clf` to classify the examples below in one batched call (`batch_size=...`) and print a small table (text, label, score). Then show the **top 3** intents for the Arabic message "وين طلبي؟ صار له أسبوع" with `top_k=3`.
-
-# %%
-examples = ["where is my refund", "I was charged twice for order A-55821!!", "how do I delete my account?",
-            "وين طلبي؟ صار له أسبوع", "أريد إلغاء طلبي رقم A-10023", "نسيت كلمة المرور"]
-
-# %%
-# BEGIN SOLUTION
-out = clf(examples, batch_size=16)
-print(pd.DataFrame({"text": examples, "label": [o["label"] for o in out],
-                    "score": [round(o["score"], 3) for o in out]}).to_string(index=False))
-print(clf("وين طلبي؟ صار له أسبوع", top_k=3))
-# END SOLUTION
-
-# %% [markdown]
-# Save the test predictions for the Lab 3.4 leaderboard, with the single-ticket latency (p95) of the reloaded pipeline.
-
-# %%
-lat = U.bench(lambda t: clf(t), preds_en.text.tolist()[:U.pick(100, 20)])
-print({k: round(v, 1) for k, v in lat.items()})
-U.save_predictions(
-    "Fine-tuned DistilmBERT",
-    ours[["ticket_id", "lang", "y_true", "y_pred", "confidence"]],
-    {"day": 3, "p95_ms": lat["p95_ms"], "device": U.device(),
-     "notes": f"{MODEL_NAME} fine-tuned on {TRAIN_SPLIT} ({len(train_ds)} tickets); quick={U.QUICK}"})
-
-# %% [markdown]
-# ## ✱ Stretch · Data-size ablation: 10 / 25 / 80 per class
+# A confusion matrix counts, for every true department, where the messages went. The diagonal is right;
+# every other cell is a kind of error with a cause you can look for.
 #
-# How much labelled data do you need? Train fresh models on 10, 25 and 80 tickets per intent and plot validation macro-F1 against the data size. (We use validation, not test: this is a model-selection question.) Each run takes ~1 minute on a T4. Small sets need more epochs to converge, so we give every run 6 epochs.
+# ✏️ **Exercise** · Write `top_confusions(y_true, y_pred, k)`: the `k` largest off-diagonal cells as a list of
+# `(true, predicted, count)`, largest first.
 
 # %%
-def train_eval(n_per_class, seed=42):
-    df = ds["train"].to_pandas()
-    idx = df.sample(frac=1, random_state=seed).groupby("label").head(n_per_class).index.tolist()
-    m = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME, num_labels=len(label2id), id2label=id2label, label2id=label2id)
-    a = TrainingArguments(output_dir=str(U.CACHE / "runs" / f"ablation-{n_per_class}"), learning_rate=5e-5,
-                          num_train_epochs=6, warmup_steps=0.1, per_device_train_batch_size=U.pick(32, 16),
-                          per_device_eval_batch_size=64, weight_decay=0.01, fp16=USE_FP16, seed=seed,
-                          max_steps=U.pick(-1, 10), save_strategy="no", eval_strategy="no",
-                          logging_strategy="no", report_to="none")
-    t = Trainer(model=m, args=a, train_dataset=ds["train"].select(idx), eval_dataset=val_ds,
-                processing_class=tok, data_collator=collator, compute_metrics=compute_metrics)
-    t.train()
-    return t.evaluate()["eval_macro_f1"]
+def top_confusions(y_true, y_pred, k: int = 5) -> list:
+    # BEGIN SOLUTION
+    pairs = pd.Series(list(zip(y_true, y_pred)))
+    counts = pairs[[t != p for t, p in pairs]].value_counts()
+    return [(t, p, int(n)) for (t, p), n in counts.head(k).items()]
+    # END SOLUTION
 
 
-sizes = [10, 25, 80]
-ablation = pd.DataFrame({"per_class": sizes, "val_macro_f1": [train_eval(n) for n in sizes]})
-print(ablation.round(3))
-plt.plot(ablation.per_class, ablation.val_macro_f1, "o-")
-plt.title("Validation macro-F1 vs. training data size")
-plt.xlabel("training tickets per intent"); plt.ylabel("macro-F1"); plt.xscale("log")
-plt.xticks(sizes, [str(s) for s in sizes])
-plt.show()
+# %%
+print(pd.crosstab(test["department"], pd.Series(y_pred, name="predicted", index=test.index)).reindex(index=LABELS, columns=LABELS, fill_value=0).to_string())
+confusions = [tuple(c) for c in G.attempt(lambda: top_confusions(list(test["department"]), y_pred), "d32_confusions")]
+print("\nlargest confusions (true → predicted):")
+for t, p, n in confusions:
+    print(f"  {t} → {p}: {n}")
+t, p, _ = confusions[0]
+wrong = test[(test["department"] == t) & (pd.Series(y_pred, index=test.index) == p)]
+print(f"\nthree '{t}' messages sent to '{p}':")
+for text in wrong["text"].head(3):
+    print("  ", text[:150])
+assert len(confusions) >= 3 and all(a != b for a, b, _ in confusions)
+
+# %% [markdown]
+# 🔍 Read the three messages. Do they carry a second clause with another department's words ("and the meter
+# was replaced last month")? Is "my bill is high and I think the meter is broken" a billing message or a
+# meters message? Some confusions are the model's; some are the label's. Say which, before you ask for more
+# training.
+
+# %% [markdown]
+# ## ✱ Stretch · Run the same notebook on a published Arabic encoder in Colab with a GPU
+#
+# The course encoder knows Sawaqi's messages and nothing else. A published Arabic encoder has read far more
+# text. In Colab, with a GPU runtime, install `transformers`, load an Arabic-capable encoder of your choice
+# with `AutoModel.from_pretrained` and its tokeniser, replace `Router.encoder` by it (its hidden states are
+# `model(**batch).last_hidden_state`; the mask is `batch["attention_mask"]`), lower the learning rate to
+# about 2e-5 and train for three epochs. Compare the same table. This step downloads model weights: do it in
+# Colab, not on the classroom laptops.
 
 # %% [markdown]
 # ## Checkpoint
 #
-# 1. Validation macro-F1 peaked at epoch 2 and the run continued to epoch 4. Which weights does `trainer.model` hold after training, and why?
-# 2. Why can the fine-tuned model lose to frozen e5 embeddings on Arabic, even though it wins on English?
-# 3. You deploy the model but rebuild `id2label` with `set(train.intent)` in the service. What can go wrong?
+# 1. Validation macro F1 peaked at an early epoch and then moved sideways. What do you ship?
+# 2. Why average only over real tokens, and not over the padded positions too?
+# 3. The largest confusion is between two departments whose messages share words. Name two fixes that are
+#    not "train longer".
 #
 # <details><summary>Answers</summary>
 #
-# 1. The epoch-2 checkpoint: `load_best_model_at_end=True` with `metric_for_best_model="macro_f1"` reloads the best evaluation checkpoint at the end.
-# 2. Fine-tuning on English-only data specializes the representations to English tickets; e5's multilingual training kept EN and AR aligned. The cross-lingual signal can partly wash out.
-# 3. Python sets have no stable order, so ids can map to the wrong intent names. Always load the saved label maps (they are in `config.json`).
+# 1. The weights of the best validation epoch. Later epochs fit the training messages more closely without
+#    doing better on unseen ones.
+# 2. Padding carries no meaning; averaging it in would make a short message's vector depend on how long the
+#    longest message of its batch happened to be.
+# 3. Fix the labels (decide where a "high bill, maybe the meter" message belongs and relabel consistently),
+#    add labelled examples of exactly that kind, or send that pair to a person when the two scores are close.
 #
 # </details>
 #
-# ## Carry forward
-#
-# Lab 3.4 loads `artifacts/intent-distilmbert/` for behavioural tests, quantization and the Gradio demo, and puts "Fine-tuned DistilmBERT" on the leaderboard. For your capstone, this notebook is the template for any encoder classifier: change the dataset and label maps, keep the recipe.
+# **Carry forward.** `artifacts/D3_2/encoder_predictions.csv`, `encoder_vs_baseline.csv` and `train_log.json`
+# (with timestamps). Lab 3.4 serves a routing model and writes its card from these numbers.
