@@ -11,7 +11,7 @@ Participants build the language layer of a customer-service system for a fiction
 
 **Format:** Intensive: 3 teaching days of four sessions and a capstone day, with guided pre-work and a tracked follow-up task
 
-**Course page:** https://sdaiaacademy.github.io/applied-nlp/
+**Course page:** https://sdaiaacademy.github.io/ae-301/
 <!-- /academy:title -->
 
 The whole course follows one case study: **Sawaqi Water Company**, a fictional regional water utility, and **Ghayth

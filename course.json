@@ -1,7 +1,7 @@
 {
   "$schema": "https://sdaiaacademy.github.io/engine/schemas/course.schema.json",
   "engine": "1",
-  "id": "applied-nlp",
+  "id": "ae-301",
   "code": "AE-301",
   "version": "2027.1.0",
   "lang": "en",
@@ -26,8 +26,8 @@
     "Setup: a laptop CPU with uv, or Google Colab, and a key for a free hosted model (OpenRouter by default). Nothing downloads a language model. Run 00_setup_check before Day 1; see labs/README.md."
   ],
   "site": {
-    "url": "https://sdaiaacademy.github.io/applied-nlp/",
-    "repo": "SDAIAAcademy/applied-nlp"
+    "url": "https://sdaiaacademy.github.io/ae-301/",
+    "repo": "SDAIAAcademy/ae-301"
   },
   "outcomes": [
     {

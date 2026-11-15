@@ -9,13 +9,13 @@ Hands-on notebooks for the SDAIA Academy course **AE-301 Applied Natural Languag
 **1 · Get a free OpenRouter key** at <https://openrouter.ai/keys>. Free models (ids ending in `:free`) allow 20 requests a minute and 50 a day; an account that has bought at least 10 credits gets 1,000 free-model requests a day, and free models do not spend the credits. Identical requests are replayed from `labs/cache/`, so running a cell again costs nothing. The helper spaces calls to a free model by about three seconds and waits when the provider answers with a rate limit. **Plan Day 2 before the cohort:** its four labs make about 390 requests (about 125 with `ANLP_QUICK=1`), more than a fresh free key allows in a day even in quick mode. Each participant needs a key on an account that has bought at least 10 credits, or a table shares one such key and its cache; Day 1 (about 22 requests) fits a fresh free key.
 
 **2a · Google Colab**
-1. Open a notebook from the [course page](https://sdaiaacademy.github.io/applied-nlp/), or directly: `https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/<notebook>.ipynb`.
+1. Open a notebook from the [course page](https://sdaiaacademy.github.io/ae-301/), or directly: `https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/<notebook>.ipynb`.
 2. In the 🔑 **Secrets** panel add `OPENROUTER_API_KEY` and turn on notebook access.
 3. Run the first cell. It clones this repository and installs `requirements-colab.txt`.
 
 **2b · Local**
 ```bash
-git clone https://github.com/SDAIAAcademy/applied-nlp
+git clone https://github.com/SDAIAAcademy/ae-301
 cd applied-nlp/labs
 cp .env.example .env           # then paste your key into .env
 uv sync                        # creates .venv from pyproject.toml (uv.lock pins every version)
@@ -44,19 +44,19 @@ Free models change often. If a default has disappeared or is busy, pick another 
 
 | Day | Session | Notebook | Needs a hosted model |
 |---|---|---|---|
-| 0 | Setup | [`00_setup_check.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/00_setup_check.ipynb) | one call |
-| 1 | Tokenisation | [`D1_1_tokenisers.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_1_tokenisers.ipynb) | no (three tokeniser files from the Hub) |
-| 1 | Embeddings and semantic search | [`D1_2_semantic_search.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_2_semantic_search.ipynb) | embeddings, 21 requests |
-| 1 | Inside the transformer | [`D1_3_attention.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_3_attention.ipynb) | no |
-| 1 | Decision models | [`D1_4_baseline.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D1_4_baseline.ipynb) | no · **AI assistants off** |
-| 2 | Generative language models | [`D2_1_sampling.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_1_sampling.ipynb) | chat, 60 requests (24 in quick mode) |
-| 2 | Prompting and structured outputs | [`D2_2_extraction.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_2_extraction.ipynb) | chat, about 230 requests (about 45 in quick mode) |
-| 2 | Retrieval-augmented generation | [`D2_3_rag.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_3_rag.ipynb) | chat, 16 requests |
-| 2 | Model selection and evaluation | [`D2_4_model_selection.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D2_4_model_selection.ipynb) | chat, 80 requests (40 in quick mode) |
-| 3 | Fine-tuning data | [`D3_1_splits.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_1_splits.ipynb) | no |
-| 3 | Fine-tuning an encoder | [`D3_2_finetune_encoder.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_2_finetune_encoder.ipynb) | no |
-| 3 | Low-rank and quantised adapters | [`D3_3_lora.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_3_lora.ipynb) | no |
-| 3 | Evaluate and deploy | [`D3_4_service.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/applied-nlp/blob/main/labs/D3_4_service.ipynb) | no |
+| 0 | Setup | [`00_setup_check.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/00_setup_check.ipynb) | one call |
+| 1 | Tokenisation | [`D1_1_tokenisers.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D1_1_tokenisers.ipynb) | no (three tokeniser files from the Hub) |
+| 1 | Embeddings and semantic search | [`D1_2_semantic_search.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D1_2_semantic_search.ipynb) | embeddings, 21 requests |
+| 1 | Inside the transformer | [`D1_3_attention.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D1_3_attention.ipynb) | no |
+| 1 | Decision models | [`D1_4_baseline.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D1_4_baseline.ipynb) | no · **AI assistants off** |
+| 2 | Generative language models | [`D2_1_sampling.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D2_1_sampling.ipynb) | chat, 60 requests (24 in quick mode) |
+| 2 | Prompting and structured outputs | [`D2_2_extraction.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D2_2_extraction.ipynb) | chat, about 230 requests (about 45 in quick mode) |
+| 2 | Retrieval-augmented generation | [`D2_3_rag.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D2_3_rag.ipynb) | chat, 16 requests |
+| 2 | Model selection and evaluation | [`D2_4_model_selection.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D2_4_model_selection.ipynb) | chat, 80 requests (40 in quick mode) |
+| 3 | Fine-tuning data | [`D3_1_splits.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D3_1_splits.ipynb) | no |
+| 3 | Fine-tuning an encoder | [`D3_2_finetune_encoder.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D3_2_finetune_encoder.ipynb) | no |
+| 3 | Low-rank and quantised adapters | [`D3_3_lora.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D3_3_lora.ipynb) | no |
+| 3 | Evaluate and deploy | [`D3_4_service.ipynb`](https://colab.research.google.com/github/SDAIAAcademy/ae-301/blob/main/labs/D3_4_service.ipynb) | no |
 
 Exercises are marked **✏️ Exercise** and raise `NotImplementedError` until you fill them in. The cell after each exercise has a safety net: when the exercise is not done, it takes a reference result, so the rest of the notebook still runs. Complete versions are in `solutions/`. Cells marked **✱ Stretch** are optional. Each lab writes its outputs to `artifacts/<lab>/`; a later lab that compares with an earlier one reads your own output when it exists and the supplied copy in `data/reference/` otherwise.
 
