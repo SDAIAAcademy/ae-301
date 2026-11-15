@@ -1,0 +1,1158 @@
+{
+ "predictions": [
+  {
+   "account_number": "3019240377",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3082828513",
+   "district": null,
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": "3003384043",
+   "district": null,
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": "shurfa",
+   "complaint_type": "new_connection"
+  },
+  {
+   "account_number": "3032988567",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3022681981",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3031159276",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": "wurood",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3031159276",
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3073241511",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3073241511",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3073241511",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3034950157",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3086456772",
+   "district": null,
+   "complaint_type": "new_connection"
+  },
+  {
+   "account_number": "3000892629",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3024743151",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3024743151",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3032167215",
+   "district": "qalaa",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3032167215",
+   "district": "qalaa",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3032167215",
+   "district": "qalaa",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3085370823",
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3003384043",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3072903954",
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3072903954",
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3072903954",
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3080739561",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": null,
+   "district": "qalaa",
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3094588403",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3051052545",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3056335557",
+   "district": null,
+   "complaint_type": "leak_meter"
+  },
+  {
+   "account_number": "3000451026",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3086186696",
+   "district": "shurfa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3086186696",
+   "district": "shurfa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3086186696",
+   "district": "shurfa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3086186696",
+   "district": "shurfa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3017004462",
+   "district": null,
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3094698545",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3065405612",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3065405612",
+   "district": "shurfa",
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3057708848",
+   "district": null,
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3043919479",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3043919479",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3043919479",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3043919479",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3047028797",
+   "district": "ghadeer",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3043871553",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3069980829",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3094913897",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": null,
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3052011120",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3044555665",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3041443052",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3078902043",
+   "district": "manhal",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3078902043",
+   "district": "manhal",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": null,
+   "district": "qalaa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3095523875",
+   "district": "rabwa",
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3095523875",
+   "district": "rabwa",
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "leak_meter"
+  },
+  {
+   "account_number": "3086064286",
+   "district": null,
+   "complaint_type": "sewage_blockage"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "ownership_transfer"
+  },
+  {
+   "account_number": "3018111288",
+   "district": null,
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3027917035",
+   "district": null,
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "bad_smell"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3044076685",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3045907979",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3085370823",
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3095523875",
+   "district": "rabwa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3098513127",
+   "district": null,
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": "3070942296",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3070942296",
+   "district": "shurfa",
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": "3070942296",
+   "district": "shurfa",
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": "3069236499",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3069236499",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3069236499",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3045359737",
+   "district": "qalaa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3043919479",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3018111288",
+   "district": "wurood",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3099543205",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3032047667",
+   "district": "naseem",
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3085699223",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3085699223",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": null,
+   "district": "qalaa",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3033983698",
+   "district": "shurfa",
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3015517414",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3045907979",
+   "district": "yasmeen",
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3045907979",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3099543205",
+   "district": null,
+   "complaint_type": "payment_failed"
+  },
+  {
+   "account_number": "3099543205",
+   "district": null,
+   "complaint_type": "payment_failed"
+  },
+  {
+   "account_number": "3099543205",
+   "district": null,
+   "complaint_type": "payment_failed"
+  },
+  {
+   "account_number": "3065405612",
+   "district": "shurfa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3031159276",
+   "district": "ghadeer",
+   "complaint_type": "sewage_blockage"
+  },
+  {
+   "account_number": "3058729048",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3070942296",
+   "district": "rabwa",
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3045907979",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3060778710",
+   "district": null,
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": "3060778710",
+   "district": null,
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": null,
+   "district": "ghadeer",
+   "complaint_type": "new_connection"
+  },
+  {
+   "account_number": "3008652821",
+   "district": null,
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3015110634",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3015110634",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3003705307",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3010255575",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3010255575",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3065569080",
+   "district": "wurood",
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3070327107",
+   "district": "naseem",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3022681981",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3003705307",
+   "district": "qalaa",
+   "complaint_type": "new_connection"
+  },
+  {
+   "account_number": "3098343270",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3005125367",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3094588403",
+   "district": null,
+   "complaint_type": "leak_meter"
+  },
+  {
+   "account_number": "3034950157",
+   "district": null,
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3036085026",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3085370823",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3086064286",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3020651473",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3033983698",
+   "district": "rabwa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3031159276",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3031159276",
+   "district": null,
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3008652821",
+   "district": "naseem",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": "yasmeen",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3057708848",
+   "district": "naseem",
+   "complaint_type": "installment_request"
+  },
+  {
+   "account_number": "3086456772",
+   "district": "naseem",
+   "complaint_type": "payment_failed"
+  },
+  {
+   "account_number": null,
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3094588403",
+   "district": "ghadeer",
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": "3066663709",
+   "district": null,
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3027917035",
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3088849933",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3088849933",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3074976704",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3095452390",
+   "district": "wurood",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3095452390",
+   "district": "wurood",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3058729048",
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3029669838",
+   "district": null,
+   "complaint_type": "ownership_transfer"
+  },
+  {
+   "account_number": "3045359737",
+   "district": null,
+   "complaint_type": "low_pressure"
+  },
+  null,
+  {
+   "account_number": "3043871553",
+   "district": "shurfa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3094588403",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3036654756",
+   "district": "qalaa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3052600535",
+   "district": "ghadeer",
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3017820906",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3017820906",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3003384043",
+   "district": "qalaa",
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3098343270",
+   "district": null,
+   "complaint_type": "ownership_transfer"
+  },
+  {
+   "account_number": "3086456772",
+   "district": null,
+   "complaint_type": "leak_meter"
+  },
+  {
+   "account_number": "3036654756",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3018754829",
+   "district": "rabwa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3057708848",
+   "district": null,
+   "complaint_type": "sewage_blockage"
+  },
+  {
+   "account_number": "3024948211",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3024948211",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3043871553",
+   "district": null,
+   "complaint_type": "payment_failed"
+  },
+  {
+   "account_number": "3024948211",
+   "district": "rabwa",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3008652821",
+   "district": "ghadeer",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3047028797",
+   "district": "shurfa",
+   "complaint_type": "sewage_blockage"
+  },
+  {
+   "account_number": "3077667896",
+   "district": "manhal",
+   "complaint_type": "sewage_overflow"
+  },
+  {
+   "account_number": "3034827218",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": null,
+   "district": "naseem",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3053418196",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3095452390",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3061001428",
+   "district": "naseem",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3052011120",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3025202370",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3057484877",
+   "district": null,
+   "complaint_type": "sewage_blockage"
+  },
+  {
+   "account_number": "3024948211",
+   "district": null,
+   "complaint_type": "leak_meter"
+  },
+  {
+   "account_number": "3066663709",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": "wurood",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3044555665",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3085699223",
+   "district": null,
+   "complaint_type": "meter_reading"
+  },
+  {
+   "account_number": "3029669838",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": "3069236499",
+   "district": "manhal",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3041443052",
+   "district": "wurood",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": null,
+   "district": "yasmeen",
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": null,
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3044771175",
+   "district": "ghadeer",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3044771175",
+   "district": "ghadeer",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3073241511",
+   "district": "qalaa",
+   "complaint_type": "discoloured"
+  },
+  {
+   "account_number": "3096856254",
+   "district": null,
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": "3094913897",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3000892629",
+   "district": null,
+   "complaint_type": "ownership_transfer"
+  },
+  {
+   "account_number": "3034950157",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3034950157",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3033983698",
+   "district": "shurfa",
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": null,
+   "district": "ghadeer",
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3044771175",
+   "district": null,
+   "complaint_type": "meter_fault"
+  },
+  {
+   "account_number": "3053291680",
+   "district": "qalaa",
+   "complaint_type": "leak_street"
+  },
+  {
+   "account_number": "3012419586",
+   "district": "yasmeen",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3086591832",
+   "district": "ghadeer",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3052011120",
+   "district": null,
+   "complaint_type": "no_water"
+  },
+  {
+   "account_number": "3073241511",
+   "district": null,
+   "complaint_type": "duplicate_charge"
+  },
+  {
+   "account_number": null,
+   "district": "rabwa",
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3098513127",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  {
+   "account_number": "3098513127",
+   "district": null,
+   "complaint_type": "high_bill"
+  },
+  null,
+  {
+   "account_number": "3018111288",
+   "district": null,
+   "complaint_type": "low_pressure"
+  },
+  {
+   "account_number": "3086456772",
+   "district": null,
+   "complaint_type": "installment_request"
+  }
+ ],
+ "failures": [
+  {
+   "msg_id": "M0087",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M0144",
+   "attempt": 1,
+   "error": "Value error, account_number must be an [ACCOUNT_n] placeholder that appears in the message, or null"
+  },
+  {
+   "msg_id": "M0224",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M0277",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0309",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0394",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0563",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M0583",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0648",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0918",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M0933",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M0982",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1080",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1102",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1117",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1163",
+   "attempt": 1,
+   "error": "Value error, account_number must be an [ACCOUNT_n] placeholder that appears in the message, or null"
+  },
+  {
+   "msg_id": "M1209",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1289",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1289",
+   "attempt": 2,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1340",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1497",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1549",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1712",
+   "attempt": 1,
+   "error": "Field required; Extra inputs are not permitted"
+  },
+  {
+   "msg_id": "M1761",
+   "attempt": 1,
+   "error": "Value error, account_number must be an [ACCOUNT_n] placeholder that appears in the message, or null"
+  },
+  {
+   "msg_id": "M1762",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1780",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1783",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1846",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1943",
+   "attempt": 1,
+   "error": "Value error, account_number must be an [ACCOUNT_n] placeholder that appears in the message, or null"
+  },
+  {
+   "msg_id": "M1950",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1966",
+   "attempt": 1,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  },
+  {
+   "msg_id": "M1966",
+   "attempt": 2,
+   "error": "Invalid JSON: expected value at line 1 column 1"
+  }
+ ]
+}

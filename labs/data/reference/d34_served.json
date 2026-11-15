@@ -1,0 +1,42 @@
+[
+ {
+  "variety": "all",
+  "n": 403,
+  "macro_f1": 0.847,
+  "accuracy": 0.861,
+  "handed_off": 0.362,
+  "accuracy_when_kept": 1.0
+ },
+ {
+  "variety": "msa",
+  "n": 115,
+  "macro_f1": 0.938,
+  "accuracy": 0.957,
+  "handed_off": 0.191,
+  "accuracy_when_kept": 1.0
+ },
+ {
+  "variety": "gulf",
+  "n": 157,
+  "macro_f1": 0.856,
+  "accuracy": 0.898,
+  "handed_off": 0.274,
+  "accuracy_when_kept": 1.0
+ },
+ {
+  "variety": "arabizi",
+  "n": 51,
+  "macro_f1": 0.42,
+  "accuracy": 0.569,
+  "handed_off": 0.941,
+  "accuracy_when_kept": 1.0
+ },
+ {
+  "variety": "en",
+  "n": 80,
+  "macro_f1": 0.808,
+  "accuracy": 0.838,
+  "handed_off": 0.412,
+  "accuracy_when_kept": 1.0
+ }
+]

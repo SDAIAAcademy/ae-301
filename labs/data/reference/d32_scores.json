@@ -1,0 +1,16 @@
+{
+ "baseline": {
+  "all": 0.847,
+  "msa": 0.938,
+  "gulf": 0.856,
+  "arabizi": 0.42,
+  "en": 0.808
+ },
+ "fine-tuned encoder": {
+  "all": 0.611,
+  "msa": 0.629,
+  "gulf": 0.657,
+  "arabizi": 0.327,
+  "en": 0.524
+ }
+}

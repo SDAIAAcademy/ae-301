@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="ai-engineering">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 2 · Generate · Applied Natural Language Processing Engineering</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day2.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Applied Natural Language Processing Engineering" data-track="ai-engineering" data-day="Day 2">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Applied Natural Language Processing Engineering</div>
+  <h1>Generate</h1>
+  <p class="lead mt">Day 2</p>
+  <div class="meta"><span class="track">AI Engineering Track</span><span>3 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>AE-301</span></div>
+  <aside class="notes"><p>Open with yesterday's number: the baseline routes with macro F1 0.85 and 0.42 for Arabizi, in 4 ms. Today's question: what does a generative model add, for whom, and at what price? Check keys: today's labs call a hosted chat model.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>Generate</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · Generative language models</b><small>A decoder in a loop: sampling settings, consistency and invented details</small></div></div><div class="item"><div><b>Session 2 · Prompting and structured outputs</b><small>A prompt is a specification; a schema is the contract; personal fields are masked before they leave</small></div></div><div class="item"><div><b>Session 3 · Retrieval-augmented generation</b><small>Ground replies in the tariff rule book, cite the rule, and refuse when the rules are silent</small></div></div><div class="item"><div><b>Session 4 · Model selection and evaluation</b><small>Choose on quality by variety, latency and cost per thousand messages, not on a leaderboard</small></div></div></div>
+  <aside class="notes"><p>Four sessions. Every lab today works with a hosted open-weight model through one function, caches every answer, and starts from supplied files. If a key fails, the labs run on a scripted stand-in and say so in their first line: its numbers are not a model's.</p></aside>
+</section>
+
+<section class="slide" id="review-day-1" data-lo="LO1" data-n="3">
+  <div class="kicker">Review · Day 1</div>
+  <h2>Before we generate anything</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="review-day-1-q1">
+    <p class="lead">A message contains <span class="ar">العَدّاد</span> with diacritics. The Arabic tokeniser returns <code>[UNK]</code> and the router sends the message to the wrong department. Where is the fix?</p>
+    <div class="opts">
+      <div class="opt" data-why="Blames the classifier: it never received the word, so no amount of training on clean text helps" data-k="A">Retrain the router with more epochs</div>
+      <div class="opt" data-why="Changes the wrong part: a larger vocabulary trained on text without diacritics still has no piece for them" data-k="B">Ask for a tokeniser with a larger vocabulary</div>
+      <div class="opt" data-why="Treats a systematic spelling problem as rare noise: 1,052 pieces were unknown in the archive" data-k="C">Leave it, since diacritics are rare in customer messages</div>
+      <div class="opt" data-ok data-k="D">Normalise the text before the tokeniser sees it</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The failure happens before the model: the tokeniser has no piece with a diacritic. Removing diacritics first turned 1,052 unknown pieces into 0.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. Two minutes. Use it to recall the order of the pipeline: normalise, tokenise, embed, attend, decide. Every later problem this week is located by asking at which of those steps it happens.</p></aside>
+</section>
+
+<!-- ======================= SESSION 1 ======================= -->
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="4">
+  <div class="kicker">Session 1</div>
+  <h1>Generative language models</h1>
+  <ul class="bullets outcomes"><li>Explain how temperature and top-p change the next-token choice</li><li>Measure the consistency of replies across repeated samples</li><li>Detect details a reply invented</li></ul>
+  <div class="sess-no">01</div>
+  <aside class="notes"><p>Session 1 serves LO5: the prompted model is the second of the three approaches, and before using it to decide we look at how it produces text at all.</p></aside>
+</section>
+
+<section class="slide" data-label="The loop" id="decoder-in-a-loop" data-lo="LO5" data-n="5" data-session="1">
+  <div class="kicker">Generative language models</div>
+  <h2>A generative model is yesterday's decoder in a loop</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Context</b>the tokens so far</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Decoder</b>one score per vocabulary entry</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>Sampling</b>scores become one chosen token</div>
+    <div class="arrow">→</div>
+    <div class="step c-purple"><b>Append</b>and go round again</div>
+  </div>
+  <ul class="bullets small mt">
+    <li>The model never writes a sentence. It scores the next token, thousands of times.</li>
+    <li>Everything it "knows" at a step is in the context: your instructions, the message, and what it has written so far.</li>
+    <li>It stops at an end token or at your <code>max_tokens</code>.</li>
+  </ul>
+  <aside class="notes"><p>Link to Lab 1.3: the decoder there continued "the water" with several likely openings. A hosted model does the same at a scale of billions of parameters. Two consequences for today: output costs time per token (latency grows with length), and the choice of token is a setting you control.</p></aside>
+</section>
+
+<section class="slide" data-label="Chat template" id="instructions-are-tokens-too" data-lo="LO5" data-n="6" data-session="1">
+  <div class="kicker">Base and instruction-tuned</div>
+  <h2>A chat is one long text with markers the model was trained to follow</h2>
+  <div class="cols cols-2">
+    <div class="trace s">
+      <div class="ev guard"><b>system</b>You write short replies for the contact centre of Sawaqi. Use only the facts given.</div>
+      <div class="ev user"><b>user</b>Customer message: … FACTS: {"ticket": "SW-48211", "crew_eta_hours": 4}</div>
+      <div class="ev model"><b>assistant</b>the model continues from here</div>
+    </div>
+    <ul class="bullets small">
+      <li>A <b>base</b> model continues any text. An <b>instruction-tuned</b> model was trained further on conversations in one fixed format.</li>
+      <li>The provider's <b>chat template</b> turns your list of messages into that format. Use the API's roles; do not write the markers yourself.</li>
+      <li>The system message is not a law. It is text the model was trained to weigh heavily.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The trace shows the reply task of Lab 2.1. The last bullet prepares Day 2's theme: a prompt asks, code checks. Whatever must hold (a format, a fact, a refusal) is verified after generation, by code.</p></aside>
+</section>
+
+<section class="slide" data-label="Temperature" id="temperature-sharpens-or-flattens" data-lo="LO5" data-n="7" data-session="1">
+  <div class="kicker">Measured in Lab 2.1 on the course decoder</div>
+  <h2>Temperature sharpens or flattens the same scores</h2>
+  <table class="t">
+    <tr><th class="num">Temperature</th><th class="num">Probability of the top token</th><th class="num">Entropy (bits)</th><th>Reads as</th></tr>
+    <tr><td class="num">0.2</td><td class="num">0.996</td><td class="num">0.04</td><td>almost always the same token</td></tr>
+    <tr><td class="num">0.7</td><td class="num">0.631</td><td class="num">2.42</td><td>the favourite, with variety</td></tr>
+    <tr><td class="num">1.0</td><td class="num">0.335</td><td class="num">4.97</td><td>the model's own distribution</td></tr>
+    <tr><td class="num">1.5</td><td class="num">0.108</td><td class="num">7.63</td><td>unlikely tokens get drawn</td></tr>
+  </table>
+  <p class="small muted">Next token after <span class="ar">الماي</span> ("the water"). The scores are divided by the temperature before the softmax. At 0, providers take the top token.</p>
+  <aside class="notes"><p>Real numbers from the course's run of Lab 2.1, step 1, on the course's own small decoder: same model, same scores, four ways of drawing. Entropy in bits: 0 means one certain token, 7.6 bits is like choosing among roughly 200 equally likely tokens. The model did not get more creative at 1.5; your dice did.</p></aside>
+</section>
+
+<section class="slide" data-label="Top-p" id="top-p-cuts-the-tail" data-lo="LO5" data-n="8" data-session="1">
+  <div class="kicker">Nucleus sampling</div>
+  <h2>Top-p removes the long tail before the draw</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 2.1"><code class="language-python">probs = (logits / temperature).softmax(-<span class="hljs-number">1</span>)
+order = probs.argsort(descending=<span class="hljs-literal">True</span>)
+before = probs[order].cumsum(<span class="hljs-number">0</span>) - probs[order]
+<span class="hljs-comment"># the smallest set that reaches top_p</span>
+keep = order[before &lt; top_p]
+out = torch.zeros_like(probs)
+out[keep] = probs[keep]
+out = out / out.<span class="hljs-built_in">sum</span>()</code></pre>
+    <ul class="bullets small">
+      <li>Thousands of unlikely tokens together hold real probability. One of them, drawn, is the odd word in a reply.</li>
+      <li>At temperature 1.0, <code>top_p=0.9</code> leaves 73 tokens of 2,000; <code>top_p=0.5</code> leaves 3.</li>
+      <li>Use one knob at a time, and write down both.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The 73 and 3 are from the same run: the number of tokens left in the nucleus at each setting. This is the lab's first exercise. Common settings: temperature 0 for decisions and extraction; around 0.7 with top-p 0.9 for drafting.</p></aside>
+</section>
+
+<section class="slide" data-label="Consistency" id="consistency-is-measurable" data-lo="LO5" data-n="9" data-session="1">
+  <div class="kicker">Lab 2.1, steps 2 and 3</div>
+  <h2>Consistency is a number: generate twice, compare</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Setting</th><th class="num">Temperature</th><th class="num">Top-p</th><th>Exact agreement · word overlap</th></tr>
+      <tr><td>focused</td><td class="num">0.0</td><td class="num">1.0</td><td rowspan="3">measured by your run: ten tasks, two samples each</td></tr>
+      <tr><td>balanced</td><td class="num">0.7</td><td class="num">0.9</td></tr>
+      <tr><td>loose</td><td class="num">1.3</td><td class="num">1.0</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li><b>Exact agreement</b>: the share of sample pairs with identical text.</li>
+      <li><b>Word overlap</b>: shared words over all words of the pair.</li>
+      <li>A reply a customer could receive in two versions is a complaint waiting to happen. Decide how much variation the task tolerates, then set the knobs.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The cells are left for the room's own runs: the course was built without access to a hosted model, and a table from the scripted stand-in would mislead. Collect three tables' numbers on the board. Expect exact agreement near 1 at temperature 0 (not always exactly 1: providers do not guarantee determinism) and falling fast after that.</p></aside>
+</section>
+
+<section class="slide" data-label="Invented" id="invented-details" data-lo="LO5" data-n="10" data-session="1">
+  <div class="kicker">Lab 2.1, step 4</div>
+  <h2>An invented detail is anything stated that the inputs do not hold</h2>
+  <div class="cols cols-2">
+    <div class="chat">
+      <div class="msg user"><span class="who">Facts</span>ticket SW-48211, crew within 4 hours</div>
+      <div class="msg ai good"><span class="who">Reply</span>Your request is logged as SW-48211. A crew will reach you within 4 hours.</div>
+      <div class="msg ai bad"><span class="who">Reply</span>Your request is logged as SW-48211. You will receive a credit of 50 SAR under rule R-11.</div>
+    </div>
+    <ul class="bullets small">
+      <li>The model is completing a plausible reply. A credit is plausible.</li>
+      <li>A regular expression catches the costly kind: <b>numbers and identifiers</b> that are in neither the message nor the facts.</li>
+      <li>It does not catch an invented promise in words. That needs a person or a second model, and a sample to read.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The bad reply is an illustration of what the lab's checker flags: 50 and R-11 appear nowhere in the inputs, and the rule book ends at R-10. The lab counts replies with at least one such detail per setting. Ask what an invented credit costs Sawaqi compared with a slow reply.</p></aside>
+</section>
+
+<section class="slide" data-label="Settings" id="settings-follow-the-task" data-lo="LO5" data-n="11" data-session="1">
+  <div class="kicker">Choosing settings</div>
+  <h2>Set the knobs by what a wrong output costs</h2>
+  <table class="t small">
+    <tr><th>Task</th><th>Setting</th><th>Then check with code</th></tr>
+    <tr><td>Route to a department</td><td>temperature 0, a dozen output tokens</td><td>the label is one of eight</td></tr>
+    <tr><td>Extract fields</td><td>temperature 0, JSON mode</td><td>schema and validators</td></tr>
+    <tr><td>Answer from the rule book</td><td>temperature 0</td><td>citation present, refusal exact</td></tr>
+    <tr><td>Draft a reply for an agent to send</td><td>moderate temperature, top-p below 1</td><td>no number or identifier outside the facts</td></tr>
+  </table>
+  <div class="callout warn small mt-s"><b>Temperature 0 makes a model repeat itself, not tell the truth.</b> A repeated invented detail is still invented.</div>
+  <aside class="notes"><p>These four rows are today's four labs. A seed parameter exists on many APIs and is best effort on most: the stretch of the lab tests it. The durable habit is the right column.</p></aside>
+</section>
+
+<section class="slide" id="check-sampling" data-lo="LO5" data-n="12" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>The same message, a different department each run</h2>
+  <div class="quiz" data-type="single" data-lo="LO5" data-id="check-sampling-q1">
+    <p class="lead">Ghayth routes with a prompted model. The same message is sent to billing on one run and to meters on the next. What do you change first?</p>
+    <div class="opts">
+      <div class="opt" data-why="Adds examples before removing the randomness: with sampling on, a longer prompt still gives two answers" data-k="A">Add ten examples to the prompt</div>
+      <div class="opt" data-ok data-k="B">Set the temperature to 0 and limit the output to a label</div>
+      <div class="opt" data-why="Buys a bigger model to fix a setting: a larger model sampled at a high temperature also varies" data-k="C">Move to a larger model</div>
+      <div class="opt" data-why="Hides the variation instead of removing it: a majority vote triples the cost of every message" data-k="D">Call the model three times and take the majority</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The variation comes from the draw, not from the model's knowledge. Remove the draw for a decision; then measure whether the single answer is right.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. Follow up: after the change the answer is stable and wrong. Now which options become reasonable? Examples, and a look at the label: "the bill is high and I think the meter is broken" is a hard message for a person too.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-1" data-auto="lab" data-lab="2.1" data-label="Lab 2.1" data-n="13" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.1 · 25 min</div><h2>Sampling, consistency and invented details</h2><p class="lead small">Vary sampling settings on ten replies and record consistency and invented details, starting from the course decoder's own next-token distribution.</p><a class="nb" href="../labs/D2_1_sampling.ipynb">D2_1_sampling.ipynb</a></div><ul class="checklist"><li>Temperature on one next-token distribution <span class="min">5 min</span></li><li>Ten replies at three settings <span class="min">8 min</span></li><li>Consistency across samples <span class="min">6 min</span></li><li>An invented-detail checker <span class="min">6 min</span></li><li class="stretch">✱ Stretch: Fix a seed and see what it does and does not make repeatable</li></ul></div>
+  <aside class="notes"><p>Walk the room. Step 1 uses the course's own decoder and needs no key. Steps 2 to 4 make 60 calls to the hosted model (24 in quick mode): free endpoints allow 20 requests a minute and 50 a day unless the account has bought credits. Quick mode helps, but Day 2 as a whole (about 125 requests in quick mode) does not fit a fresh free key: check before the day that every table has a key with credits or shares one. Usual problems: a nucleus that drops the top token when it alone exceeds top_p (keep a token when the mass before it is below top_p); a checker that flags numbers quoted from the customer's own message.</p><p>Sources: OpenRouter documentation, limits.</p></aside>
+</section>
+
+<!-- ======================= SESSION 2 ======================= -->
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="14">
+  <div class="kicker">Session 2</div>
+  <h1>Prompting and structured outputs</h1>
+  <ul class="bullets outcomes"><li>Write an extraction prompt with a schema and examples</li><li>Validate replies and repair or log the failures</li><li>Mask personal fields before text reaches a hosted model</li></ul>
+  <div class="sess-no">02</div>
+  <aside class="notes"><p>Session 2 serves LO3. The evidence has three parts: field-level precision and recall, a log of validation failures, and a passing masking test. The lab produces all three as files.</p></aside>
+</section>
+
+<section class="slide" data-label="Specification" id="prompt-is-a-specification" data-lo="LO3" data-n="15" data-session="2">
+  <div class="kicker">Prompting</div>
+  <h2>A prompt is a specification: say what, from what, and in which shape</h2>
+  <div class="prompt" data-tool="Extraction prompt, Lab 2.2">
+    <span class="seg c-teal">You extract fields from one customer message of a water utility.</span>
+    <span class="seg c-cyan">The message may be in Modern Standard Arabic, Gulf dialect, Arabic in Latin script or English. Personal values are masked as [ACCOUNT_n], [PHONE_n], [NAME_n].</span>
+    <span class="seg c-purple">Return JSON only, with exactly these keys: account_number, district (one of eight, or null), complaint_type (one of sixteen).</span>
+    <span class="seg c-coral">Never invent a value.</span>
+  </div>
+  <div class="legend"><span class="c-teal">Task</span><span class="c-cyan">Input, and what is unusual about it</span><span class="c-purple">Output contract</span><span class="c-coral">The rule that code will check</span></div>
+  <aside class="notes"><p>Read the prompt as a contract with four clauses. Zero-shot: no examples. Few-shot: a handful of input and output pairs, which helps most for the rare variety; the lab's stretch adds two per variety and counts what the longer prompt costs. Every clause that matters is also enforced after the call: the last one by a validator.</p></aside>
+</section>
+
+<section class="slide" data-label="Masking" id="mask-before-it-leaves" data-lo="LO3" data-n="16" data-session="2">
+  <div class="kicker">Personal data</div>
+  <h2>Mask personal fields before the text leaves, and put them back after</h2>
+  <div class="trace s">
+    <div class="ev user"><b>message</b><span class="ar">انا عبدالله الشمري، ارغب في تقسيط مبلغ 425 ريال، حسابي رقم ٣٠٨٢٨٢٨٥١٣</span></div>
+    <div class="ev guard"><b>masked</b><span class="ar">انا [NAME_1] [NAME_2]، ارغب في تقسيط مبلغ 425 ريال، حسابي رقم [ACCOUNT_1]</span></div>
+    <div class="ev model"><b>model</b><code>{"account_number": "[ACCOUNT_1]", "district": null, "complaint_type": "installment_request"}</code></div>
+    <div class="ev final"><b>unmasked</b><code>account_number = "3082828513"</code>, inside Sawaqi</div>
+  </div>
+  <ul class="bullets small mt-s">
+    <li>The model needs to know <b>where</b> the account number is, not what it is.</li>
+    <li>Sawaqi's rule R-10 classifies customer records as Restricted and requires this step.</li>
+  </ul>
+  <aside class="notes"><p>The message is from the synthetic data: name, account and amount are invented. Turki's position: names, phone numbers and account numbers are personal data and do not go to an external service. R-10 is Sawaqi's own rule, written by the course; it refers to the national Data Classification Policy and the Personal Data Protection Law, which participants should read at their official addresses (in the course's sources) before they classify anything real. Masking by pattern is pseudonymisation of the text sent, not anonymisation of the customer.</p><p>Sources: Personal Data Protection Law and its Implementing Regulation; Data Classification Policy (SDAIA, official addresses in the course sources).</p></aside>
+</section>
+
+<section class="slide" data-label="Masking test" id="masking-has-a-test" data-lo="LO3" data-n="17" data-session="2">
+  <div class="kicker">Measured in Lab 2.2</div>
+  <h2>A masking step without a test is a hope</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">200</div><div class="lbl">messages masked</div></div>
+    <div class="stat"><div class="big">0</div><div class="lbl">with a 10-digit run or a known name left</div></div>
+    <div class="stat"><div class="big">200</div><div class="lbl">restored exactly by unmasking</div></div>
+  </div>
+  <ul class="bullets small mt">
+    <li>Arabic-Indic digits are turned into Western digits first: a pattern for <code>30</code> and eight digits must find <span class="ar">٣٠</span> too.</li>
+    <li>The test proves the patterns on these messages. It cannot see a name outside the list or a phone number written with spaces: say so in the card.</li>
+  </ul>
+  <aside class="notes"><p>From the course's run of Lab 2.2, step 1; deterministic. The "passing masking test" is one of the three parts of LO3's evidence. In production the name list becomes a name recogniser, and the test set grows with every leak found. The test runs before every release, like any other test.</p></aside>
+</section>
+
+<section class="slide" data-label="Schema" id="schema-is-the-contract" data-lo="LO3" data-n="18" data-session="2">
+  <div class="kicker">Structured outputs</div>
+  <h2>The schema is the contract; validators check values, not only shapes</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 2.2"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Extraction</span>(BaseModel, extra=<span class="hljs-string">&quot;forbid&quot;</span>):
+    account_number: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>]
+    district: <span class="hljs-type">Optional</span>[District]        <span class="hljs-comment"># one of eight</span>
+    complaint_type: ComplaintType       <span class="hljs-comment"># one of sixteen</span>
+
+<span class="hljs-meta">    @field_validator(<span class="hljs-params"><span class="hljs-string">&quot;account_number&quot;</span></span>)</span>
+<span class="hljs-meta">    @classmethod</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">known_account</span>(<span class="hljs-params">cls, value, info</span>):
+        mapping = info.context[<span class="hljs-string">&quot;mapping&quot;</span>]
+        <span class="hljs-keyword">if</span> value <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> value <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> mapping:
+            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">&quot;must be an [ACCOUNT_n] &quot;</span>
+                             <span class="hljs-string">&quot;placeholder from the message&quot;</span>)
+        <span class="hljs-keyword">return</span> value</code></pre>
+    <ul class="bullets small">
+      <li><b>Types</b> reject a wrong shape: a missing key, a district outside the list.</li>
+      <li>The <b>validator</b> rejects a wrong value: an account number the model never saw, a phone placeholder in the account field.</li>
+      <li>The error message is written for the model: it is sent back in the repair call.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The code is shortened: the lab's version also checks that the placeholder starts with [ACCOUNT_. This is the nice consequence of masking: because the model only saw placeholders, any real-looking account number in its answer is invented by construction, and the validator can prove it. Pydantic is the validation library; the same model class later defines the API's response in Lab 3.4.</p></aside>
+</section>
+
+<section class="slide" data-label="Repair" id="validate-repair-log" data-lo="LO3" data-n="19" data-session="2">
+  <div class="kicker">The loop around the model</div>
+  <h2>Validate, repair once, then log and hand off</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Mask</b>placeholders in</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Ask</b>temperature 0, JSON mode</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>Validate</b>schema and validators</div>
+    <div class="arrow">→</div>
+    <div class="step c-amber"><b>Repair once</b>send the error back</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>Log</b>still failing: to a person</div>
+  </div>
+  <div class="cols cols-2 mt">
+    <div class="card c-teal flat"><h4>The log is evidence</h4><p class="small mb0">Message id, attempt, error. It shows what the validators stopped, and which errors repair does not fix.</p></div>
+    <div class="card c-coral flat"><h4>Never guess</h4><p class="small mb0">A message that fails twice gets no fields. A wrong account number is worse than none.</p></div>
+  </div>
+  <aside class="notes"><p>One repair, not five: each retry costs a call and a model that failed twice in the same way rarely succeeds the third time. The failure log is the second part of LO3's evidence. In the lab, read it by kind: text around the JSON, a wrong key, a value the validator refused.</p></aside>
+</section>
+
+<section class="slide" data-label="Valid is not right" id="valid-json-is-not-right" data-lo="LO3" data-n="20" data-session="2">
+  <div class="kicker">Constrained output</div>
+  <h2>Valid JSON every time is a format guarantee, not a correctness guarantee</h2>
+  <div class="cols cols-2">
+    <ul class="bullets">
+      <li><b>JSON mode</b> asks the model for JSON; <b>constrained decoding</b> removes every token that would break your schema.</li>
+      <li>Both end parse errors. Neither knows which district the customer lives in.</li>
+      <li>So measure values against gold fields: <b>precision</b> and <b>recall</b> for each field.</li>
+    </ul>
+    <table class="t small">
+      <tr><th>For one field</th><th>Counts as</th></tr>
+      <tr><td>Right value returned</td><td>correct</td></tr>
+      <tr><td>Value returned, gold has none</td><td>costs precision</td></tr>
+      <tr><td>Null returned, gold has a value</td><td>costs recall</td></tr>
+      <tr><td>Wrong value returned</td><td>costs both</td></tr>
+    </table>
+  </div>
+  <aside class="notes"><p>Not every provider and model supports a schema-constrained mode; the lab uses the widely available JSON mode and its own validation, which works everywhere. The table is the definition the lab's field_scores implements.</p></aside>
+</section>
+
+<section class="slide" data-label="Regex baseline" id="regex-baseline-fields" data-lo="LO3" data-n="21" data-session="2">
+  <div class="kicker">Measured in Lab 2.2 · 200 messages with gold fields</div>
+  <h2>The baseline for extraction is three regular expressions, and it has two bugs</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Field</th><th class="num">Precision</th><th class="num">Recall</th></tr>
+      <tr><td>Account number</td><td class="num">0.69</td><td class="num">0.76</td></tr>
+      <tr><td>District</td><td class="num">0.97</td><td class="num">0.97</td></tr>
+      <tr><td>Complaint type (keywords)</td><td class="num">0.58</td><td class="num">0.58</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>A number in Arabic-Indic digits is returned as written and does not equal the gold value.</li>
+      <li>A message with a phone number and no account number returns the phone number.</li>
+      <li>The district is easy; the complaint type is where a model can earn its cost.</li>
+      <li><b>Your model's rows go beside these.</b></li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 2.2, step 4: the regex baseline, deterministic. The two bugs are planted in the data on purpose and both are one-line fixes, which the lab asks for. Note the district: the word for manhole in one sewage template is also the name of the district Al-Manhal, a false positive worth finding. The model rows are for the room's runs.</p></aside>
+</section>
+
+<section class="slide" id="check-structured-outputs" data-lo="LO3" data-n="22" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>The provider now guarantees schema-valid JSON</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="check-structured-outputs-q1">
+    <p class="lead">You switch on constrained decoding. Every reply now parses and matches the schema. Which check can you still not drop?</p>
+    <div class="opts">
+      <div class="opt" data-why="Keeps a check the constraint already covers: a missing key can no longer occur" data-k="A">That every reply has the three keys</div>
+      <div class="opt" data-why="Same: the constraint restricts the district to the list, so this can no longer fail" data-k="B">That the district is one of the eight in the list</div>
+      <div class="opt" data-ok data-k="C">That the account placeholder is one that occurs in this message</div>
+      <div class="opt" data-why="Checks the format again: valid JSON is exactly what constrained decoding guarantees" data-k="D">That the reply is JSON and nothing else</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A schema can say "a string" or "one of these eight". It cannot say "a value that is true of this message". That stays in your validator and in your precision and recall.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Push further: what else is schema-valid and wrong? A district that is in the list and not in the message; a complaint type that fits a second clause of the message. Only measurement against gold fields finds those.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-2" data-auto="lab" data-lab="2.2" data-label="Lab 2.2" data-n="23" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.2 · 25 min</div><h2>Masked, validated extraction</h2><p class="lead small">Extract account number, district and complaint type into a validated schema, mask personal fields before the hosted model sees them, and log failures.</p><a class="nb" href="../labs/D2_2_extraction.ipynb">D2_2_extraction.ipynb</a></div><ul class="checklist"><li>Mask personal fields, with a test <span class="min">6 min</span></li><li>A schema whose validators catch wrong values <span class="min">5 min</span></li><li>Extract with a hosted model, repair once, log failures <span class="min">8 min</span></li><li>Field precision and recall against a regex baseline <span class="min">6 min</span></li><li class="stretch">✱ Stretch: Add two examples per variety to the prompt and score again</li></ul></div>
+  <aside class="notes"><p>Walk the room. One call per message and one more per repair: about 230 calls for the full 200 messages, more than a free key's daily limit, so most tables should run in quick mode (40 messages) and read the full table from a table that has credits. Usual problems: masking names before digits are normalised; a validator that returns nothing (Pydantic then stores None: return the value); a repair message that does not start with the words the lab asks for; counting a failed message as correct nulls. Evidence files are in artifacts/D2_2.</p></aside>
+</section>
+
+<!-- ======================= SESSION 3 ======================= -->
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="24">
+  <div class="kicker">Session 3</div>
+  <h1>Retrieval-augmented generation</h1>
+  <ul class="bullets outcomes"><li>Chunk and index a bilingual rule book</li><li>Write a prompt that cites its sources and refuses when they are silent</li><li>Evaluate retrieval and generation separately</li></ul>
+  <div class="sess-no">03</div>
+  <aside class="notes"><p>Session 3 serves LO2 a second time: retrieval measured, now feeding a generator. Retrieval and agents in depth are course AE-304; here the rule book is one of Ghayth's sources and the point is to evaluate the two parts separately.</p></aside>
+</section>
+
+<section class="slide" data-label="Why retrieve" id="facts-live-in-documents" data-lo="LO2" data-n="25" data-session="3">
+  <div class="kicker">Retrieval-augmented generation</div>
+  <h2>Facts that change live in documents, not in weights</h2>
+  <div class="cols cols-2">
+    <div class="chat">
+      <div class="msg user"><span class="who">Customer</span>How much does a meter test cost and when is it refunded?</div>
+      <div class="msg ai bad"><span class="who">Model alone</span>A plausible price, from nowhere.</div>
+      <div class="msg ai good"><span class="who">Model with rule R-07</span>The answer the rule gives, with [R-07] after it.</div>
+    </div>
+    <ul class="bullets small">
+      <li>The tariff rule book is Latifa's: ten rules, each in English and Arabic.</li>
+      <li>No model was trained on it, and it changes every quarter.</li>
+      <li>Retrieve the rule, put it in the context, ask for an answer <b>from it</b>, with a citation.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The bad reply is the default behaviour of any generative model asked for a price it does not have: it completes a plausible sentence. Grounding does not make the model smarter; it changes the task from recalling to reading.</p></aside>
+</section>
+
+<section class="slide" data-label="Two pipelines" id="ingest-and-answer" data-lo="LO2" data-n="26" data-session="3">
+  <div class="kicker">The shape</div>
+  <h2>Two pipelines: one when the rules change, one for every question</h2>
+  <div class="cols cols-2">
+    <div class="flow v">
+      <div class="step c-navy"><b>Ingest · when the rule book changes</b>split each rule into chunks, keep the rule id</div>
+      <div class="arrow">↓</div>
+      <div class="step c-teal"><b>Index</b>normalised words, or embeddings</div>
+    </div>
+    <div class="flow v">
+      <div class="step c-cyan"><b>Answer · for every question</b>retrieve the top 3 chunks</div>
+      <div class="arrow">↓</div>
+      <div class="step c-purple"><b>Generate</b>answer from them, cite, or refuse</div>
+      <div class="arrow">↓</div>
+      <div class="step c-coral"><b>Check</b>citation present, refusal exact</div>
+    </div>
+  </div>
+  <aside class="notes"><p>Same two phases as yesterday's search, with a generator added at the end. Ten rules in two languages become 20 chunks. A chunk is one language of one rule: small enough to quote, large enough to answer. For long documents, chunking is a design decision to test; here the rules are short on purpose.</p></aside>
+</section>
+
+<section class="slide" data-label="Keyword search" id="bm25-with-normalisation" data-lo="LO2" data-n="27" data-session="3">
+  <div class="kicker">Measured in Lab 2.3</div>
+  <h2>For ten rules, a keyword search with Arabic normalisation finds every answer</h2>
+  <div class="cols cols-2">
+    <div class="stack">
+      <div class="stat"><div class="big">12 of 12</div><div class="lbl">answerable questions with the right rule in the top 3 (English, MSA and Gulf)</div></div>
+      <div class="card c-coral flat"><h4>And nothing for Arabizi</h4><p class="small mb0"><code>bkam tif7soon el 3adad?</code> shares no word with a rule book in Arabic script and English.</p></div>
+    </div>
+    <ul class="bullets small">
+      <li><b>BM25</b>: a rare word counts more, a repeated word counts less each time, a long chunk gets no bonus.</li>
+      <li>Normalise first, and cut words to six letters so that a word meets its suffixed forms.</li>
+      <li>Start with the simplest retriever and an evaluation set. Add embeddings where the set shows a gap.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 2.3, steps 1 and 2, and its stretch: deterministic. Twelve questions is a small set and ten rules a small corpus; the method scales, the 12 of 12 does not. The Arabizi gap is the opening for yesterday's multilingual embeddings, or for rewriting the question first.</p></aside>
+</section>
+
+<section class="slide" data-label="Grounded prompt" id="answer-from-the-rules-only" data-lo="LO2" data-n="28" data-session="3">
+  <div class="kicker">The generator's contract</div>
+  <h2>Answer from the rules, cite the rule, or say the rules are silent</h2>
+  <div class="prompt" data-tool="Grounded reply, Lab 2.3">
+    <span class="seg c-teal">You answer customers of Sawaqi Water Company from the RULES given in the message and from nothing else.</span>
+    <span class="seg c-cyan">Answer in the language of the question, in one or two sentences,</span>
+    <span class="seg c-purple">and cite the rule you used in square brackets, like [R-02].</span>
+    <span class="seg c-coral">If the RULES do not answer the question, reply exactly: NOT_IN_RULES</span>
+  </div>
+  <div class="legend"><span class="c-teal">Source</span><span class="c-cyan">Form</span><span class="c-purple">Citation</span><span class="c-coral">Refusal</span></div>
+  <p class="small muted mt-s">The user message holds the three retrieved chunks, each starting with its rule id, then the question.</p>
+  <aside class="notes"><p>Each clause is checkable by code: a citation is a pattern, the refusal is an exact string. That is why the refusal is not a polite sentence: code must be able to count it and route the question to a person. A cited rule that was not among the retrieved ones is an invented citation: the lab's table shows the retrieved rules next to each reply so that this is visible.</p></aside>
+</section>
+
+<section class="slide" data-label="Four numbers" id="score-the-two-parts-apart" data-lo="LO2" data-n="29" data-session="3">
+  <div class="kicker">Lab 2.3, step 4</div>
+  <h2>Score the retriever and the generator apart</h2>
+  <table class="t small">
+    <tr><th>Number</th><th>Over</th><th>The part it measures</th></tr>
+    <tr><td>Hit at 3</td><td>12 answerable questions</td><td>the retriever: is the right rule in the context?</td></tr>
+    <tr><td>Cited the right rule</td><td>12 answerable</td><td>the generator: did it use that rule?</td></tr>
+    <tr><td>Contains the key fact</td><td>12 answerable</td><td>the generator: did it copy the figure correctly?</td></tr>
+    <tr><td>False refusals</td><td>12 answerable</td><td>the generator: too cautious</td></tr>
+    <tr><td>Refused</td><td>4 questions the rules do not answer</td><td>the generator: not cautious enough when below 4</td></tr>
+  </table>
+  <div class="callout tip small mt-s"><b>One score for the whole pipeline cannot tell you which part to fix.</b></div>
+  <aside class="notes"><p>The four silent questions are in the data on purpose: a farm discount, the price of a private tanker, paying cash at a petrol station, a solar heater refund. A retriever always returns its top three, so the generator receives rules that look related. Whether it refuses is the test. The key fact is checked as a string (a price, a number of days), which is crude and works for figures.</p></aside>
+</section>
+
+<section class="slide" data-label="Where it went wrong" id="locate-the-error" data-lo="LO2" data-n="30" data-session="3">
+  <div class="kicker">Reading a wrong answer</div>
+  <h2>Locate the error before you change anything</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral"><h4>The rule was not retrieved</h4><p class="small mb0">Fix the retriever: wording, normalisation, a second search. The generator never had a chance.</p></div>
+    <div class="card c-amber"><h4>Retrieved, answer wrong</h4><p class="small mb0">Fix the prompt or the chunk: two tiers in one sentence, a figure copied from the wrong tier.</p></div>
+    <div class="card c-purple"><h4>Silent question, answered</h4><p class="small mb0">Read which retrieved rule it leaned on. Tighten the refusal clause; test it on more silent questions.</p></div>
+  </div>
+  <aside class="notes"><p>This is the same discipline as Day 1's "trace the failure to its cause", one level up. The lab prints the retrieved rules beside every reply for exactly this reading. Ask the room to classify three wrong answers from their own run before touching the prompt.</p></aside>
+</section>
+
+<section class="slide" id="check-grounded" data-lo="LO2" data-n="31" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>The right rule, the wrong price</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="check-grounded-q1">
+    <p class="lead">A customer asks what the second residential tier costs. The top chunk is R-02, which lists all four tiers. The reply says "SAR 1.20 [R-02]"; the rule says SAR 2.50. Where do you look first?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">At the generator: the prompt and how the four tiers read in one sentence</div>
+      <div class="opt" data-why="Blames retrieval although the gold rule is the top hit: more chunks add more figures to confuse" data-k="B">At the retriever: return ten chunks instead of three</div>
+      <div class="opt" data-why="Changes the index although the right chunk was found: embeddings would retrieve the same rule" data-k="C">At the index: replace keywords by embeddings</div>
+      <div class="opt" data-why="Moves facts into weights: the tariff changes every quarter, and the model would still have to pick the right tier" data-k="D">At the model: fine-tune it on the rule book</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Retrieval did its job: the rule is in the context and is cited. The error is in reading it, so the fix is the prompt or the form of the chunk, for example one tier per line.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The first tier's price was copied instead of the second's: a reading error. A table-like chunk (one tier per line) and an instruction to quote the figure from the matching line usually fix it. Then add this question to the evaluation set.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-3" data-auto="lab" data-lab="2.3" data-label="Lab 2.3" data-n="32" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.3 · 25 min</div><h2>Grounded replies from the rule book</h2><p class="lead small">Ground replies in the tariff rules with citations and refuse when the rules are silent, scoring retrieval and answers separately on 16 questions.</p><a class="nb" href="../labs/D2_3_rag.ipynb">D2_3_rag.ipynb</a></div><ul class="checklist"><li>Chunk and index the rule book <span class="min">6 min</span></li><li>Retrieval: hit at 3 on 16 questions <span class="min">5 min</span></li><li>Grounded replies with citations <span class="min">8 min</span></li><li>Score citations and refusals <span class="min">6 min</span></li><li class="stretch">✱ Stretch: Ask in Gulf dialect and in Arabizi: does retrieval still find the rule?</li></ul></div>
+  <aside class="notes"><p>Walk the room. Sixteen calls, cached. Usual problems: chunks that keep the Markdown heading marks; a user message that does not follow the RULES and QUESTION layout; scoring a refusal by "contains NOT_IN_RULES" and so accepting a reply that refuses and answers; forgetting that the four silent questions have no gold rule. If a table's model answers every silent question, that is a finding to report, not a bug in their code.</p></aside>
+</section>
+
+<!-- ======================= SESSION 4 ======================= -->
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="33">
+  <div class="kicker">Session 4</div>
+  <h1>Model selection and evaluation</h1>
+  <ul class="bullets outcomes"><li>Compare models on one labelled set by macro F1 and F1 by variety</li><li>Measure latency percentiles and cost per thousand messages</li><li>Defend a choice against a latency budget</li></ul>
+  <div class="sess-no">04</div>
+  <aside class="notes"><p>Session 4 is the centre of LO5: the second row of the comparison, with latency and cost beside quality.</p></aside>
+</section>
+
+<section class="slide" data-label="Four columns" id="choose-on-four-columns" data-lo="LO5" data-n="34" data-session="4">
+  <div class="kicker">Model selection</div>
+  <h2>A model is chosen on four columns, and a leaderboard has one</h2>
+  <div class="cols cols-4">
+    <div class="card c-teal"><h4>Quality</h4><p class="small mb0">Macro F1 on your test set, and by variety.</p></div>
+    <div class="card c-cyan"><h4>Latency</h4><p class="small mb0">Median and 95th percentile, against a budget.</p></div>
+    <div class="card c-amber"><h4>Cost</h4><p class="small mb0">Per 1,000 messages at your volume.</p></div>
+    <div class="card c-purple"><h4>Licence and place</h4><p class="small mb0">May you run the weights yourself? Where is the text processed?</p></div>
+  </div>
+  <div class="callout note mt"><b>A public leaderboard</b> ranks models on someone else's task, in someone else's language, with no price. Use it to choose candidates, never to choose.</div>
+  <aside class="notes"><p>Open-weight means the weights are published under a licence; read the licence, because some restrict commercial use. A hosted open-weight model can later be moved to your own servers; a closed one cannot. The fourth column does not fit in a table cell and belongs in the decision memo.</p></aside>
+</section>
+
+<section class="slide" data-label="Cost" id="cost-is-volume-tokens-price" data-lo="LO5" data-n="35" data-session="4">
+  <div class="kicker">Cost</div>
+  <h2>Cost = messages × tokens per call × the published price</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Model (paid endpoint)</th><th class="num">Input, USD per million tokens</th><th class="num">Output</th></tr>
+      <tr><td>The larger model of the lab</td><td class="num">0.20</td><td class="num">0.40</td></tr>
+      <tr><td>The smaller model of the lab</td><td class="num">0.08</td><td class="num">0.20</td></tr>
+      <tr><td>The baseline</td><td class="num" colspan="2">your own processor</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>A routing call is about 200 input tokens and a few output tokens.</li>
+      <li>At 0.20 per million: about 0.04 USD per 1,000 messages, 2.40 USD a month at 60,000 messages.</li>
+      <li>A <b>free</b> endpoint costs nothing and has a daily request limit: price the paid endpoint of the same model.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Prices from OpenRouter's public model list, read on 13 November 2026 and saved in data/reference/prices.json; the lab reads live prices when it can. The model names are in labs/README.md and are a setting. Do the arithmetic aloud: 200 tokens × 1,000 messages = 200,000 tokens = 0.2 of a million × 0.20 USD. At this volume cost is not the deciding column; at 2 million messages a day it is.</p><p>Sources: OpenRouter's public model list (prices); OpenRouter documentation, limits.</p></aside>
+</section>
+
+<section class="slide" data-label="Latency" id="latency-is-a-distribution" data-lo="LO5" data-n="36" data-session="4">
+  <div class="kicker">Latency</div>
+  <h2>Latency is a distribution: report the median and the 95th percentile</h2>
+  <div class="cols cols-2">
+    <ul class="bullets">
+      <li>The <b>median</b> (p50) is what a typical message waits.</li>
+      <li>The <b>95th percentile</b> (p95) is what one message in twenty waits. Budgets are written on it.</li>
+      <li>A hosted model's latency includes the network and a queue you do not control.</li>
+      <li>Sawaqi's budget: <b>300 ms at p95</b> per message.</li>
+    </ul>
+    <div class="stack">
+      <div class="stat"><div class="big">4 · 5 ms</div><div class="lbl">the baseline's p50 and p95 on a laptop processor (Lab 1.4)</div></div>
+      <div class="card c-coral flat"><h4>A mean hides the queue</h4><p class="small mb0">Nineteen fast calls and one of five seconds average to "fine".</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>The lab measures the wall-clock time of each call. On a free endpoint the p95 is often seconds, not milliseconds: that is a finding about the endpoint, and a paid or self-hosted endpoint of the same model will differ. Cached calls return at once, so the lab reports the latency recorded when the call was first made.</p></aside>
+</section>
+
+<section class="slide" data-label="Zero-shot router" id="zero-shot-router" data-lo="LO5" data-n="37" data-session="4">
+  <div class="kicker">The prompted model as a classifier</div>
+  <h2>Describe the eight departments, ask for one name, parse what comes back</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 2.4"><code class="language-python">SYSTEM = <span class="hljs-string">&quot;&quot;&quot;You route one customer message of a water
+utility to one department. ...
+Departments:
+- billing: a bill that is too high, a charge twice
+- meters: a meter that is broken or reads wrong
+...
+Reply with the department name only.&quot;&quot;&quot;</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">parse_label</span>(<span class="hljs-params">reply</span>):
+    low = reply.lower()
+    found = [(low.index(d), d)
+             <span class="hljs-keyword">for</span> d <span class="hljs-keyword">in</span> DEPARTMENTS <span class="hljs-keyword">if</span> d <span class="hljs-keyword">in</span> low]
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">min</span>(found)[<span class="hljs-number">1</span>] <span class="hljs-keyword">if</span> found <span class="hljs-keyword">else</span> <span class="hljs-literal">None</span></code></pre>
+    <ul class="bullets small">
+      <li><b>No training data</b>: the descriptions are the whole "training".</li>
+      <li>Parse leniently ("Department: leaks"), and count a reply with no department as wrong.</li>
+      <li>Temperature 0, a dozen output tokens.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>This is the "prompted model as a zero-shot classifier" of the entry. Its strength is exactly where yesterday's baseline was weak: it needs no labelled Arabizi. Its weakness is the other three columns. The descriptions are worth iterating on: most routing errors of a prompted model come from two departments whose descriptions overlap.</p></aside>
+</section>
+
+<section class="slide" data-label="Forty messages" id="forty-messages-are-few" data-lo="LO5" data-n="38" data-session="4">
+  <div class="kicker">Measured in Lab 2.4 · the baseline's row</div>
+  <h2>Forty messages, ten per variety: enough to find failures, not to rank close models</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Approach</th><th class="num">Macro F1</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th></tr>
+      <tr><td>Baseline, on these 40</td><td class="num">0.81</td><td class="num">1.00</td><td class="num">0.60</td><td class="num">0.51</td><td class="num">0.71</td></tr>
+      <tr><td>Baseline, on all 403</td><td class="num">0.85</td><td class="num">0.94</td><td class="num">0.86</td><td class="num">0.42</td><td class="num">0.81</td></tr>
+      <tr><td>Larger model</td><td colspan="5" rowspan="2">measured by your run</td></tr>
+      <tr><td>Smaller model</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>The same baseline scores 0.60 for Gulf on ten messages and 0.86 on 157.</li>
+      <li>With ten messages, one error moves a variety by several points.</li>
+      <li>Read the errors, then widen the sample before you sign a decision.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Both baseline rows are from the course's runs: Lab 2.4, step 3, and Lab 1.4. The gap between them is the lesson about sample size, and it is real. The entry's lab line asks for 40 labelled messages; it is the right size for a 25-minute lab on a free key (80 calls) and the wrong size for a final decision, which is why the capstone asks for the held-out test split.</p></aside>
+</section>
+
+<section class="slide" data-label="Cascade" id="cascade-cheap-first" data-lo="LO5" data-n="39" data-session="4">
+  <div class="kicker">You do not have to choose one</div>
+  <h2>A cascade sends only the unsure messages to the expensive model</h2>
+  <div class="flow">
+    <div class="step c-teal"><b>Baseline</b>4 ms, free</div>
+    <div class="arrow">→</div>
+    <div class="step c-amber"><b>Confident?</b>above a threshold: done</div>
+    <div class="arrow">→</div>
+    <div class="step c-purple"><b>Prompted model</b>the rest of the messages</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>Still unsure?</b>to a person</div>
+  </div>
+  <ul class="bullets small mt">
+    <li>Cost and latency are paid only for the share of messages that reach the second step.</li>
+    <li>The threshold is chosen on validation data, and its hand-off rate is reported.</li>
+    <li>It is a new system: evaluate it as a whole, by variety, like any other row.</li>
+  </ul>
+  <aside class="notes"><p>The lab's stretch builds it in six lines from the saved confidences of Lab 1.4. A cascade is often the defensible answer in the capstone: it turns "which model?" into "which model for which messages?".</p></aside>
+</section>
+
+<section class="slide" data-label="Decision" id="write-the-decision" data-lo="LO5" data-n="40" data-session="4">
+  <div class="kicker">The output of model selection</div>
+  <h2>A decision is three sentences someone can disagree with</h2>
+  <div class="cols cols-2">
+    <ol class="bullets">
+      <li>Which approach routes today, and on which numbers.</li>
+      <li>What it costs a month at Sawaqi's volume, and its p95 against the budget.</li>
+      <li>Which messages go to a person until a better model exists.</li>
+    </ol>
+    <div class="stack">
+      <div class="card c-teal flat"><h4>Say what would change it</h4><p class="small mb0">"If Arabizi F1 of the prompted model stays above the baseline's on 400 messages, we switch that variety."</p></div>
+      <div class="card c-purple flat"><h4>And what is not in the table</h4><p class="small mb0">Licence, where the text is processed, what happens when the model is withdrawn.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>The lab writes the skeleton of this memo to artifacts/D2_4/decision.md. It is practice for the capstone's defence: the "defended recommendation" of LO5. A recommendation that names no number and no condition is an opinion.</p></aside>
+</section>
+
+<section class="slide" id="check-model-selection" data-lo="LO5" data-n="41" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>The cheaper model ties on English</h2>
+  <div class="quiz" data-type="single" data-lo="LO5" data-id="check-model-selection-q1">
+    <p class="lead">The smaller model matches the larger one on English and MSA, loses 20 points on Arabizi, and costs less than half. 15% of messages are Arabizi. What do you recommend?</p>
+    <div class="opts">
+      <div class="opt" data-why="Decides on the average cost and forgets who pays for it: one customer in seven would be routed much worse" data-k="A">The smaller model for everything, since it costs less than half</div>
+      <div class="opt" data-why="Pays the higher price for the 85% of messages where the cheaper model is as good" data-k="B">The larger model for everything, since it is better somewhere</div>
+      <div class="opt" data-why="Reads a tie on ten messages per variety as proof: the sample cannot separate close models, so the question stays open rather than closed" data-k="C">Either one, since the two models are equivalent</div>
+      <div class="opt" data-ok data-k="D">Route by variety: the larger model or a person for Arabizi; confirm on more messages</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The choice is per group of messages, not per system. Each model is used where it is good enough, and ten messages per variety is a reason to confirm before signing.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. The scenario is invented for the question. Ask how the service would know that a message is Arabizi: a script check on the characters, which Lab 3.4 writes in five lines.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-4" data-auto="lab" data-lab="2.4" data-label="Lab 2.4" data-n="42" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.4 · 25 min</div><h2>Two open-weight models against the baseline</h2><p class="lead small">Compare two open-weight models as zero-shot routers on 40 labelled messages for F1, latency and cost, next to the Day 1 baseline.</p><a class="nb" href="../labs/D2_4_model_selection.ipynb">D2_4_model_selection.ipynb</a></div><ul class="checklist"><li>A zero-shot routing prompt and a label parser <span class="min">6 min</span></li><li>Run both models on 40 messages <span class="min">7 min</span></li><li>Macro F1 and F1 by variety <span class="min">6 min</span></li><li>Latency, cost per thousand, decision <span class="min">6 min</span></li><li class="stretch">✱ Stretch: A cascade: the baseline first, the model only when it is unsure</li></ul></div>
+  <aside class="notes"><p>Walk the room. Eighty calls (40 in quick mode), cached; on a fresh free key run quick mode or share one table's cache. Usual problems: a parser that returns the last department named instead of the first; counting unparsed replies as missing instead of wrong; pricing the free endpoint at zero; reading the cached latency of a second run. The baseline's row comes from each participant's Lab 1.4 or from the supplied copy. The table in artifacts/D2_4/comparison.csv is two of the three rows of the final comparison.</p></aside>
+</section>
+
+<!-- ======================= CLOSING ======================= -->
+<section class="slide" data-label="Recap" id="day-2-recap" data-n="43" data-session="4">
+  <div class="kicker">Day 2 recap</div>
+  <h2>A prompt asks; code checks; a table decides</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li><b>Sampling</b> is a setting: temperature 0 for decisions, and it repeats errors too.</li>
+      <li><b>Mask</b> personal fields before text leaves; test the masking.</li>
+      <li><b>Schema and validators</b>: valid is not right, so score each field.</li>
+    </ul>
+    <ul class="bullets small">
+      <li><b>Grounding</b>: retrieve, cite, refuse; score retriever and generator apart.</li>
+      <li><b>Selection</b>: quality by variety, p95 latency, cost per 1,000, licence.</li>
+      <li><b>Small samples</b> find failures; they do not rank close models.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Ask each table for the row of their comparison they trust least, and why. Tonight's ten minutes: finish the decision memo in three sentences.</p></aside>
+</section>
+
+<section class="slide dark" data-label="Tomorrow" id="tomorrow-adapt" data-n="44" data-session="4">
+  <div class="kicker">Tomorrow · Day 3</div>
+  <h2>Adapt: train the third approach, then ship one of the three</h2>
+  <p class="lead">Split without leakage, fine-tune an encoder for routing and read its confusion matrix, train a low-rank adapter inside a memory budget, and wrap the chosen model in a tested service with a model card.</p>
+  <aside class="notes"><p>Tomorrow needs no hosted model: everything trains on the laptop's processor in about a minute. Every lab starts from supplied files.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T03:19:01Z","version":"2027.1.0","commit":"93e55d3"},"course":{"id":"ae-301","code":"AE-301","title":"Applied Natural Language Processing Engineering","track":"ai-engineering","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ae-301/","repo":"SDAIAAcademy/ae-301","home":"../index.html"},"deck":{"id":"day2","kind":"day","day":2,"label":"Day 2","title":"Generate","prev":"day1.html","next":"day3.html","md":"day2.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"Generative language models","slide":"s1","outcomes":["Explain how temperature and top-p change the next-token choice","Measure the consistency of replies across repeated samples","Detect details a reply invented"],"minutes":50,"lab":{"id":"2.1","title":"Sampling, consistency and invented details","minutes":25,"href":"../labs/D2_1_sampling.ipynb"}},{"n":2,"label":"Session 2","title":"Prompting and structured outputs","slide":"s2","outcomes":["Write an extraction prompt with a schema and examples","Validate replies and repair or log the failures","Mask personal fields before text reaches a hosted model"],"minutes":50,"lab":{"id":"2.2","title":"Masked, validated extraction","minutes":25,"href":"../labs/D2_2_extraction.ipynb"}},{"n":3,"label":"Session 3","title":"Retrieval-augmented generation","slide":"s3","outcomes":["Chunk and index a bilingual rule book","Write a prompt that cites its sources and refuses when they are silent","Evaluate retrieval and generation separately"],"minutes":50,"lab":{"id":"2.3","title":"Grounded replies from the rule book","minutes":25,"href":"../labs/D2_3_rag.ipynb"}},{"n":4,"label":"Session 4","title":"Model selection and evaluation","slide":"s4","outcomes":["Compare models on one labelled set by macro F1 and F1 by variety","Measure latency percentiles and cost per thousand messages","Defend a choice against a latency budget"],"minutes":50,"lab":{"id":"2.4","title":"Two open-weight models against the baseline","minutes":25,"href":"../labs/D2_4_model_selection.ipynb"}}],"slides":[{"id":"title","n":1,"title":"Generate","kind":"title","session":0,"hash":"befcea55","md":"#### [day2#title] Generate\n\n*SDAIA Academy · Applied Natural Language Processing Engineering*\n\nDay 2\n\nAI Engineering Track · 3 teaching days + capstone day · 4 sessions · 4 labs · AE-301","notes":"Open with yesterday's number: the baseline routes with macro F1 0.85 and 0.42 for Arabizi, in 4 ms. Today's question: what does a generative model add, for whom, and at what price? Check keys: today's labs call a hosted chat model.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"Generate","kind":"content","session":0,"hash":"88ae7736","md":"#### [day2#agenda] Generate\n\n*Today*\n\n- **Session 1 · Generative language models**: A decoder in a loop: sampling settings, consistency and invented details\n- **Session 2 · Prompting and structured outputs**: A prompt is a specification; a schema is the contract; personal fields are masked before they leave\n- **Session 3 · Retrieval-augmented generation**: Ground replies in the tariff rule book, cite the rule, and refuse when the rules are silent\n- **Session 4 · Model selection and evaluation**: Choose on quality by variety, latency and cost per thousand messages, not on a leaderboard","notes":"Four sessions. Every lab today works with a hosted open-weight model through one function, caches every answer, and starts from supplied files. If a key fails, the labs run on a scripted stand-in and say so in their first line: its numbers are not a model's.","minutes":null,"lo":[]},{"id":"review-day-1","n":3,"title":"Before we generate anything","kind":"quiz","session":0,"hash":"bf30e371","md":"#### [day2#review-day-1] Before we generate anything\n\n*Review · Day 1*\n\n**Question:** A message contains العَدّاد with diacritics. The Arabic tokeniser returns `[UNK]` and the router sends the message to the wrong department. Where is the fix?\n\n- A. Retrain the router with more epochs\n- B. Ask for a tokeniser with a larger vocabulary\n- C. Leave it, since diacritics are rare in customer messages\n- D. Normalise the text before the tokeniser sees it","notes":"Answer: D. Two minutes. Use it to recall the order of the pipeline: normalise, tokenise, embed, attend, decide. Every later problem this week is located by asking at which of those steps it happens.","minutes":null,"lo":["LO1"]},{"id":"s1","n":4,"title":"Generative language models","kind":"section","session":1,"hash":"b198ff01","md":"#### [day2#s1] Generative language models\n\n*Session 1*\n\n- Explain how temperature and top-p change the next-token choice\n- Measure the consistency of replies across repeated samples\n- Detect details a reply invented","notes":"Session 1 serves LO5: the prompted model is the second of the three approaches, and before using it to decide we look at how it produces text at all.","minutes":null,"lo":["LO5"]},{"id":"decoder-in-a-loop","n":5,"title":"A generative model is yesterday's decoder in a loop","kind":"content","session":1,"hash":"e5efa1ec","md":"#### [day2#decoder-in-a-loop] A generative model is yesterday's decoder in a loop\n\n*Generative language models*\n\n1. **Context** the tokens so far\n2. **Decoder** one score per vocabulary entry\n3. **Sampling** scores become one chosen token\n4. **Append** and go round again\n\n- The model never writes a sentence. It scores the next token, thousands of times.\n- Everything it \"knows\" at a step is in the context: your instructions, the message, and what it has written so far.\n- It stops at an end token or at your `max_tokens`.","notes":"Link to Lab 1.3: the decoder there continued \"the water\" with several likely openings. A hosted model does the same at a scale of billions of parameters. Two consequences for today: output costs time per token (latency grows with length), and the choice of token is a setting you control.","minutes":null,"lo":["LO5"]},{"id":"instructions-are-tokens-too","n":6,"title":"A chat is one long text with markers the model was trained to follow","kind":"content","session":1,"hash":"6e6b833e","md":"#### [day2#instructions-are-tokens-too] A chat is one long text with markers the model was trained to follow\n\n*Base and instruction-tuned*\n\n- system: You write short replies for the contact centre of Sawaqi. Use only the facts given.\n- user: Customer message: … FACTS: {\"ticket\": \"SW-48211\", \"crew_eta_hours\": 4}\n- assistant: the model continues from here\n\n- A **base** model continues any text. An **instruction-tuned** model was trained further on conversations in one fixed format.\n- The provider's **chat template** turns your list of messages into that format. Use the API's roles; do not write the markers yourself.\n- The system message is not a law. It is text the model was trained to weigh heavily.","notes":"The trace shows the reply task of Lab 2.1. The last bullet prepares Day 2's theme: a prompt asks, code checks. Whatever must hold (a format, a fact, a refusal) is verified after generation, by code.","minutes":null,"lo":["LO5"]},{"id":"temperature-sharpens-or-flattens","n":7,"title":"Temperature sharpens or flattens the same scores","kind":"content","session":1,"hash":"1410ad4b","md":"#### [day2#temperature-sharpens-or-flattens] Temperature sharpens or flattens the same scores\n\n*Measured in Lab 2.1 on the course decoder*\n\n| Temperature | Probability of the top token | Entropy (bits) | Reads as |\n| --- | --- | --- | --- |\n| 0.2 | 0.996 | 0.04 | almost always the same token |\n| 0.7 | 0.631 | 2.42 | the favourite, with variety |\n| 1.0 | 0.335 | 4.97 | the model's own distribution |\n| 1.5 | 0.108 | 7.63 | unlikely tokens get drawn |\n\nNext token after الماي (\"the water\"). The scores are divided by the temperature before the softmax. At 0, providers take the top token.","notes":"Real numbers from the course's run of Lab 2.1, step 1, on the course's own small decoder: same model, same scores, four ways of drawing. Entropy in bits: 0 means one certain token, 7.6 bits is like choosing among roughly 200 equally likely tokens. The model did not get more creative at 1.5; your dice did.","minutes":null,"lo":["LO5"]},{"id":"top-p-cuts-the-tail","n":8,"title":"Top-p removes the long tail before the draw","kind":"content","session":1,"hash":"a181188c","md":"#### [day2#top-p-cuts-the-tail] Top-p removes the long tail before the draw\n\n*Nucleus sampling*\n\n```python\n# file: Lab 2.1\nprobs = (logits / temperature).softmax(-1)\norder = probs.argsort(descending=True)\nbefore = probs[order].cumsum(0) - probs[order]\n# the smallest set that reaches top_p\nkeep = order[before \u003c top_p]\nout = torch.zeros_like(probs)\nout[keep] = probs[keep]\nout = out / out.sum()\n```\n\n- Thousands of unlikely tokens together hold real probability. One of them, drawn, is the odd word in a reply.\n- At temperature 1.0, `top_p=0.9` leaves 73 tokens of 2,000; `top_p=0.5` leaves 3.\n- Use one knob at a time, and write down both.","notes":"The 73 and 3 are from the same run: the number of tokens left in the nucleus at each setting. This is the lab's first exercise. Common settings: temperature 0 for decisions and extraction; around 0.7 with top-p 0.9 for drafting.","minutes":null,"lo":["LO5"]},{"id":"consistency-is-measurable","n":9,"title":"Consistency is a number: generate twice, compare","kind":"content","session":1,"hash":"678e5118","md":"#### [day2#consistency-is-measurable] Consistency is a number: generate twice, compare\n\n*Lab 2.1, steps 2 and 3*\n\n| Setting | Temperature | Top-p | Exact agreement · word overlap |\n| --- | --- | --- | --- |\n| focused | 0.0 | 1.0 | measured by your run: ten tasks, two samples each |\n| balanced | 0.7 | 0.9 |  |\n| loose | 1.3 | 1.0 |  |\n\n- **Exact agreement**: the share of sample pairs with identical text.\n- **Word overlap**: shared words over all words of the pair.\n- A reply a customer could receive in two versions is a complaint waiting to happen. Decide how much variation the task tolerates, then set the knobs.","notes":"The cells are left for the room's own runs: the course was built without access to a hosted model, and a table from the scripted stand-in would mislead. Collect three tables' numbers on the board. Expect exact agreement near 1 at temperature 0 (not always exactly 1: providers do not guarantee determinism) and falling fast after that.","minutes":null,"lo":["LO5"]},{"id":"invented-details","n":10,"title":"An invented detail is anything stated that the inputs do not hold","kind":"content","session":1,"hash":"e7fc3d95","md":"#### [day2#invented-details] An invented detail is anything stated that the inputs do not hold\n\n*Lab 2.1, step 4*\n\n**Facts:** ticket SW-48211, crew within 4 hours\n\n**Reply (good example):** Your request is logged as SW-48211. A crew will reach you within 4 hours.\n\n**Reply (weak example):** Your request is logged as SW-48211. You will receive a credit of 50 SAR under rule R-11.\n\n- The model is completing a plausible reply. A credit is plausible.\n- A regular expression catches the costly kind: **numbers and identifiers** that are in neither the message nor the facts.\n- It does not catch an invented promise in words. That needs a person or a second model, and a sample to read.","notes":"The bad reply is an illustration of what the lab's checker flags: 50 and R-11 appear nowhere in the inputs, and the rule book ends at R-10. The lab counts replies with at least one such detail per setting. Ask what an invented credit costs Sawaqi compared with a slow reply.","minutes":null,"lo":["LO5"]},{"id":"settings-follow-the-task","n":11,"title":"Set the knobs by what a wrong output costs","kind":"content","session":1,"hash":"49d3b747","md":"#### [day2#settings-follow-the-task] Set the knobs by what a wrong output costs\n\n*Choosing settings*\n\n| Task | Setting | Then check with code |\n| --- | --- | --- |\n| Route to a department | temperature 0, a dozen output tokens | the label is one of eight |\n| Extract fields | temperature 0, JSON mode | schema and validators |\n| Answer from the rule book | temperature 0 | citation present, refusal exact |\n| Draft a reply for an agent to send | moderate temperature, top-p below 1 | no number or identifier outside the facts |\n\n> **Temperature 0 makes a model repeat itself, not tell the truth.** A repeated invented detail is still invented.","notes":"These four rows are today's four labs. A seed parameter exists on many APIs and is best effort on most: the stretch of the lab tests it. The durable habit is the right column.","minutes":null,"lo":["LO5"]},{"id":"check-sampling","n":12,"title":"The same message, a different department each run","kind":"quiz","session":1,"hash":"2cb3d7c9","md":"#### [day2#check-sampling] The same message, a different department each run\n\n*Checkpoint*\n\n**Question:** Ghayth routes with a prompted model. The same message is sent to billing on one run and to meters on the next. What do you change first?\n\n- A. Add ten examples to the prompt\n- B. Set the temperature to 0 and limit the output to a label\n- C. Move to a larger model\n- D. Call the model three times and take the majority","notes":"Answer: B. Follow up: after the change the answer is stable and wrong. Now which options become reasonable? Examples, and a look at the label: \"the bill is high and I think the meter is broken\" is a hard message for a person too.","minutes":null,"lo":["LO5"]},{"id":"lab-2-1","n":13,"title":"Sampling, consistency and invented details","kind":"lab","session":1,"hash":"35061909","md":"#### [day2#lab-2-1] Sampling, consistency and invented details\n\nLab 2.1 · 25 min\n\nVary sampling settings on ten replies and record consistency and invented details, starting from the course decoder's own next-token distribution.\n\n[D2_1_sampling.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D2_1_sampling.ipynb)\n\n- [ ] Temperature on one next-token distribution (5 min)\n- [ ] Ten replies at three settings (8 min)\n- [ ] Consistency across samples (6 min)\n- [ ] An invented-detail checker (6 min)\n- [ ] ✱ Stretch: Fix a seed and see what it does and does not make repeatable","notes":"Walk the room. Step 1 uses the course's own decoder and needs no key. Steps 2 to 4 make 60 calls to the hosted model (24 in quick mode): free endpoints allow 20 requests a minute and 50 a day unless the account has bought credits. Quick mode helps, but Day 2 as a whole (about 125 requests in quick mode) does not fit a fresh free key: check before the day that every table has a key with credits or shares one. Usual problems: a nucleus that drops the top token when it alone exceeds top_p (keep a token when the mass before it is below top_p); a checker that flags numbers quoted from the customer's own message.\n\nSources: OpenRouter documentation, limits.","minutes":null,"lo":[]},{"id":"s2","n":14,"title":"Prompting and structured outputs","kind":"section","session":2,"hash":"16d6d9aa","md":"#### [day2#s2] Prompting and structured outputs\n\n*Session 2*\n\n- Write an extraction prompt with a schema and examples\n- Validate replies and repair or log the failures\n- Mask personal fields before text reaches a hosted model","notes":"Session 2 serves LO3. The evidence has three parts: field-level precision and recall, a log of validation failures, and a passing masking test. The lab produces all three as files.","minutes":null,"lo":["LO3"]},{"id":"prompt-is-a-specification","n":15,"title":"A prompt is a specification: say what, from what, and in which shape","kind":"content","session":2,"hash":"7f04761c","md":"#### [day2#prompt-is-a-specification] A prompt is a specification: say what, from what, and in which shape\n\n*Prompting*\n\nPrompt for Extraction prompt, Lab 2.2:\n\n```text\nYou extract fields from one customer message of a water utility.\nThe message may be in Modern Standard Arabic, Gulf dialect, Arabic in Latin script or English. Personal values are masked as [ACCOUNT_n], [PHONE_n], [NAME_n].\nReturn JSON only, with exactly these keys: account_number, district (one of eight, or null), complaint_type (one of sixteen).\nNever invent a value.\n```\n\nTask · Input, and what is unusual about it · Output contract · The rule that code will check","notes":"Read the prompt as a contract with four clauses. Zero-shot: no examples. Few-shot: a handful of input and output pairs, which helps most for the rare variety; the lab's stretch adds two per variety and counts what the longer prompt costs. Every clause that matters is also enforced after the call: the last one by a validator.","minutes":null,"lo":["LO3"]},{"id":"mask-before-it-leaves","n":16,"title":"Mask personal fields before the text leaves, and put them back after","kind":"content","session":2,"hash":"42b7d91d","md":"#### [day2#mask-before-it-leaves] Mask personal fields before the text leaves, and put them back after\n\n*Personal data*\n\n- message: انا عبدالله الشمري، ارغب في تقسيط مبلغ 425 ريال، حسابي رقم ٣٠٨٢٨٢٨٥١٣\n- masked: انا [NAME_1] [NAME_2]، ارغب في تقسيط مبلغ 425 ريال، حسابي رقم [ACCOUNT_1]\n- model: `{\"account_number\": \"[ACCOUNT_1]\", \"district\": null, \"complaint_type\": \"installment_request\"}`\n- unmasked: `account_number = \"3082828513\"`, inside Sawaqi\n\n- The model needs to know **where** the account number is, not what it is.\n- Sawaqi's rule R-10 classifies customer records as Restricted and requires this step.","notes":"The message is from the synthetic data: name, account and amount are invented. Turki's position: names, phone numbers and account numbers are personal data and do not go to an external service. R-10 is Sawaqi's own rule, written by the course; it refers to the national Data Classification Policy and the Personal Data Protection Law, which participants should read at their official addresses (in the course's sources) before they classify anything real. Masking by pattern is pseudonymisation of the text sent, not anonymisation of the customer.\n\nSources: Personal Data Protection Law and its Implementing Regulation; Data Classification Policy (SDAIA, official addresses in the course sources).","minutes":null,"lo":["LO3"]},{"id":"masking-has-a-test","n":17,"title":"A masking step without a test is a hope","kind":"content","session":2,"hash":"45b49bc6","md":"#### [day2#masking-has-a-test] A masking step without a test is a hope\n\n*Measured in Lab 2.2*\n\n- **200** messages masked\n- **0** with a 10-digit run or a known name left\n- **200** restored exactly by unmasking\n\n- Arabic-Indic digits are turned into Western digits first: a pattern for `30` and eight digits must find ٣٠ too.\n- The test proves the patterns on these messages. It cannot see a name outside the list or a phone number written with spaces: say so in the card.","notes":"From the course's run of Lab 2.2, step 1; deterministic. The \"passing masking test\" is one of the three parts of LO3's evidence. In production the name list becomes a name recogniser, and the test set grows with every leak found. The test runs before every release, like any other test.","minutes":null,"lo":["LO3"]},{"id":"schema-is-the-contract","n":18,"title":"The schema is the contract; validators check values, not only shapes","kind":"content","session":2,"hash":"70101ea1","md":"#### [day2#schema-is-the-contract] The schema is the contract; validators check values, not only shapes\n\n*Structured outputs*\n\n```python\n# file: Lab 2.2\nclass Extraction(BaseModel, extra=\"forbid\"):\n    account_number: Optional[str]\n    district: Optional[District]        # one of eight\n    complaint_type: ComplaintType       # one of sixteen\n\n    @field_validator(\"account_number\")\n    @classmethod\n    def known_account(cls, value, info):\n        mapping = info.context[\"mapping\"]\n        if value is not None and value not in mapping:\n            raise ValueError(\"must be an [ACCOUNT_n] \"\n                             \"placeholder from the message\")\n        return value\n```\n\n- **Types** reject a wrong shape: a missing key, a district outside the list.\n- The **validator** rejects a wrong value: an account number the model never saw, a phone placeholder in the account field.\n- The error message is written for the model: it is sent back in the repair call.","notes":"The code is shortened: the lab's version also checks that the placeholder starts with [ACCOUNT_. This is the nice consequence of masking: because the model only saw placeholders, any real-looking account number in its answer is invented by construction, and the validator can prove it. Pydantic is the validation library; the same model class later defines the API's response in Lab 3.4.","minutes":null,"lo":["LO3"]},{"id":"validate-repair-log","n":19,"title":"Validate, repair once, then log and hand off","kind":"content","session":2,"hash":"57d37b8d","md":"#### [day2#validate-repair-log] Validate, repair once, then log and hand off\n\n*The loop around the model*\n\n1. **Mask** placeholders in\n2. **Ask** temperature 0, JSON mode\n3. **Validate** schema and validators\n4. **Repair once** send the error back\n5. **Log** still failing: to a person\n\n- **The log is evidence.** Message id, attempt, error. It shows what the validators stopped, and which errors repair does not fix.\n- **Never guess.** A message that fails twice gets no fields. A wrong account number is worse than none.","notes":"One repair, not five: each retry costs a call and a model that failed twice in the same way rarely succeeds the third time. The failure log is the second part of LO3's evidence. In the lab, read it by kind: text around the JSON, a wrong key, a value the validator refused.","minutes":null,"lo":["LO3"]},{"id":"valid-json-is-not-right","n":20,"title":"Valid JSON every time is a format guarantee, not a correctness guarantee","kind":"content","session":2,"hash":"4d116412","md":"#### [day2#valid-json-is-not-right] Valid JSON every time is a format guarantee, not a correctness guarantee\n\n*Constrained output*\n\n- **JSON mode** asks the model for JSON; **constrained decoding** removes every token that would break your schema.\n- Both end parse errors. Neither knows which district the customer lives in.\n- So measure values against gold fields: **precision** and **recall** for each field.\n\n| For one field | Counts as |\n| --- | --- |\n| Right value returned | correct |\n| Value returned, gold has none | costs precision |\n| Null returned, gold has a value | costs recall |\n| Wrong value returned | costs both |","notes":"Not every provider and model supports a schema-constrained mode; the lab uses the widely available JSON mode and its own validation, which works everywhere. The table is the definition the lab's field_scores implements.","minutes":null,"lo":["LO3"]},{"id":"regex-baseline-fields","n":21,"title":"The baseline for extraction is three regular expressions, and it has two bugs","kind":"content","session":2,"hash":"50a41d03","md":"#### [day2#regex-baseline-fields] The baseline for extraction is three regular expressions, and it has two bugs\n\n*Measured in Lab 2.2 · 200 messages with gold fields*\n\n| Field | Precision | Recall |\n| --- | --- | --- |\n| Account number | 0.69 | 0.76 |\n| District | 0.97 | 0.97 |\n| Complaint type (keywords) | 0.58 | 0.58 |\n\n- A number in Arabic-Indic digits is returned as written and does not equal the gold value.\n- A message with a phone number and no account number returns the phone number.\n- The district is easy; the complaint type is where a model can earn its cost.\n- **Your model's rows go beside these.**","notes":"From the course's run of Lab 2.2, step 4: the regex baseline, deterministic. The two bugs are planted in the data on purpose and both are one-line fixes, which the lab asks for. Note the district: the word for manhole in one sewage template is also the name of the district Al-Manhal, a false positive worth finding. The model rows are for the room's runs.","minutes":null,"lo":["LO3"]},{"id":"check-structured-outputs","n":22,"title":"The provider now guarantees schema-valid JSON","kind":"quiz","session":2,"hash":"a2498819","md":"#### [day2#check-structured-outputs] The provider now guarantees schema-valid JSON\n\n*Checkpoint*\n\n**Question:** You switch on constrained decoding. Every reply now parses and matches the schema. Which check can you still not drop?\n\n- A. That every reply has the three keys\n- B. That the district is one of the eight in the list\n- C. That the account placeholder is one that occurs in this message\n- D. That the reply is JSON and nothing else","notes":"Answer: C. Push further: what else is schema-valid and wrong? A district that is in the list and not in the message; a complaint type that fits a second clause of the message. Only measurement against gold fields finds those.","minutes":null,"lo":["LO3"]},{"id":"lab-2-2","n":23,"title":"Masked, validated extraction","kind":"lab","session":2,"hash":"084e3b6e","md":"#### [day2#lab-2-2] Masked, validated extraction\n\nLab 2.2 · 25 min\n\nExtract account number, district and complaint type into a validated schema, mask personal fields before the hosted model sees them, and log failures.\n\n[D2_2_extraction.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D2_2_extraction.ipynb)\n\n- [ ] Mask personal fields, with a test (6 min)\n- [ ] A schema whose validators catch wrong values (5 min)\n- [ ] Extract with a hosted model, repair once, log failures (8 min)\n- [ ] Field precision and recall against a regex baseline (6 min)\n- [ ] ✱ Stretch: Add two examples per variety to the prompt and score again","notes":"Walk the room. One call per message and one more per repair: about 230 calls for the full 200 messages, more than a free key's daily limit, so most tables should run in quick mode (40 messages) and read the full table from a table that has credits. Usual problems: masking names before digits are normalised; a validator that returns nothing (Pydantic then stores None: return the value); a repair message that does not start with the words the lab asks for; counting a failed message as correct nulls. Evidence files are in artifacts/D2_2.","minutes":null,"lo":[]},{"id":"s3","n":24,"title":"Retrieval-augmented generation","kind":"section","session":3,"hash":"fd659e97","md":"#### [day2#s3] Retrieval-augmented generation\n\n*Session 3*\n\n- Chunk and index a bilingual rule book\n- Write a prompt that cites its sources and refuses when they are silent\n- Evaluate retrieval and generation separately","notes":"Session 3 serves LO2 a second time: retrieval measured, now feeding a generator. Retrieval and agents in depth are course AE-304; here the rule book is one of Ghayth's sources and the point is to evaluate the two parts separately.","minutes":null,"lo":["LO2"]},{"id":"facts-live-in-documents","n":25,"title":"Facts that change live in documents, not in weights","kind":"content","session":3,"hash":"3618ebe8","md":"#### [day2#facts-live-in-documents] Facts that change live in documents, not in weights\n\n*Retrieval-augmented generation*\n\n**Customer:** How much does a meter test cost and when is it refunded?\n\n**Model alone (weak example):** A plausible price, from nowhere.\n\n**Model with rule R-07 (good example):** The answer the rule gives, with [R-07] after it.\n\n- The tariff rule book is Latifa's: ten rules, each in English and Arabic.\n- No model was trained on it, and it changes every quarter.\n- Retrieve the rule, put it in the context, ask for an answer **from it**, with a citation.","notes":"The bad reply is the default behaviour of any generative model asked for a price it does not have: it completes a plausible sentence. Grounding does not make the model smarter; it changes the task from recalling to reading.","minutes":null,"lo":["LO2"]},{"id":"ingest-and-answer","n":26,"title":"Two pipelines: one when the rules change, one for every question","kind":"content","session":3,"hash":"e53b8245","md":"#### [day2#ingest-and-answer] Two pipelines: one when the rules change, one for every question\n\n*The shape*\n\n1. **Ingest · when the rule book changes** split each rule into chunks, keep the rule id\n2. **Index** normalised words, or embeddings\n\n1. **Answer · for every question** retrieve the top 3 chunks\n2. **Generate** answer from them, cite, or refuse\n3. **Check** citation present, refusal exact","notes":"Same two phases as yesterday's search, with a generator added at the end. Ten rules in two languages become 20 chunks. A chunk is one language of one rule: small enough to quote, large enough to answer. For long documents, chunking is a design decision to test; here the rules are short on purpose.","minutes":null,"lo":["LO2"]},{"id":"bm25-with-normalisation","n":27,"title":"For ten rules, a keyword search with Arabic normalisation finds every answer","kind":"content","session":3,"hash":"4abbfab4","md":"#### [day2#bm25-with-normalisation] For ten rules, a keyword search with Arabic normalisation finds every answer\n\n*Measured in Lab 2.3*\n\n**12 of 12** answerable questions with the right rule in the top 3 (English, MSA and Gulf)\n\n- **And nothing for Arabizi.** `bkam tif7soon el 3adad?` shares no word with a rule book in Arabic script and English.\n\n- **BM25**: a rare word counts more, a repeated word counts less each time, a long chunk gets no bonus.\n- Normalise first, and cut words to six letters so that a word meets its suffixed forms.\n- Start with the simplest retriever and an evaluation set. Add embeddings where the set shows a gap.","notes":"From the course's run of Lab 2.3, steps 1 and 2, and its stretch: deterministic. Twelve questions is a small set and ten rules a small corpus; the method scales, the 12 of 12 does not. The Arabizi gap is the opening for yesterday's multilingual embeddings, or for rewriting the question first.","minutes":null,"lo":["LO2"]},{"id":"answer-from-the-rules-only","n":28,"title":"Answer from the rules, cite the rule, or say the rules are silent","kind":"content","session":3,"hash":"f4359c73","md":"#### [day2#answer-from-the-rules-only] Answer from the rules, cite the rule, or say the rules are silent\n\n*The generator's contract*\n\nPrompt for Grounded reply, Lab 2.3:\n\n```text\nYou answer customers of Sawaqi Water Company from the RULES given in the message and from nothing else.\nAnswer in the language of the question, in one or two sentences,\nand cite the rule you used in square brackets, like [R-02].\nIf the RULES do not answer the question, reply exactly: NOT_IN_RULES\n```\n\nSource · Form · Citation · Refusal\n\nThe user message holds the three retrieved chunks, each starting with its rule id, then the question.","notes":"Each clause is checkable by code: a citation is a pattern, the refusal is an exact string. That is why the refusal is not a polite sentence: code must be able to count it and route the question to a person. A cited rule that was not among the retrieved ones is an invented citation: the lab's table shows the retrieved rules next to each reply so that this is visible.","minutes":null,"lo":["LO2"]},{"id":"score-the-two-parts-apart","n":29,"title":"Score the retriever and the generator apart","kind":"content","session":3,"hash":"edcacdcd","md":"#### [day2#score-the-two-parts-apart] Score the retriever and the generator apart\n\n*Lab 2.3, step 4*\n\n| Number | Over | The part it measures |\n| --- | --- | --- |\n| Hit at 3 | 12 answerable questions | the retriever: is the right rule in the context? |\n| Cited the right rule | 12 answerable | the generator: did it use that rule? |\n| Contains the key fact | 12 answerable | the generator: did it copy the figure correctly? |\n| False refusals | 12 answerable | the generator: too cautious |\n| Refused | 4 questions the rules do not answer | the generator: not cautious enough when below 4 |\n\n> **One score for the whole pipeline cannot tell you which part to fix.**","notes":"The four silent questions are in the data on purpose: a farm discount, the price of a private tanker, paying cash at a petrol station, a solar heater refund. A retriever always returns its top three, so the generator receives rules that look related. Whether it refuses is the test. The key fact is checked as a string (a price, a number of days), which is crude and works for figures.","minutes":null,"lo":["LO2"]},{"id":"locate-the-error","n":30,"title":"Locate the error before you change anything","kind":"content","session":3,"hash":"129ec055","md":"#### [day2#locate-the-error] Locate the error before you change anything\n\n*Reading a wrong answer*\n\n- **The rule was not retrieved.** Fix the retriever: wording, normalisation, a second search. The generator never had a chance.\n- **Retrieved, answer wrong.** Fix the prompt or the chunk: two tiers in one sentence, a figure copied from the wrong tier.\n- **Silent question, answered.** Read which retrieved rule it leaned on. Tighten the refusal clause; test it on more silent questions.","notes":"This is the same discipline as Day 1's \"trace the failure to its cause\", one level up. The lab prints the retrieved rules beside every reply for exactly this reading. Ask the room to classify three wrong answers from their own run before touching the prompt.","minutes":null,"lo":["LO2"]},{"id":"check-grounded","n":31,"title":"The right rule, the wrong price","kind":"quiz","session":3,"hash":"7d2fc22b","md":"#### [day2#check-grounded] The right rule, the wrong price\n\n*Checkpoint*\n\n**Question:** A customer asks what the second residential tier costs. The top chunk is R-02, which lists all four tiers. The reply says \"SAR 1.20 [R-02]\"; the rule says SAR 2.50. Where do you look first?\n\n- A. At the generator: the prompt and how the four tiers read in one sentence\n- B. At the retriever: return ten chunks instead of three\n- C. At the index: replace keywords by embeddings\n- D. At the model: fine-tune it on the rule book","notes":"Answer: A. The first tier's price was copied instead of the second's: a reading error. A table-like chunk (one tier per line) and an instruction to quote the figure from the matching line usually fix it. Then add this question to the evaluation set.","minutes":null,"lo":["LO2"]},{"id":"lab-2-3","n":32,"title":"Grounded replies from the rule book","kind":"lab","session":3,"hash":"214ea21d","md":"#### [day2#lab-2-3] Grounded replies from the rule book\n\nLab 2.3 · 25 min\n\nGround replies in the tariff rules with citations and refuse when the rules are silent, scoring retrieval and answers separately on 16 questions.\n\n[D2_3_rag.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D2_3_rag.ipynb)\n\n- [ ] Chunk and index the rule book (6 min)\n- [ ] Retrieval: hit at 3 on 16 questions (5 min)\n- [ ] Grounded replies with citations (8 min)\n- [ ] Score citations and refusals (6 min)\n- [ ] ✱ Stretch: Ask in Gulf dialect and in Arabizi: does retrieval still find the rule?","notes":"Walk the room. Sixteen calls, cached. Usual problems: chunks that keep the Markdown heading marks; a user message that does not follow the RULES and QUESTION layout; scoring a refusal by \"contains NOT_IN_RULES\" and so accepting a reply that refuses and answers; forgetting that the four silent questions have no gold rule. If a table's model answers every silent question, that is a finding to report, not a bug in their code.","minutes":null,"lo":[]},{"id":"s4","n":33,"title":"Model selection and evaluation","kind":"section","session":4,"hash":"59ccce45","md":"#### [day2#s4] Model selection and evaluation\n\n*Session 4*\n\n- Compare models on one labelled set by macro F1 and F1 by variety\n- Measure latency percentiles and cost per thousand messages\n- Defend a choice against a latency budget","notes":"Session 4 is the centre of LO5: the second row of the comparison, with latency and cost beside quality.","minutes":null,"lo":["LO5"]},{"id":"choose-on-four-columns","n":34,"title":"A model is chosen on four columns, and a leaderboard has one","kind":"content","session":4,"hash":"94b33ed6","md":"#### [day2#choose-on-four-columns] A model is chosen on four columns, and a leaderboard has one\n\n*Model selection*\n\n- **Quality.** Macro F1 on your test set, and by variety.\n- **Latency.** Median and 95th percentile, against a budget.\n- **Cost.** Per 1,000 messages at your volume.\n- **Licence and place.** May you run the weights yourself? Where is the text processed?\n\n> **A public leaderboard** ranks models on someone else's task, in someone else's language, with no price. Use it to choose candidates, never to choose.","notes":"Open-weight means the weights are published under a licence; read the licence, because some restrict commercial use. A hosted open-weight model can later be moved to your own servers; a closed one cannot. The fourth column does not fit in a table cell and belongs in the decision memo.","minutes":null,"lo":["LO5"]},{"id":"cost-is-volume-tokens-price","n":35,"title":"Cost = messages × tokens per call × the published price","kind":"content","session":4,"hash":"aa114e82","md":"#### [day2#cost-is-volume-tokens-price] Cost = messages × tokens per call × the published price\n\n*Cost*\n\n| Model (paid endpoint) | Input, USD per million tokens | Output |\n| --- | --- | --- |\n| The larger model of the lab | 0.20 | 0.40 |\n| The smaller model of the lab | 0.08 | 0.20 |\n| The baseline | your own processor |  |\n\n- A routing call is about 200 input tokens and a few output tokens.\n- At 0.20 per million: about 0.04 USD per 1,000 messages, 2.40 USD a month at 60,000 messages.\n- A **free** endpoint costs nothing and has a daily request limit: price the paid endpoint of the same model.","notes":"Prices from OpenRouter's public model list, read on 13 November 2026 and saved in data/reference/prices.json; the lab reads live prices when it can. The model names are in labs/README.md and are a setting. Do the arithmetic aloud: 200 tokens × 1,000 messages = 200,000 tokens = 0.2 of a million × 0.20 USD. At this volume cost is not the deciding column; at 2 million messages a day it is.\n\nSources: OpenRouter's public model list (prices); OpenRouter documentation, limits.","minutes":null,"lo":["LO5"]},{"id":"latency-is-a-distribution","n":36,"title":"Latency is a distribution: report the median and the 95th percentile","kind":"content","session":4,"hash":"54adf5f3","md":"#### [day2#latency-is-a-distribution] Latency is a distribution: report the median and the 95th percentile\n\n*Latency*\n\n- The **median** (p50) is what a typical message waits.\n- The **95th percentile** (p95) is what one message in twenty waits. Budgets are written on it.\n- A hosted model's latency includes the network and a queue you do not control.\n- Sawaqi's budget: **300 ms at p95** per message.\n\n**4 · 5 ms** the baseline's p50 and p95 on a laptop processor (Lab 1.4)\n\n- **A mean hides the queue.** Nineteen fast calls and one of five seconds average to \"fine\".","notes":"The lab measures the wall-clock time of each call. On a free endpoint the p95 is often seconds, not milliseconds: that is a finding about the endpoint, and a paid or self-hosted endpoint of the same model will differ. Cached calls return at once, so the lab reports the latency recorded when the call was first made.","minutes":null,"lo":["LO5"]},{"id":"zero-shot-router","n":37,"title":"Describe the eight departments, ask for one name, parse what comes back","kind":"content","session":4,"hash":"17481401","md":"#### [day2#zero-shot-router] Describe the eight departments, ask for one name, parse what comes back\n\n*The prompted model as a classifier*\n\n```python\n# file: Lab 2.4\nSYSTEM = \"\"\"You route one customer message of a water\nutility to one department. ...\nDepartments:\n- billing: a bill that is too high, a charge twice\n- meters: a meter that is broken or reads wrong\n...\nReply with the department name only.\"\"\"\n\ndef parse_label(reply):\n    low = reply.lower()\n    found = [(low.index(d), d)\n             for d in DEPARTMENTS if d in low]\n    return min(found)[1] if found else None\n```\n\n- **No training data**: the descriptions are the whole \"training\".\n- Parse leniently (\"Department: leaks\"), and count a reply with no department as wrong.\n- Temperature 0, a dozen output tokens.","notes":"This is the \"prompted model as a zero-shot classifier\" of the entry. Its strength is exactly where yesterday's baseline was weak: it needs no labelled Arabizi. Its weakness is the other three columns. The descriptions are worth iterating on: most routing errors of a prompted model come from two departments whose descriptions overlap.","minutes":null,"lo":["LO5"]},{"id":"forty-messages-are-few","n":38,"title":"Forty messages, ten per variety: enough to find failures, not to rank close models","kind":"content","session":4,"hash":"e8d03295","md":"#### [day2#forty-messages-are-few] Forty messages, ten per variety: enough to find failures, not to rank close models\n\n*Measured in Lab 2.4 · the baseline's row*\n\n| Approach | Macro F1 | MSA | Gulf | Arabizi | English |\n| --- | --- | --- | --- | --- | --- |\n| Baseline, on these 40 | 0.81 | 1.00 | 0.60 | 0.51 | 0.71 |\n| Baseline, on all 403 | 0.85 | 0.94 | 0.86 | 0.42 | 0.81 |\n| Larger model | measured by your run |  |  |  |  |\n| Smaller model |  |  |  |  |  |\n\n- The same baseline scores 0.60 for Gulf on ten messages and 0.86 on 157.\n- With ten messages, one error moves a variety by several points.\n- Read the errors, then widen the sample before you sign a decision.","notes":"Both baseline rows are from the course's runs: Lab 2.4, step 3, and Lab 1.4. The gap between them is the lesson about sample size, and it is real. The entry's lab line asks for 40 labelled messages; it is the right size for a 25-minute lab on a free key (80 calls) and the wrong size for a final decision, which is why the capstone asks for the held-out test split.","minutes":null,"lo":["LO5"]},{"id":"cascade-cheap-first","n":39,"title":"A cascade sends only the unsure messages to the expensive model","kind":"content","session":4,"hash":"d08a105a","md":"#### [day2#cascade-cheap-first] A cascade sends only the unsure messages to the expensive model\n\n*You do not have to choose one*\n\n1. **Baseline** 4 ms, free\n2. **Confident?** above a threshold: done\n3. **Prompted model** the rest of the messages\n4. **Still unsure?** to a person\n\n- Cost and latency are paid only for the share of messages that reach the second step.\n- The threshold is chosen on validation data, and its hand-off rate is reported.\n- It is a new system: evaluate it as a whole, by variety, like any other row.","notes":"The lab's stretch builds it in six lines from the saved confidences of Lab 1.4. A cascade is often the defensible answer in the capstone: it turns \"which model?\" into \"which model for which messages?\".","minutes":null,"lo":["LO5"]},{"id":"write-the-decision","n":40,"title":"A decision is three sentences someone can disagree with","kind":"content","session":4,"hash":"fcd74365","md":"#### [day2#write-the-decision] A decision is three sentences someone can disagree with\n\n*The output of model selection*\n\n1. Which approach routes today, and on which numbers.\n2. What it costs a month at Sawaqi's volume, and its p95 against the budget.\n3. Which messages go to a person until a better model exists.\n\n- **Say what would change it.** \"If Arabizi F1 of the prompted model stays above the baseline's on 400 messages, we switch that variety.\"\n- **And what is not in the table.** Licence, where the text is processed, what happens when the model is withdrawn.","notes":"The lab writes the skeleton of this memo to artifacts/D2_4/decision.md. It is practice for the capstone's defence: the \"defended recommendation\" of LO5. A recommendation that names no number and no condition is an opinion.","minutes":null,"lo":["LO5"]},{"id":"check-model-selection","n":41,"title":"The cheaper model ties on English","kind":"quiz","session":4,"hash":"046cf8be","md":"#### [day2#check-model-selection] The cheaper model ties on English\n\n*Checkpoint*\n\n**Question:** The smaller model matches the larger one on English and MSA, loses 20 points on Arabizi, and costs less than half. 15% of messages are Arabizi. What do you recommend?\n\n- A. The smaller model for everything, since it costs less than half\n- B. The larger model for everything, since it is better somewhere\n- C. Either one, since the two models are equivalent\n- D. Route by variety: the larger model or a person for Arabizi; confirm on more messages","notes":"Answer: D. The scenario is invented for the question. Ask how the service would know that a message is Arabizi: a script check on the characters, which Lab 3.4 writes in five lines.","minutes":null,"lo":["LO5"]},{"id":"lab-2-4","n":42,"title":"Two open-weight models against the baseline","kind":"lab","session":4,"hash":"224440ef","md":"#### [day2#lab-2-4] Two open-weight models against the baseline\n\nLab 2.4 · 25 min\n\nCompare two open-weight models as zero-shot routers on 40 labelled messages for F1, latency and cost, next to the Day 1 baseline.\n\n[D2_4_model_selection.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D2_4_model_selection.ipynb)\n\n- [ ] A zero-shot routing prompt and a label parser (6 min)\n- [ ] Run both models on 40 messages (7 min)\n- [ ] Macro F1 and F1 by variety (6 min)\n- [ ] Latency, cost per thousand, decision (6 min)\n- [ ] ✱ Stretch: A cascade: the baseline first, the model only when it is unsure","notes":"Walk the room. Eighty calls (40 in quick mode), cached; on a fresh free key run quick mode or share one table's cache. Usual problems: a parser that returns the last department named instead of the first; counting unparsed replies as missing instead of wrong; pricing the free endpoint at zero; reading the cached latency of a second run. The baseline's row comes from each participant's Lab 1.4 or from the supplied copy. The table in artifacts/D2_4/comparison.csv is two of the three rows of the final comparison.","minutes":null,"lo":[]},{"id":"day-2-recap","n":43,"title":"A prompt asks; code checks; a table decides","kind":"content","session":4,"hash":"c2aa412a","md":"#### [day2#day-2-recap] A prompt asks; code checks; a table decides\n\n*Day 2 recap*\n\n- **Sampling** is a setting: temperature 0 for decisions, and it repeats errors too.\n- **Mask** personal fields before text leaves; test the masking.\n- **Schema and validators**: valid is not right, so score each field.\n\n- **Grounding**: retrieve, cite, refuse; score retriever and generator apart.\n- **Selection**: quality by variety, p95 latency, cost per 1,000, licence.\n- **Small samples** find failures; they do not rank close models.","notes":"Ask each table for the row of their comparison they trust least, and why. Tonight's ten minutes: finish the decision memo in three sentences.","minutes":null,"lo":[]},{"id":"tomorrow-adapt","n":44,"title":"Adapt: train the third approach, then ship one of the three","kind":"content","session":4,"hash":"440c4a4f","md":"#### [day2#tomorrow-adapt] Adapt: train the third approach, then ship one of the three\n\n*Tomorrow · Day 3*\n\nSplit without leakage, fine-tune an encoder for routing and read its confusion matrix, train a low-rank adapter inside a memory budget, and wrap the chosen model in a tested service with a model card.","notes":"Tomorrow needs no hosted model: everything trains on the laptop's processor in about a minute. Every lab starts from supplied files.","minutes":null,"lo":[]}],"activities":[{"id":"review-day-1-q1","slide":"review-day-1","type":"single","prompt":"A message contains العَدّاد with diacritics. The Arabic tokeniser returns [UNK] and the router sends the message to the wrong department. Where is the fix?","options":[{"key":"A","text":"Retrain the router with more epochs"},{"key":"B","text":"Ask for a tokeniser with a larger vocabulary"},{"key":"C","text":"Leave it, since diacritics are rare in customer messages"},{"key":"D","text":"Normalise the text before the tokeniser sees it"}],"correct":[3],"explanation":"The failure happens before the model: the tokeniser has no piece with a diacritic. Removing diacritics first turned 1,052 unknown pieces into 0.","misconceptions":["Blames the classifier: it never received the word, so no amount of training on clean text helps","Changes the wrong part: a larger vocabulary trained on text without diacritics still has no piece for them","Treats a systematic spelling problem as rare noise: 1,052 pieces were unknown in the archive",""],"lo":["LO1"]},{"id":"check-sampling-q1","slide":"check-sampling","type":"single","prompt":"Ghayth routes with a prompted model. The same message is sent to billing on one run and to meters on the next. What do you change first?","options":[{"key":"A","text":"Add ten examples to the prompt"},{"key":"B","text":"Set the temperature to 0 and limit the output to a label"},{"key":"C","text":"Move to a larger model"},{"key":"D","text":"Call the model three times and take the majority"}],"correct":[1],"explanation":"The variation comes from the draw, not from the model's knowledge. Remove the draw for a decision; then measure whether the single answer is right.","misconceptions":["Adds examples before removing the randomness: with sampling on, a longer prompt still gives two answers","","Buys a bigger model to fix a setting: a larger model sampled at a high temperature also varies","Hides the variation instead of removing it: a majority vote triples the cost of every message"],"lo":["LO5"]},{"id":"check-structured-outputs-q1","slide":"check-structured-outputs","type":"single","prompt":"You switch on constrained decoding. Every reply now parses and matches the schema. Which check can you still not drop?","options":[{"key":"A","text":"That every reply has the three keys"},{"key":"B","text":"That the district is one of the eight in the list"},{"key":"C","text":"That the account placeholder is one that occurs in this message"},{"key":"D","text":"That the reply is JSON and nothing else"}],"correct":[2],"explanation":"A schema can say \"a string\" or \"one of these eight\". It cannot say \"a value that is true of this message\". That stays in your validator and in your precision and recall.","misconceptions":["Keeps a check the constraint already covers: a missing key can no longer occur","Same: the constraint restricts the district to the list, so this can no longer fail","","Checks the format again: valid JSON is exactly what constrained decoding guarantees"],"lo":["LO3"]},{"id":"check-grounded-q1","slide":"check-grounded","type":"single","prompt":"A customer asks what the second residential tier costs. The top chunk is R-02, which lists all four tiers. The reply says \"SAR 1.20 [R-02]\"; the rule says SAR 2.50. Where do you look first?","options":[{"key":"A","text":"At the generator: the prompt and how the four tiers read in one sentence"},{"key":"B","text":"At the retriever: return ten chunks instead of three"},{"key":"C","text":"At the index: replace keywords by embeddings"},{"key":"D","text":"At the model: fine-tune it on the rule book"}],"correct":[0],"explanation":"Retrieval did its job: the rule is in the context and is cited. The error is in reading it, so the fix is the prompt or the form of the chunk, for example one tier per line.","misconceptions":["","Blames retrieval although the gold rule is the top hit: more chunks add more figures to confuse","Changes the index although the right chunk was found: embeddings would retrieve the same rule","Moves facts into weights: the tariff changes every quarter, and the model would still have to pick the right tier"],"lo":["LO2"]},{"id":"check-model-selection-q1","slide":"check-model-selection","type":"single","prompt":"The smaller model matches the larger one on English and MSA, loses 20 points on Arabizi, and costs less than half. 15% of messages are Arabizi. What do you recommend?","options":[{"key":"A","text":"The smaller model for everything, since it costs less than half"},{"key":"B","text":"The larger model for everything, since it is better somewhere"},{"key":"C","text":"Either one, since the two models are equivalent"},{"key":"D","text":"Route by variety: the larger model or a person for Arabizi; confirm on more messages"}],"correct":[3],"explanation":"The choice is per group of messages, not per system. Each model is used where it is good enough, and ten messages per variety is a reason to confirm before signing.","misconceptions":["Decides on the average cost and forgets who pays for it: one customer in seven would be routed much worse","Pays the higher price for the 85% of messages where the cheaper model is as good","Reads a tie on ten messages per variety as proof: the sample cannot separate close models, so the question stays open rather than closed",""],"lo":["LO5"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day2.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

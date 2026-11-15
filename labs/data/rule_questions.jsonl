@@ -1,0 +1,16 @@
+{"qid": "q01", "variety": "en", "question": "How much is one cubic metre in the second residential tier?", "rule": "R-02", "key_fact": "2.50"}
+{"qid": "q02", "variety": "msa", "question": "كم رسوم خدمة العداد الشهرية للمنازل؟", "rule": "R-02", "key_fact": "9"}
+{"qid": "q03", "variety": "en", "question": "What does a commercial customer pay per cubic metre?", "rule": "R-03", "key_fact": "7.00"}
+{"qid": "q04", "variety": "msa", "question": "متى تستحق الفاتورة بعد إصدارها؟", "rule": "R-04", "key_fact": "30"}
+{"qid": "q05", "variety": "gulf", "question": "ابي اقسط المتأخرات، كم القسط الاول؟", "rule": "R-05", "key_fact": "20%"}
+{"qid": "q06", "variety": "en", "question": "How many instalments can arrears be split into?", "rule": "R-05", "key_fact": "six"}
+{"qid": "q07", "variety": "msa", "question": "أصلحت تسربا داخل المنزل، كيف تحسب الفاتورة؟", "rule": "R-06", "key_fact": "الشريحة الأولى"}
+{"qid": "q08", "variety": "en", "question": "How much does a meter test cost and when is it refunded?", "rule": "R-07", "key_fact": "150"}
+{"qid": "q09", "variety": "gulf", "question": "كم يكلف توصيل ماي لبيت جديد؟", "rule": "R-08", "key_fact": "1,800"}
+{"qid": "q10", "variety": "en", "question": "Is transferring an account to a new owner free?", "rule": "R-08", "key_fact": "free"}
+{"qid": "q11", "variety": "msa", "question": "متى يحق لي طلب صهريج مجاني عند الانقطاع؟", "rule": "R-09", "key_fact": "24"}
+{"qid": "q12", "variety": "en", "question": "Can you send my message text to an outside service with my phone number in it?", "rule": "R-10", "key_fact": "masked"}
+{"qid": "q13", "variety": "en", "question": "Is there a discount on water for farms?", "rule": null, "key_fact": null}
+{"qid": "q14", "variety": "msa", "question": "كم سعر صهريج المياه الخاص؟", "rule": null, "key_fact": null}
+{"qid": "q15", "variety": "gulf", "question": "ممكن ادفع الفاتوره كاش في محطة البنزين؟", "rule": null, "key_fact": null}
+{"qid": "q16", "variety": "en", "question": "Do you refund the cost of a solar water heater?", "rule": null, "key_fact": null}

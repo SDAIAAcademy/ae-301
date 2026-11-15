@@ -1,0 +1,203 @@
+[
+ {
+  "qid": "q01",
+  "variety": "en",
+  "question": "How much is one cubic metre in the second residential tier?",
+  "rule": "R-02",
+  "key_fact": "2.50",
+  "reply": "R-01 · Scope and definitions\n\nThis rule book sets the charges and service rules of Sawaqi Water Company for residential and commercial customers. [R-01]",
+  "retrieved": [
+   "R-01",
+   "R-06",
+   "R-02"
+  ]
+ },
+ {
+  "qid": "q02",
+  "variety": "msa",
+  "question": "كم رسوم خدمة العداد الشهرية للمنازل؟",
+  "rule": "R-02",
+  "key_fact": "9",
+  "reply": "رسوم الفحص 150 ريالا وتسترد إذا تجاوز خطأ العداد 3%. [R-07]",
+  "retrieved": [
+   "R-07",
+   "R-02",
+   "R-03"
+  ]
+ },
+ {
+  "qid": "q03",
+  "variety": "en",
+  "question": "What does a commercial customer pay per cubic metre?",
+  "rule": "R-03",
+  "key_fact": "7.00",
+  "reply": "R-03 · Commercial tariff\n\nCommercial customers pay a flat SAR 7.00 per m³ and a meter service charge of SAR 25 per month. [R-03]",
+  "retrieved": [
+   "R-03",
+   "R-01",
+   "R-10"
+  ]
+ },
+ {
+  "qid": "q04",
+  "variety": "msa",
+  "question": "متى تستحق الفاتورة بعد إصدارها؟",
+  "rule": "R-04",
+  "key_fact": "30",
+  "reply": "السداد والتأخر\n\nتستحق الفاتورة بعد 30 يوما من إصدارها. [R-04]",
+  "retrieved": [
+   "R-04",
+   "R-06",
+   "R-09"
+  ]
+ },
+ {
+  "qid": "q05",
+  "variety": "gulf",
+  "question": "ابي اقسط المتأخرات، كم القسط الاول؟",
+  "rule": "R-05",
+  "key_fact": "20%",
+  "reply": "القسط الأول 20% من المتأخرات ويدفع عند توقيع الخطة. [R-05]",
+  "retrieved": [
+   "R-05"
+  ]
+ },
+ {
+  "qid": "q06",
+  "variety": "en",
+  "question": "How many instalments can arrears be split into?",
+  "rule": "R-05",
+  "key_fact": "six",
+  "reply": "R-05 · Instalment plans\n\nArrears above SAR 500 can be paid in up to six monthly instalments. [R-05]",
+  "retrieved": [
+   "R-05",
+   "R-04"
+  ]
+ },
+ {
+  "qid": "q07",
+  "variety": "msa",
+  "question": "أصلحت تسربا داخل المنزل، كيف تحسب الفاتورة؟",
+  "rule": "R-06",
+  "key_fact": "الشريحة الأولى",
+  "reply": "تسوية التسربات\n\nإذا أصلح العميل تسربا في الجهة الخاصة به من العداد خلال 14 يوما من اكتشافه، يعاد احتساب الاستهلاك الزائد في تلك الفاتورة بسعر الشريحة الأولى. [R-06]",
+  "retrieved": [
+   "R-06",
+   "R-04"
+  ]
+ },
+ {
+  "qid": "q08",
+  "variety": "en",
+  "question": "How much does a meter test cost and when is it refunded?",
+  "rule": "R-07",
+  "key_fact": "150",
+  "reply": "R-07 · Meter testing and disputes\n\nA customer may ask for a meter test. [R-07]",
+  "retrieved": [
+   "R-07",
+   "R-06",
+   "R-04"
+  ]
+ },
+ {
+  "qid": "q09",
+  "variety": "gulf",
+  "question": "كم يكلف توصيل ماي لبيت جديد؟",
+  "rule": "R-08",
+  "key_fact": "1,800",
+  "reply": "NOT_IN_RULES",
+  "retrieved": [
+   "R-08"
+  ]
+ },
+ {
+  "qid": "q10",
+  "variety": "en",
+  "question": "Is transferring an account to a new owner free?",
+  "rule": "R-08",
+  "key_fact": "free",
+  "reply": "Transferring an account to a new owner is free with the property deed. [R-08]",
+  "retrieved": [
+   "R-08",
+   "R-09",
+   "R-10"
+  ]
+ },
+ {
+  "qid": "q11",
+  "variety": "msa",
+  "question": "متى يحق لي طلب صهريج مجاني عند الانقطاع؟",
+  "rule": "R-09",
+  "key_fact": "24",
+  "reply": "وإذا استمر انقطاع غير مجدول أكثر من 24 ساعة يحق للأسرة طلب صهريج مياه مجاني. [R-09]",
+  "retrieved": [
+   "R-09",
+   "R-07",
+   "R-05"
+  ]
+ },
+ {
+  "qid": "q12",
+  "variety": "en",
+  "question": "Can you send my message text to an outside service with my phone number in it?",
+  "rule": "R-10",
+  "key_fact": "masked",
+  "reply": "Personal fields are masked before message text is sent to any external service, and only the fields a task needs are kept. [R-10]",
+  "retrieved": [
+   "R-10",
+   "R-08",
+   "R-05"
+  ]
+ },
+ {
+  "qid": "q13",
+  "variety": "en",
+  "question": "Is there a discount on water for farms?",
+  "rule": null,
+  "key_fact": null,
+  "reply": "When an unplanned interruption lasts more than 24 hours, a household may ask for a free water tanker. [R-09]",
+  "retrieved": [
+   "R-09",
+   "R-04",
+   "R-01"
+  ]
+ },
+ {
+  "qid": "q14",
+  "variety": "msa",
+  "question": "كم سعر صهريج المياه الخاص؟",
+  "rule": null,
+  "key_fact": null,
+  "reply": "NOT_IN_RULES",
+  "retrieved": [
+   "R-09",
+   "R-03",
+   "R-02"
+  ]
+ },
+ {
+  "qid": "q15",
+  "variety": "gulf",
+  "question": "ممكن ادفع الفاتوره كاش في محطة البنزين؟",
+  "rule": null,
+  "key_fact": null,
+  "reply": "NOT_IN_RULES",
+  "retrieved": [
+   "R-06",
+   "R-04"
+  ]
+ },
+ {
+  "qid": "q16",
+  "variety": "en",
+  "question": "Do you refund the cost of a solar water heater?",
+  "rule": null,
+  "key_fact": null,
+  "reply": "Wastewater service adds 60% of the water charge. [R-03]",
+  "retrieved": [
+   "R-03",
+   "R-02",
+   "R-07"
+  ]
+ }
+]

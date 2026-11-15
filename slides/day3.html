@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="ai-engineering">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 3 · Adapt · Applied Natural Language Processing Engineering</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day3.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Applied Natural Language Processing Engineering" data-track="ai-engineering" data-day="Day 3">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Applied Natural Language Processing Engineering</div>
+  <h1>Adapt</h1>
+  <p class="lead mt">Day 3</p>
+  <div class="meta"><span class="track">AI Engineering Track</span><span>3 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>AE-301</span></div>
+  <aside class="notes"><p>Open with the table from Day 1: two rows are filled (the baseline, and each participant's prompted model). Today trains the third row, an encoder fine-tuned on Sawaqi's 400 labelled messages, and ships one of the three. No hosted model is needed today; everything trains on the laptop's processor.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>Adapt</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · Fine-tuning data</b><small>An honest test score needs a split by customer and enough labels in every variety</small></div></div><div class="item"><div><b>Session 2 · Fine-tuning an encoder</b><small>An encoder plus a small head, trained with a short loop and read through its confusion matrix</small></div></div><div class="item"><div><b>Session 3 · Low-rank and quantised adapters</b><small>Train a small update instead of every weight, within a memory budget</small></div></div><div class="item"><div><b>Session 4 · Evaluate and deploy</b><small>One table for every approach, a small tested service and a model card with results by variety</small></div></div></div>
+  <aside class="notes"><p>Four sessions. The first is about data and has no neural network in it; that order is deliberate. The last produces the service and the model card that the capstone builds on.</p></aside>
+</section>
+
+<section class="slide" id="review-day-2" data-lo="LO3" data-n="3">
+  <div class="kicker">Review · Day 2</div>
+  <h2>Before we train anything</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="review-day-2-q1">
+    <p class="lead">Ghayth extracts fields with a hosted model. A reply has valid JSON with <code>"account_number": "3055512345"</code>. The message, as sent, contained <code>[ACCOUNT_1]</code>. What does the service do with this reply?</p>
+    <div class="opts">
+      <div class="opt" data-why="Checks the shape only: the number looks like an account number, yet the model never saw one" data-k="A">Accepts it, since it matches the account pattern</div>
+      <div class="opt" data-ok data-k="B">Rejects it, since the model only ever saw a placeholder</div>
+      <div class="opt" data-why="Lets an invented value pass because it happens to exist in a table" data-k="C">Accepts it if the number exists in the customer table</div>
+      <div class="opt" data-why="Replaces a rule with a guess: the validator knows the mapping, so nothing needs estimating" data-k="D">Asks a second model whether the number is plausible</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Masking makes invention provable: any real-looking account number in the reply cannot have come from the message. The validator rejects it and the repair call asks again.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. Two minutes. The thread to today: code decides what code can decide. The same attitude applies to the test set this morning.</p></aside>
+</section>
+
+<!-- ======================= SESSION 1 ======================= -->
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="4">
+  <div class="kicker">Session 1</div>
+  <h1>Fine-tuning data</h1>
+  <ul class="bullets outcomes"><li>Decide when fine-tuning is worth it</li><li>Split by customer to prevent leakage</li><li>Check label balance by department and variety</li></ul>
+  <div class="sess-no">01</div>
+  <aside class="notes"><p>Session 1 serves LO4: the routing set split by customer is the condition under which every score of today is measured.</p></aside>
+</section>
+
+<section class="slide" data-label="When" id="when-to-fine-tune" data-lo="LO4 LO5" data-n="5" data-session="1">
+  <div class="kicker">Fine-tuning data</div>
+  <h2>Fine-tune for a narrow, stable skill you have labels for</h2>
+  <table class="t small">
+    <tr><th>The need</th><th>Reach for</th><th>Because</th></tr>
+    <tr><td>A task you can describe, no labels yet</td><td>A prompted model</td><td>Works today; costs per call</td></tr>
+    <tr><td>Facts that change (the tariff)</td><td>Retrieval</td><td>Update a file, not a model</td></tr>
+    <tr class="hl"><td>One decision, thousands of times a day, with labels</td><td>A fine-tuned small model</td><td>Milliseconds on a processor, no cost per call</td></tr>
+    <tr><td>A large model that must fit small memory</td><td>Adapters, quantised weights</td><td>Train a fraction of the weights</td></tr>
+  </table>
+  <div class="callout note small mt-s"><b>And always:</b> the baseline from Day 1 stays in the table. Fine-tuning has to beat it to be worth maintaining.</div>
+  <aside class="notes"><p>Fine-tuning buys latency and unit cost and pays in labels, training runs and a model you now own and must retrain. Ask the room for a task in their work for each row. The third row is routing at Sawaqi; whether the fine-tuned model wins there is an empirical question we answer by lunch.</p></aside>
+</section>
+
+<section class="slide" data-label="Near-duplicates" id="customers-write-again" data-lo="LO4" data-n="6" data-session="1">
+  <div class="kicker">Measured in Lab 3.1 · 1,106 labelled messages, 345 customers</div>
+  <h2>Customers write again, and their second message is almost the first</h2>
+  <div class="cols cols-2">
+    <div class="chat">
+      <div class="msg user"><span class="who">C0009</span>Hello, I want a wter connection for a new house in Al-Yasmeen and the meer was replaced last month</div>
+      <div class="msg user"><span class="who">C0009</span>I want a water connection for a new house in Al-Yasmeen and the meter was replaced last month. Thanks.</div>
+    </div>
+    <div class="stack">
+      <div class="stat"><div class="big">274</div><div class="lbl">near-duplicate pairs within customers</div></div>
+      <div class="stat"><div class="big">29%</div><div class="lbl">of labelled messages have at least one near-duplicate</div></div>
+    </div>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 3.1, step 1: pairs of messages by the same customer whose normalised word sets overlap by 0.6 or more (Jaccard). The pair on the slide is from the data, typos included. In real contact centres this is normal: nobody answered, so the customer wrote again. An exact-duplicate filter misses all of these.</p></aside>
+</section>
+
+<section class="slide" data-label="Leakage" id="leak-inflates-the-score" data-lo="LO4" data-n="7" data-session="1">
+  <div class="kicker">Measured in Lab 3.1 · five seeds each</div>
+  <h2>A random split tests the model on messages it has nearly seen</h2>
+  <div class="cols cols-2">
+    <table class="t">
+      <tr><th>Split</th><th class="num">Test messages with a near-copy in training</th><th class="num">Macro F1</th></tr>
+      <tr><td>Random</td><td class="num">16%</td><td class="num">0.892</td></tr>
+      <tr class="hl"><td>By customer</td><td class="num">0%</td><td class="num">0.859</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Same data, same baseline, same sizes: 400 to train, 400 to test.</li>
+      <li>The model did not get better. The test got easier.</li>
+      <li>The 0.033 of difference is a score no new customer will ever see.</li>
+      <li>A larger model memorises better, so it profits <b>more</b> from the leak.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Means over five seeds from the course's run of Lab 3.1, step 2, with Day 1's baseline. Three points sounds small; it is the size of many reported "improvements". The leak also changes model comparisons: a model with more capacity benefits more from seeing near-copies, so a random split can reverse a ranking.</p></aside>
+</section>
+
+<section class="slide" data-label="Group split" id="split-by-what-repeats" data-lo="LO4" data-n="8" data-session="1">
+  <div class="kicker">The rule</div>
+  <h2>Split by the unit that repeats, and give each part one job</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.1"><code class="language-python">ids = df[<span class="hljs-string">&quot;customer_id&quot;</span>].drop_duplicates() \
+        .sample(frac=<span class="hljs-number">1</span>, random_state=seed)
+sizes = df[<span class="hljs-string">&quot;customer_id&quot;</span>].value_counts()
+side, n_test, n_train = {}, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>
+<span class="hljs-keyword">for</span> cid <span class="hljs-keyword">in</span> ids:                 <span class="hljs-comment"># a customer goes whole</span>
+    <span class="hljs-keyword">if</span> n_test &lt; <span class="hljs-number">400</span>:
+        side[cid], n_test = <span class="hljs-string">&quot;test&quot;</span>, n_test + sizes[cid]
+    <span class="hljs-keyword">elif</span> n_train &lt; <span class="hljs-number">400</span>:
+        side[cid], n_train = <span class="hljs-string">&quot;train&quot;</span>, n_train + sizes[cid]</code></pre>
+    <table class="t small">
+      <tr><th>Part</th><th>Its one job</th></tr>
+      <tr><td>Train</td><td>fit the weights</td></tr>
+      <tr><td>Validation</td><td>choose: epochs, thresholds, prompts, learning rates</td></tr>
+      <tr><td>Test</td><td>one final measurement, by variety</td></tr>
+    </table>
+  </div>
+  <aside class="notes"><p>At Sawaqi the unit that repeats is the customer. In other data it is the author, the patient, the document, the day. The check that goes into the data card: customers on both sides, which must be zero. scikit-learn's StratifiedGroupKFold does the grouped split and keeps the label mix; the lab's stretch uses it.</p><p>Sources: scikit-learn documentation, StratifiedGroupKFold.</p></aside>
+</section>
+
+<section class="slide" data-label="Thin cells" id="count-labels-by-variety" data-lo="LO4" data-n="9" data-session="1">
+  <div class="kicker">Measured in Lab 3.1</div>
+  <h2>Count the labels for every department in every variety before training</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Department</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th></tr>
+      <tr><td>billing</td><td class="num">21</td><td class="num">24</td><td class="num">13</td><td class="num">7</td></tr>
+      <tr><td>payments</td><td class="num">18</td><td class="num"><em>3</em></td><td class="num">7</td><td class="num">9</td></tr>
+      <tr><td>connections</td><td class="num">6</td><td class="num">10</td><td class="num"><em>0</em></td><td class="num">9</td></tr>
+      <tr><td>wastewater</td><td class="num">19</td><td class="num">18</td><td class="num"><em>1</em></td><td class="num"><em>3</em></td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Four cells of 32 have fewer than five training messages in this split.</li>
+      <li>Each one is a promise the model cannot keep.</li>
+      <li>Three honest answers: label more of exactly that kind, declare the cell unsupported, or send it to a person.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Four of the eight departments, from the course's run of Lab 3.1, step 3, on its own customer split with seed 1; the supplied split in data/split.csv has a similar pattern with other cells. This is Day 1's Arabizi table turned into a check that runs before any training. Label balance by department alone would have looked fine.</p></aside>
+</section>
+
+<section class="slide" data-label="Labels" id="labels-are-decisions" data-lo="LO4" data-n="10" data-session="1">
+  <div class="kicker">Label quality</div>
+  <h2>A label is a decision someone made, and some were hard</h2>
+  <div class="cols cols-2">
+    <div class="chat">
+      <div class="msg user"><span class="who">Customer</span>My bill is high and I think the meter is broken</div>
+      <div class="msg ai"><span class="who">Labelled</span>meters</div>
+      <div class="msg user"><span class="who">Customer</span>The pressure is weak and I have already paid the last bill</div>
+      <div class="msg ai"><span class="who">Labelled</span>supply</div>
+    </div>
+    <ul class="bullets small">
+      <li>The first message is a billing complaint with a meters cause. Either label is defensible; an inconsistent one is not.</li>
+      <li>The second carries a clause with another department's words. It is not the complaint.</li>
+      <li>Write the rule down, label by it, and expect the model's ceiling to be the labellers' agreement.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Both patterns are planted in the data: one template about a high bill caused by the meter is labelled meters, and about three messages in ten carry a second clause from another department. They are the two main sources of confusion in the next lab's matrix. In real projects, measure agreement between two labellers on a sample before blaming a model.</p></aside>
+</section>
+
+<section class="slide" data-label="Data card" id="data-card" data-lo="LO4" data-n="11" data-session="1">
+  <div class="kicker">The output of this session</div>
+  <h2>A data card states what the scores were measured on</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>How many messages in each part, from how many customers.</li>
+      <li>How it was split, and the check: customers on both sides, 0.</li>
+      <li>Near-duplicates found, and what a random split would have reported.</li>
+      <li>Messages per variety; the cells with fewer than five labels.</li>
+      <li>Personal data: what is in it, how it is masked. What the data is not for.</li>
+    </ul>
+    <div class="card c-teal"><h4>Why write it</h4><p class="small mb0">Every number in the model card is conditional on this page. The capstone's reproducibility criterion asks for it, with the seed.</p></div>
+  </div>
+  <aside class="notes"><p>The lab writes artifacts/D3_1/DATA_CARD.md from its own numbers. It is short on purpose: seven lines that a reviewer reads before the results table.</p></aside>
+</section>
+
+<section class="slide" id="check-test-set" data-lo="LO4" data-n="12" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Six learning rates, one test set</h2>
+  <div class="quiz" data-type="single" data-lo="LO4" data-id="check-test-set-q1">
+    <p class="lead">A colleague fine-tunes the encoder with six learning rates, scores every run on the test split and reports the best: macro F1 0.66. What is the honest status of that number?</p>
+    <div class="opts">
+      <div class="opt" data-why="Sees a search problem: more runs would make the selection effect larger, not smaller" data-k="A">Too few runs: with twelve learning rates it would be reliable</div>
+      <div class="opt" data-why="Treats selection as harmless because no weights were trained on the test data" data-k="B">Fine, since the test messages were never used for training</div>
+      <div class="opt" data-ok data-k="C">Optimistic: the test split chose the run, so it is no longer unseen</div>
+      <div class="opt" data-why="Throws the work away: the runs are valid, only the choice must move to validation" data-k="D">Invalid: all six runs must be repeated on new data</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The best of six test scores is partly luck that fits this test split. Choose on the validation split; then measure the chosen run once on the test split.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. The fix costs nothing: the same six runs, ranked by validation score, then one test measurement. Every later choice today follows the same rule: the epoch, the rank of the adapter, the hand-off threshold.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-1" data-auto="lab" data-lab="3.1" data-label="Lab 3.1" data-n="13" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.1 · 25 min</div><h2>A split without leakage</h2><p class="lead small">Split a labelled set by customer to avoid leakage, show how much a random split inflates the score, and check label balance by dialect.</p><a class="nb" href="../labs/D3_1_splits.ipynb">D3_1_splits.ipynb</a></div><ul class="checklist"><li>Find near-duplicate messages per customer <span class="min">5 min</span></li><li>Random split against customer split <span class="min">8 min</span></li><li>Label balance by dialect <span class="min">6 min</span></li><li>Write the split and a data card <span class="min">6 min</span></li><li class="stretch">✱ Stretch: A split that is grouped by customer and stratified by department</li></ul></div>
+  <aside class="notes"><p>Walk the room. No model call, no download; the baseline trains ten times in a few seconds each. Usual problems: comparing every message with every other across customers (slow, and not the definition); a customer split that stops filling the training side too early; a leaked share computed over pairs instead of test messages. The numbers on each laptop equal the slide's: the data and seeds are fixed.</p></aside>
+</section>
+
+<!-- ======================= SESSION 2 ======================= -->
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="14">
+  <div class="kicker">Session 2</div>
+  <h1>Fine-tuning an encoder</h1>
+  <ul class="bullets outcomes"><li>Add a classification head to a pretrained encoder</li><li>Fine-tune it with sensible defaults and watch validation</li><li>Read a confusion matrix and name the errors</li></ul>
+  <div class="sess-no">02</div>
+  <aside class="notes"><p>Session 2 produces the full fine-tuning run: one of the two runs that LO4's evidence compares.</p></aside>
+</section>
+
+<section class="slide" data-label="Head" id="encoder-plus-head" data-lo="LO4" data-n="15" data-session="2">
+  <div class="kicker">Fine-tuning an encoder</div>
+  <h2>A pretrained encoder, a mean over real tokens, and eight scores</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.2"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Router</span>(nn.Module):
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, encoder, n_labels</span>):
+        <span class="hljs-built_in">super</span>().__init__()
+        <span class="hljs-variable language_">self</span>.encoder = encoder
+        <span class="hljs-variable language_">self</span>.drop = nn.Dropout(<span class="hljs-number">0.1</span>)
+        <span class="hljs-variable language_">self</span>.head = nn.Linear(encoder.cfg.d, n_labels)
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, ids</span>):
+        mask = ids != <span class="hljs-number">0</span>              <span class="hljs-comment"># padding out</span>
+        h = <span class="hljs-variable language_">self</span>.encoder(ids, mask)  <span class="hljs-comment"># a vector per token</span>
+        pooled = (h * mask[..., <span class="hljs-literal">None</span>]).<span class="hljs-built_in">sum</span>(<span class="hljs-number">1</span>) \
+                 / mask.<span class="hljs-built_in">sum</span>(<span class="hljs-number">1</span>, keepdim=<span class="hljs-literal">True</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">self</span>.head(<span class="hljs-variable language_">self</span>.drop(pooled))</code></pre>
+    <ul class="bullets small">
+      <li>The <b>encoder</b> arrives pretrained: it has read Sawaqi-style messages without labels.</li>
+      <li><b>Pooling</b> turns token vectors into one message vector. Padding is left out of the mean.</li>
+      <li>The <b>head</b> is new: 128 × 8 weights and 8 biases.</li>
+      <li>Full fine-tuning trains all 530,440 parameters.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The course encoder was pretrained by masked-token prediction on the text of the train and pool messages and on 10,000 further synthetic messages from other customers, none of them labelled and none from the validation or test splits: the script is _tools/pretrain_tiny.py in the labs folder. That stands for the unlabelled archive every organisation has. Many published encoders pool with a special first token instead of the mean; both work.</p><p>Sources: Devlin et al., BERT.</p></aside>
+</section>
+
+<section class="slide" data-label="The loop" id="the-training-loop" data-lo="LO4" data-n="16" data-session="2">
+  <div class="kicker">Lab 3.2, step 2</div>
+  <h2>The training loop is the one you know, with two habits for small data</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.2"><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">train_epoch</span>(<span class="hljs-params">model, opt, x, y</span>):
+    model.train()
+    perm, total = torch.randperm(<span class="hljs-built_in">len</span>(x)), <span class="hljs-number">0.0</span>
+    <span class="hljs-keyword">for</span> s <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, <span class="hljs-built_in">len</span>(x), <span class="hljs-number">32</span>):
+        idx = perm[s:s + <span class="hljs-number">32</span>]
+        loss = F.cross_entropy(model(x[idx]), y[idx])
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        total += loss.item() * <span class="hljs-built_in">len</span>(idx)
+    <span class="hljs-keyword">return</span> total / <span class="hljs-built_in">len</span>(x)</code></pre>
+    <div class="stack">
+      <div class="card c-teal flat"><h4>Mask 15% of the input tokens</h4><p class="small mb0">Each epoch hides different tokens, as in pretraining. With 400 messages the model would otherwise learn single words by heart.</p></div>
+      <div class="card c-purple flat"><h4>Keep the best validation epoch</h4><p class="small mb0">Score the validation split after every epoch and keep those weights.</p></div>
+    </div>
+  </div>
+  <aside class="notes"><p>AdamW at a learning rate of 0.001 for this small model; a published base-size encoder wants about 0.00002. The token masking is a cheap augmentation: in the course's build experiments the encoder scored about 0.53 on the test split without it and about 0.63 with it. Say this openly, and say how such a choice should be made in their own work: on the validation split, with the test split measured once afterwards, as this session's checkpoints insist.</p></aside>
+</section>
+
+<section class="slide" data-label="Validation" id="pick-the-epoch-on-validation" data-lo="LO4" data-n="17" data-session="2">
+  <div class="kicker">Measured in Lab 3.2 · 40 epochs, about two minutes on a processor</div>
+  <h2>The training loss keeps falling; the validation score stops</h2>
+  <table class="t small">
+    <tr><th class="num">Epoch</th><th class="num">5</th><th class="num">10</th><th class="num">15</th><th class="num">20</th><th class="num">25</th><th class="num">30</th><th class="num">35</th><th class="num">40</th></tr>
+    <tr><td>Training loss</td><td class="num">1.54</td><td class="num">0.60</td><td class="num">0.22</td><td class="num">0.12</td><td class="num">0.08</td><td class="num">0.05</td><td class="num">0.04</td><td class="num">0.03</td></tr>
+    <tr><td>Validation macro F1</td><td class="num">0.22</td><td class="num">0.47</td><td class="num">0.48</td><td class="num">0.53</td><td class="num">0.53</td><td class="num">0.56</td><td class="num">0.55</td><td class="num">0.58</td></tr>
+  </table>
+  <ul class="bullets small mt">
+    <li>From epoch 20 the loss falls by a factor of four and validation moves within five points.</li>
+    <li>The loop keeps the weights of the best validation epoch: here epoch 29.</li>
+    <li>The test split has not been touched yet.</li>
+  </ul>
+  <aside class="notes"><p>From the course's run of Lab 3.2, step 2 (seed fixed; small differences between machines are normal). A training loss of 0.03 says the model knows its 402 messages; the validation score says what it knows about messages it has not seen. The time depends on the laptop: one to three minutes.</p></aside>
+</section>
+
+<section class="slide" data-label="Third row" id="encoder-against-baseline" data-lo="LO4 LO5" data-n="18" data-session="2">
+  <div class="kicker">Measured in Lab 3.2 · 403 test messages</div>
+  <h2>The third row of the comparison: here, the baseline wins</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Approach</th><th class="num">Macro F1</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th></tr>
+      <tr class="hl"><td>Baseline</td><td class="num">0.85</td><td class="num">0.94</td><td class="num">0.86</td><td class="num">0.42</td><td class="num">0.81</td></tr>
+      <tr><td>Fine-tuned course encoder</td><td class="num">0.61</td><td class="num">0.63</td><td class="num">0.66</td><td class="num">0.33</td><td class="num">0.52</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Half a million parameters and 400 labels do not beat character n-grams on short messages.</li>
+      <li>That is a result, not a failure of the lab: it is why the baseline row exists.</li>
+      <li>What would change it: far more labels, or an encoder pretrained on far more Arabic. The stretch tries the second in Colab.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 3.2, step 3. The supplied full fine-tuning run used on the adapter slide and in the final table scored 0.63 on the same split: runs differ by about 0.03 between machines, which is why the order of the rows, not the second decimal, is the result. Do not soften this slide. The honest reading: a small model trained on a laptop is a teaching instrument, and on this data the cheap model is the better engineering choice. Published Arabic encoders are a hundred to two hundred times larger and pretrained on billions of words; on real customer text they usually beat a bag of words, and participants should measure that claim, not take it from this slide. The mechanics they practise here are identical.</p></aside>
+</section>
+
+<section class="slide" data-label="Confusions" id="read-the-confusion-matrix" data-lo="LO4" data-n="19" data-session="2">
+  <div class="kicker">Measured in Lab 3.2</div>
+  <h2>A confusion matrix says where the messages went</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>True department</th><th>Sent to</th><th class="num">Messages</th></tr>
+      <tr><td>supply</td><td>quality</td><td class="num">13</td></tr>
+      <tr><td>payments</td><td>billing</td><td class="num">11</td></tr>
+      <tr><td>supply</td><td>payments</td><td class="num">8</td></tr>
+      <tr><td>leaks</td><td>payments</td><td class="num">6</td></tr>
+      <tr><td>billing</td><td>payments</td><td class="num">6</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>Supply and quality share most of their words: water, tap, tank.</li>
+      <li>Payments and billing both speak of the bill.</li>
+      <li>Supply sent to payments: "…and I have already paid the last bill". The second clause won.</li>
+      <li>Read ten wrong messages of the largest cell before you change the model.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The five largest off-diagonal cells from the course's run of Lab 3.2, step 4. The third row is the planted second clause at work: the model followed words that are in the message and are not the complaint. An attention-based model could learn to discount such a clause with more examples of it; a bag of words discounts it by weight. Ask which errors are the model's and which are the label's.</p></aside>
+</section>
+
+<section class="slide" data-label="Whose error" id="model-error-or-label-error" data-lo="LO4" data-n="20" data-session="2">
+  <div class="kicker">After the matrix</div>
+  <h2>Name the cause before you choose the fix</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral"><h4>The label is arguable</h4><p class="small mb0">"High bill, maybe the meter." Decide the rule, relabel consistently, tell the departments.</p></div>
+    <div class="card c-amber"><h4>The data is thin</h4><p class="small mb0">No Arabizi wastewater messages in training. Label more of that kind, or hand it off.</p></div>
+    <div class="card c-teal"><h4>The model is distracted</h4><p class="small mb0">A second clause wins. Add examples with such clauses; consider routing on the first sentence.</p></div>
+  </div>
+  <div class="callout warn small mt"><b>"Train longer" is rarely on this list.</b> The training loss was already near zero.</div>
+  <aside class="notes"><p>This is the error analysis the capstone asks for: categories with counts, each with a different remedy. A participant who reports only a score has done half of the work.</p></aside>
+</section>
+
+<section class="slide" id="check-validation-peak" data-lo="LO4" data-n="21" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>Validation peaked early</h2>
+  <div class="quiz" data-type="single" data-lo="LO4" data-id="check-validation-peak-q1">
+    <p class="lead">You fine-tune for 40 epochs. Validation macro F1 is highest at epoch 12 and slightly lower afterwards, while the training loss falls to 0.01. Which weights do you measure on the test split?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">Those of epoch 12, the best validation epoch</div>
+      <div class="opt" data-why="Trusts the training loss: it measures memory of the training messages, not skill on new ones" data-k="B">Those of epoch 40, where the loss is lowest</div>
+      <div class="opt" data-why="Lets the test split choose the epoch, which makes its score optimistic" data-k="C">Those of whichever epoch scores best on the test split</div>
+      <div class="opt" data-why="Averages good and overfitted weights without a reason to expect a gain" data-k="D">An average of the weights of all 40 epochs</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The validation split exists to make this choice. After its peak, the model fits the training messages more closely without doing better on unseen ones.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. Tie it back to the first checkpoint of the day: the epoch is one more thing the test split must not choose.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-2" data-auto="lab" data-lab="3.2" data-label="Lab 3.2" data-n="22" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.2 · 25 min</div><h2>Fine-tune the course encoder for routing</h2><p class="lead small">Fine-tune a small Arabic-capable encoder for routing, score it by variety and read its confusion matrix.</p><a class="nb" href="../labs/D3_2_finetune_encoder.ipynb">D3_2_finetune_encoder.ipynb</a></div><ul class="checklist"><li>Load the encoder and encode a batch <span class="min">4 min</span></li><li>A classification head and a training loop <span class="min">9 min</span></li><li>Macro F1 overall and by variety <span class="min">5 min</span></li><li>Read the confusion matrix <span class="min">7 min</span></li><li class="stretch">✱ Stretch: Run the same notebook on a published Arabic encoder in Colab with a GPU</li></ul></div>
+  <aside class="notes"><p>Walk the room. Nothing is downloaded. Training takes one to three minutes on a laptop processor; ANLP_QUICK=1 cuts it to seconds for a first pass. Usual problems: averaging over padded positions (the scores drop and vary with batch composition); forgetting model.train() after an evaluation; reading the confusion matrix by column. Scores differ a little between machines; the order of the table does not. The stretch downloads a published encoder and belongs in Colab with a GPU runtime, not on the classroom laptops.</p></aside>
+</section>
+
+<!-- ======================= SESSION 3 ======================= -->
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="23">
+  <div class="kicker">Session 3</div>
+  <h1>Low-rank and quantised adapters</h1>
+  <ul class="bullets outcomes"><li>Explain the memory cost of full fine-tuning</li><li>Write a low-rank adapter layer and count trainable parameters</li><li>Compare an adapter run with full fine-tuning on the same split</li></ul>
+  <div class="sess-no">03</div>
+  <aside class="notes"><p>Session 3 completes LO4: the adapter run, its trainable-parameter count and its comparison with the full run on the same split. The course encoder is small enough that the memory saving is megabytes; the arithmetic slide shows the same ratios at sizes where it decides what is possible.</p></aside>
+</section>
+
+<section class="slide" data-label="Memory" id="memory-budget" data-lo="LO4" data-n="24" data-session="3">
+  <div class="kicker">Low-rank and quantised adapters</div>
+  <h2>Training keeps every trainable weight four times</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>A weight that…</th><th>Bytes during training</th></tr>
+      <tr><td>trains (value, gradient, two Adam states)</td><td class="num">16</td></tr>
+      <tr><td>is frozen, 32-bit</td><td class="num">4</td></tr>
+      <tr><td>is frozen, 8-bit</td><td class="num">1</td></tr>
+      <tr><td>is frozen, 4-bit</td><td class="num">0.5</td></tr>
+    </table>
+    <table class="t small">
+      <tr><th>Model (gigabytes for the weights)</th><th class="num">Full</th><th class="num">Adapter, 32-bit</th><th class="num">Adapter, 4-bit</th></tr>
+      <tr><td>Encoder, 110 million parameters</td><td class="num">1.8</td><td class="num">0.4</td><td class="num">0.1</td></tr>
+      <tr><td>Decoder, 7 billion parameters</td><td class="num">112</td><td class="num">28.4</td><td class="num">4.0</td></tr>
+    </table>
+  </div>
+  <p class="small muted">Adapters at 0.5% of the weights. Activations come on top and grow with the batch and the length of the text.</p>
+  <aside class="notes"><p>The arithmetic is from Lab 3.3, step 3, and is exact for the stated assumptions (32-bit floats, Adam, activations excluded). The last row is the reason adapters exist: a free notebook GPU has a fixed memory, and the participants should look up today's figure for their service before reading the row. For a small encoder, full fine-tuning fits easily; say so, because the next slides show the adapter costs quality.</p></aside>
+</section>
+
+<section class="slide" data-label="Low rank" id="low-rank-update" data-lo="LO4" data-n="25" data-session="3">
+  <div class="kicker">The idea</div>
+  <h2>Freeze the weight matrix; learn its change as two thin matrices</h2>
+  <div class="cols cols-2">
+    <div class="flow v">
+      <div class="step c-navy"><b>Frozen W</b>128 × 128 = 16,384 numbers</div>
+      <div class="arrow">↓</div>
+      <div class="step c-teal"><b>A: 8 × 128 and B: 128 × 8</b>2,048 trainable numbers at rank 8</div>
+      <div class="arrow">↓</div>
+      <div class="step c-purple"><b>Output</b>W x + (alpha / r) · B A x</div>
+    </div>
+    <ul class="bullets small">
+      <li>The bet: the change a task needs is <b>low rank</b>, so two thin matrices can hold it.</li>
+      <li><b>B starts at zero</b>: the adapted layer begins exactly as the pretrained one.</li>
+      <li><b>Rank</b> sets capacity; <b>alpha / r</b> scales the update.</li>
+      <li>After training, add B A into W once: no extra latency when serving.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Low-rank adaptation was proposed by Hu and colleagues in 2021. Libraries such as PEFT apply it to published models in two lines; the lab writes the layer by hand in ten, so that the two-line version is understood. If both A and B started at zero, neither would receive a gradient.</p><p>Sources: Hu et al., LoRA: Low-Rank Adaptation of Large Language Models.</p></aside>
+</section>
+
+<section class="slide" data-label="The layer" id="lora-layer-by-hand" data-lo="LO4" data-n="26" data-session="3">
+  <div class="kicker">Lab 3.3, steps 1 and 2</div>
+  <h2>The adapter layer is ten lines, and 1.7% of the model trains</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.3"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LoRALinear</span>(nn.Module):
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, base, r=<span class="hljs-number">8</span>, alpha=<span class="hljs-number">16</span></span>):
+        <span class="hljs-built_in">super</span>().__init__()
+        <span class="hljs-variable language_">self</span>.base, <span class="hljs-variable language_">self</span>.scale = base, alpha / r
+        <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.base.parameters():
+            p.requires_grad = <span class="hljs-literal">False</span>
+        <span class="hljs-variable language_">self</span>.A = nn.Parameter(
+            torch.randn(r, base.in_features) * <span class="hljs-number">0.01</span>)
+        <span class="hljs-variable language_">self</span>.B = nn.Parameter(
+            torch.zeros(base.out_features, r))
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">self</span>.base(x) \
+            + (x @ <span class="hljs-variable language_">self</span>.A.T @ <span class="hljs-variable language_">self</span>.B.T) * <span class="hljs-variable language_">self</span>.scale</code></pre>
+    <table class="t small">
+      <tr><th>Course encoder with head</th><th class="num">Parameters</th></tr>
+      <tr><td>Total</td><td class="num">538,632</td></tr>
+      <tr><td>Adapters on query and value, 2 layers</td><td class="num">8,192</td></tr>
+      <tr><td>The new head</td><td class="num">1,032</td></tr>
+      <tr class="hl"><td>Trainable</td><td class="num">9,224 (1.7%)</td></tr>
+    </table>
+  </div>
+  <aside class="notes"><p>Counts from the course's run of Lab 3.3, step 2. The query and value projections of attention are the usual place for adapters; which layers to adapt is a choice to test on validation data. The lab's first assertion is the one worth understanding: with B at zero, the adapted layer's output equals the frozen layer's.</p></aside>
+</section>
+
+<section class="slide" data-label="Quantised" id="quantised-frozen-weights" data-lo="LO4" data-n="27" data-session="3">
+  <div class="kicker">Measured in Lab 3.3, step 3</div>
+  <h2>Frozen weights can be stored in fewer bits, at a small error</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Run on the course encoder</th><th class="num">Megabytes for training</th><th>In a 3 MB budget</th></tr>
+      <tr><td>Full fine-tuning</td><td class="num">8.49</td><td>no</td></tr>
+      <tr><td>Adapter, 32-bit frozen weights</td><td class="num">2.27</td><td>yes</td></tr>
+      <tr><td>Adapter, 8-bit frozen weights</td><td class="num">0.68</td><td>yes</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li><b>Quantising</b> rounds each weight to one of 255 levels and keeps one scale per matrix.</li>
+      <li>The frozen weights of the course encoder move by 2.5% on average.</li>
+      <li>Only frozen weights can be held this way: a gradient step is smaller than one level.</li>
+      <li>The adapters stay in 32 bits and learn on top of the rounded model.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 3.3, step 3: symmetric 8-bit rounding per weight matrix, written out in six lines in the lab. The 3 MB budget is the lab's own, chosen so that full fine-tuning does not fit and the adapter does. Training adapters over 4-bit weights of a large decoder is known as QLoRA (Dettmers and colleagues, 2023); libraries do the storage, the idea is this slide.</p><p>Sources: Dettmers et al., QLoRA: Efficient Finetuning of Quantized LLMs.</p></aside>
+</section>
+
+<section class="slide" data-label="Both runs" id="adapter-vs-full" data-lo="LO4" data-n="28" data-session="3">
+  <div class="kicker">Measured in Lab 3.3 · the evidence of LO4</div>
+  <h2>The adapter trains 1.7% of the weights and gives up 13 points</h2>
+  <table class="t">
+    <tr><th>Run</th><th class="num">Trainable</th><th class="num">Macro F1</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th></tr>
+    <tr><td>Full fine-tuning (supplied)</td><td class="num">530,440</td><td class="num">0.63</td><td class="num">0.68</td><td class="num">0.66</td><td class="num">0.28</td><td class="num">0.59</td></tr>
+    <tr><td>Adapter, rank 8, 8-bit frozen weights</td><td class="num">9,224</td><td class="num">0.50</td><td class="num">0.43</td><td class="num">0.55</td><td class="num">0.22</td><td class="num">0.55</td></tr>
+  </table>
+  <ul class="bullets small mt">
+    <li>Same split, same 40 epochs, same token masking. The logs carry timestamps.</li>
+    <li>At this size the saving is 8 megabytes, which nobody needs. The trade is real at 7 billion parameters, where full fine-tuning does not fit at all.</li>
+  </ul>
+  <aside class="notes"><p>The supplied full run is in data/reference/full_ft_log.json; the adapter row is the course's run of Lab 3.3, step 4. On large published models, adapters often come within a point or two of full fine-tuning; on a tiny model with little pretrained knowledge, a low-rank update has little to steer. State both facts. The lesson for the capstone is the form of the evidence: two runs, their trainable-parameter counts, their logs, their scores by variety.</p></aside>
+</section>
+
+<section class="slide" data-label="When" id="when-adapters-fit" data-lo="LO4" data-n="29" data-session="3">
+  <div class="kicker">Using adapters well</div>
+  <h2>Adapters are for a skill on a large model, not for facts and not for small models</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Good fit</h4><p class="small mb0">A large model that does not fit your memory in full. Several tasks on one frozen model, one small adapter each.</p></div>
+    <div class="card c-coral"><h4>Poor fit</h4><p class="small mb0">A small model you can fine-tune in full. You pay quality and save nothing you need.</p></div>
+    <div class="card c-purple"><h4>Wrong tool</h4><p class="small mb0">Facts that change: prices, rules, dates. They belong in the rule book that Day 2 retrieves from.</p></div>
+  </div>
+  <aside class="notes"><p>The capstone's adaptation criterion asks for the comparison, not for the adapter to win. A defended "full fine-tuning, because memory was not our constraint" scores as well as a defended adapter.</p></aside>
+</section>
+
+<section class="slide" id="check-adapters" data-lo="LO4" data-n="30" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>The tariff changes every quarter</h2>
+  <div class="quiz" data-type="single" data-lo="LO4" data-id="check-adapters-q1">
+    <p class="lead">Latifa updates the tariff rule book four times a year. A colleague proposes a new low-rank adapter each quarter so that Ghayth "knows" the current prices. What do you answer?</p>
+    <div class="opts">
+      <div class="opt" data-why="Assumes rank is the issue: no rank makes weights a reliable store for exact prices" data-k="A">Yes, with a higher rank so that the adapter can hold the prices</div>
+      <div class="opt" data-why="Moves the same mistake to more weights: full fine-tuning stores prices no more reliably" data-k="B">Yes, but with full fine-tuning, since adapters lose quality</div>
+      <div class="opt" data-why="Treats quantisation as the risk when the problem is where the facts live" data-k="C">No: adapters over quantised weights would round the prices</div>
+      <div class="opt" data-ok data-k="D">No: keep prices in the rule book and retrieve them; adapt for skills</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A changed file is searchable, citable and auditable within minutes. Weights give no citation and no guarantee that the old price is gone.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. Ask what the adapter would be right for at Sawaqi: the routing skill in four varieties, if the model were large enough to need one.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-3" data-auto="lab" data-lab="3.3" data-label="Lab 3.3" data-n="31" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.3 · 25 min</div><h2>A low-rank adapter in a memory budget</h2><p class="lead small">Train a low-rank adapter in a fixed memory budget and compare it with a supplied full fine-tuning run, with the frozen weights optionally held in 8 bits.</p><a class="nb" href="../labs/D3_3_lora.ipynb">D3_3_lora.ipynb</a></div><ul class="checklist"><li>A low-rank adapter layer by hand <span class="min">7 min</span></li><li>Wrap the attention and count parameters <span class="min">4 min</span></li><li>A memory budget, with 8-bit frozen weights <span class="min">6 min</span></li><li>Train and compare with full fine-tuning <span class="min">8 min</span></li><li class="stretch">✱ Stretch: Sweep the rank and plot macro F1 against trainable parameters</li></ul></div>
+  <aside class="notes"><p>Walk the room. Training the adapter takes one to three minutes on a laptop processor. Usual problems: giving the optimiser every parameter, frozen ones included (it works and wastes memory: the point of the lab); initialising B with random numbers (the first assertion fails); wrapping the layers before freezing the encoder, which freezes A and B too. The stretch trains four more adapters for 15 epochs each; leave it for after class.</p></aside>
+</section>
+
+<!-- ======================= SESSION 4 ======================= -->
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="32">
+  <div class="kicker">Session 4</div>
+  <h1>Evaluate and deploy</h1>
+  <ul class="bullets outcomes"><li>Put every approach in one comparison table</li><li>Serve the chosen model behind a small API with a smoke test</li><li>Write a model card with results by variety and a hand-off rule</li></ul>
+  <div class="sess-no">04</div>
+  <aside class="notes"><p>Session 4 serves LO6 and closes LO5: the table is complete, a model is chosen, and it becomes a service with a model card.</p></aside>
+</section>
+
+<section class="slide" data-label="One table" id="one-table-every-approach" data-lo="LO5" data-n="33" data-session="4">
+  <div class="kicker">The comparison, complete</div>
+  <h2>Every approach in one table, on the same test messages</h2>
+  <table class="t small">
+    <tr><th>Approach</th><th class="num">Macro F1</th><th class="num">MSA</th><th class="num">Gulf</th><th class="num">Arabizi</th><th class="num">English</th><th>Latency</th><th>Cost per 1,000</th></tr>
+    <tr class="hl"><td>Baseline</td><td class="num">0.85</td><td class="num">0.94</td><td class="num">0.86</td><td class="num">0.42</td><td class="num">0.81</td><td>milliseconds</td><td>none per call</td></tr>
+    <tr><td>Prompted model</td><td colspan="5">your Lab 2.4 run, widened to the test split</td><td>network</td><td>per token</td></tr>
+    <tr><td>Fine-tuned encoder</td><td class="num">0.63</td><td class="num">0.68</td><td class="num">0.66</td><td class="num">0.28</td><td class="num">0.59</td><td>milliseconds</td><td>none per call</td></tr>
+    <tr><td>Encoder with adapter</td><td class="num">0.50</td><td class="num">0.43</td><td class="num">0.55</td><td class="num">0.22</td><td class="num">0.55</td><td>milliseconds</td><td>none per call</td></tr>
+  </table>
+  <div class="callout tip small mt-s"><b>With these rows, the baseline routes.</b> The open question is Arabizi, and the only row that can answer it is yours.</div>
+  <aside class="notes"><p>Rows one, three and four are the course's runs on the 403 test messages. The prompted row is left to the participants because the course was built without access to a hosted model. This is the table the capstone's first criterion asks for. The recommendation follows the evidence: nothing here beats the baseline overall, no row is good at Arabizi, so the service ships the baseline with a hand-off rule.</p></aside>
+</section>
+
+<section class="slide" data-label="Thin API" id="thin-api-over-a-function" data-lo="LO6" data-n="34" data-session="4">
+  <div class="kicker">Deploying</div>
+  <h2>The decision is a function; the API is a thin layer over it</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.4"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Message</span>(<span class="hljs-title class_ inherited__">BaseModel</span>):
+    text: <span class="hljs-built_in">str</span> = Field(max_length=<span class="hljs-number">2000</span>)
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">Decision</span>(<span class="hljs-title class_ inherited__">BaseModel</span>):
+    department: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>]
+    confidence: <span class="hljs-built_in">float</span>
+    variety: <span class="hljs-built_in">str</span>
+    handoff: <span class="hljs-built_in">bool</span>
+    reason: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>]
+    account_number: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>]
+    district: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>]
+
+<span class="hljs-meta">@app.post(<span class="hljs-params"><span class="hljs-string">&quot;/route&quot;</span>, response_model=Decision</span>)</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">route</span>(<span class="hljs-params">message: Message</span>) -&gt; Decision:
+    <span class="hljs-keyword">return</span> Decision(**decide(message.text))</code></pre>
+    <ul class="bullets small">
+      <li><b>FastAPI with Pydantic</b>: the schema validates what comes in and what goes out, and documents the service.</li>
+      <li>A message of 3,000 characters is refused with status 422 before the model runs.</li>
+      <li>A <b>demo page</b> at the root lets a colleague try a message without a tool. Gradio or Streamlit do the same with more polish.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The same Pydantic idea as Day 2's extraction schema, now as the contract of a service. The lab calls the app in the notebook's own process with a test client, so nothing has to listen on a port in class; capstone/service.py is the same code as a file to run with uvicorn. The account number and district come from exact patterns here: no hosted call in the request path, so no masking question and no network latency.</p><p>Sources: FastAPI documentation; Pydantic documentation, validators.</p></aside>
+</section>
+
+<section class="slide" data-label="Hand-off" id="hand-off-rule" data-lo="LO6" data-n="35" data-session="4">
+  <div class="kicker">Measured in Lab 3.4 · the baseline, as served</div>
+  <h2>The hand-off rule is part of the model, and it has a price</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Fewer than two words: <b>no request</b>.</li>
+      <li>Best probability below 0.5, or 0.7 for Arabizi: <b>low confidence</b>.</li>
+      <li>Second department at 60% of the first or more: <b>two departments</b>.</li>
+      <li>This starting rule is right on every message it keeps, and keeps too few. Tuning it on validation data is the engineer's work; the trade is Hessa's decision.</li>
+    </ul>
+    <table class="t small">
+      <tr><th>Variety</th><th class="num">Handed to a person</th><th class="num">Accuracy on the rest</th></tr>
+      <tr><td>MSA</td><td class="num">19%</td><td class="num">1.00</td></tr>
+      <tr><td>Gulf</td><td class="num">27%</td><td class="num">1.00</td></tr>
+      <tr><td>English</td><td class="num">41%</td><td class="num">1.00</td></tr>
+      <tr><td>Arabizi</td><td class="num">94%</td><td class="num">1.00</td></tr>
+    </table>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 3.4, step 4, on the 403 test messages with the baseline served. The rule is deliberately cautious, so that the room has something to tune: about a third of all messages go to a person. Ask what Hessa's team can absorb, and which of the three conditions to loosen first. The Arabizi row says the service, as it stands, is a router for three varieties and a sorter of Arabizi into the human queue, and the model card must say exactly that.</p></aside>
+</section>
+
+<section class="slide" data-label="Smoke test" id="smoke-test-is-not-quality" data-lo="LO6" data-n="36" data-session="4">
+  <div class="kicker">Lab 3.4, step 2</div>
+  <h2>A smoke test proves the service is alive and sane at the edges</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>Case</th><th>Must</th></tr>
+      <tr><td>20 real test messages, five per variety</td><td>answer 200 with a department from the list</td></tr>
+      <tr><td>An empty message</td><td rowspan="4">be handed to a person</td></tr>
+      <tr><td>Punctuation only</td></tr>
+      <tr><td>A greeting with no request</td></tr>
+      <tr><td>Three problems in one message</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li>24 cases, a second to run, on every change.</li>
+      <li>It says nothing about quality: that is the table by variety on the test split.</li>
+      <li>The course's service passes: 24 of 24, with 18 of the 20 real messages sent to the right department.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run of Lab 3.4, step 2. The edge cases are where services embarrass their owners: an empty text that crashes the tokeniser, a greeting confidently routed to billing. The third bullet's "18 of 20" is not the pass criterion; it is printed so that nobody mistakes the smoke test for an evaluation.</p></aside>
+</section>
+
+<section class="slide" data-label="Latency" id="latency-through-the-service" data-lo="LO5 LO6" data-n="37" data-session="4">
+  <div class="kicker">Measured in Lab 3.4, step 3</div>
+  <h2>Measure latency through the service, not around the model</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">4 ms</div><div class="lbl">the baseline alone, median (Lab 1.4)</div></div>
+    <div class="stat"><div class="big">25 ms</div><div class="lbl">through the service, median</div></div>
+    <div class="stat"><div class="big">31 ms</div><div class="lbl">through the service, 95th percentile; the budget is 300 ms</div></div>
+  </div>
+  <ul class="bullets small mt">
+    <li>The customer waits for validation, extraction, the model, the hand-off rule and the response.</li>
+    <li>Report the median and the 95th percentile, on the hardware you will run on, and say which hardware.</li>
+  </ul>
+  <aside class="notes"><p>From the course's run on one laptop processor while other work was running on it; expect other numbers on each laptop and the same order of magnitude. The service figure includes the test client's overhead. The point stands either way: the model was a sixth of the total.</p></aside>
+</section>
+
+<section class="slide" data-label="Model card" id="model-card-by-variety" data-lo="LO6" data-n="38" data-session="4">
+  <div class="kicker">The output of the course's labs</div>
+  <h2>A model card says who the model fails, and what happens then</h2>
+  <div class="cols cols-2">
+    <ol class="bullets small">
+      <li><b>What it is for</b>, and what it is not for.</li>
+      <li><b>The served model</b> and its data card.</li>
+      <li><b>Results by language variety</b>, as served, with the hand-off rate.</li>
+      <li><b>The approaches compared</b>: the table.</li>
+      <li><b>Latency</b>, and on what hardware.</li>
+      <li><b>Limits</b>: varieties below 0.7 macro F1.</li>
+      <li><b>The hand-off rule</b>, in plain words.</li>
+      <li><b>Data and privacy</b>: what is masked, and where.</li>
+    </ol>
+    <div class="card c-coral"><h4>For this service</h4><p class="small mb0">"Arabizi messages are routed correctly far less often than the others. Almost all of them go to a person. Do not staff as if they were automated."</p></div>
+  </div>
+  <aside class="notes"><p>Model cards were proposed by Mitchell and colleagues in 2019: results by subgroup are their core. The lab writes this card from its own numbers into artifacts/D3_4/MODEL_CARD.md and asks for two sentences in the participant's own words. SDAIA's AI Ethics Principles and its Generative AI guidelines are in the course sources; read them at their official addresses for what a deploying organisation is expected to document.</p><p>Sources: Mitchell et al., Model Cards for Model Reporting; SDAIA, Principles of AI Ethics; SDAIA, Generative AI Guidelines.</p></aside>
+</section>
+
+<section class="slide" id="check-model-card" data-lo="LO6" data-n="39" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>One sentence about Arabizi</h2>
+  <div class="quiz" data-type="single" data-lo="LO6" data-id="check-model-card-q1">
+    <p class="lead">The served router scores macro F1 0.85 overall and 0.42 for Arabizi, and hands 94% of Arabizi messages to a person. Which sentence belongs in the model card?</p>
+    <div class="opts">
+      <div class="opt" data-why="States the average and a language list: true, and hides the one group the model fails" data-k="A">"Supports Arabic and English with a macro F1 of 0.85."</div>
+      <div class="opt" data-why="Promises a fix instead of stating today's limit: a card describes the model as it is served" data-k="B">"Arabizi support will improve in the next version."</div>
+      <div class="opt" data-ok data-k="C">"Arabizi: macro F1 0.42; 94% of these messages go to a person."</div>
+      <div class="opt" data-why="Hides the limit in a technical term that a contact-centre lead cannot act on" data-k="D">"Performance varies with out-of-distribution orthography."</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A card states the limit by group, with the number and with what the service does about it, in words its reader can staff against.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. The other three are sentences found in real model cards. Ask who reads the card at Sawaqi: Hessa, who must plan how many people handle the hand-offs.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-4" data-auto="lab" data-lab="3.4" data-label="Lab 3.4" data-n="40" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.4 · 25 min</div><h2>A small service with a model card</h2><p class="lead small">Wrap the chosen model in a small API with a demo page, pass the smoke test, measure CPU latency and draft the model card.</p><a class="nb" href="../labs/D3_4_service.ipynb">D3_4_service.ipynb</a></div><ul class="checklist"><li>An API that routes, extracts and hands off <span class="min">7 min</span></li><li>Pass the smoke test <span class="min">5 min</span></li><li>CPU latency, median and 95th percentile <span class="min">5 min</span></li><li>Draft the model card by variety <span class="min">8 min</span></li><li class="stretch">✱ Stretch: Serve the same model with a Gradio or Streamlit demo</li></ul></div>
+  <aside class="notes"><p>Walk the room. No port is opened: the test client calls the app inside the notebook. Usual problems: a decide function that calls the model on an empty text; returning a confidence that is not rounded (harmless) or a reason on a message that is not handed off (the schema accepts it, the card becomes confusing); measuring latency on a cold first call only. Participants who finish early switch CHOSEN to the encoder, run again and compare the two cards: which would they sign?</p></aside>
+</section>
+
+<!-- ======================= CLOSING ======================= -->
+<section class="slide" data-label="Recap" id="day-3-recap" data-n="41" data-session="4">
+  <div class="kicker">Day 3 recap</div>
+  <h2>The third row is in, a model is served, and its limits are written down</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li><b>Split by customer</b>: a random split reported 0.033 that no new customer sees.</li>
+      <li><b>Validation chooses</b>, the test split measures once.</li>
+      <li><b>Fine-tuned encoder</b>: 0.63 against the baseline's 0.85 on this data.</li>
+    </ul>
+    <ul class="bullets small">
+      <li><b>Adapter</b>: 1.7% of the weights, 13 points lower; worth it when the model does not fit.</li>
+      <li><b>Service</b>: smoke test passed, latency measured through it.</li>
+      <li><b>Model card</b>: results by variety and a hand-off rule.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Ask each table which of today's numbers surprised them most. Many expect the neural model to win; hold the room on why it did not, and on what they would need to see before believing that a larger published encoder does.</p></aside>
+</section>
+
+<section class="slide dark" data-label="Tomorrow" id="tomorrow-capstone" data-n="42" data-session="4">
+  <div class="kicker">Tomorrow · Day 4</div>
+  <h2>Capstone: your service, your table, your defence</h2>
+  <p class="lead">A public repository with the three-way comparison by variety, latency and cost, validated extraction, both adaptation runs, a tested service and a model card. Then eight minutes to defend it, with a batch you have not seen.</p>
+  <aside class="notes"><p>Tonight: read labs/capstone/README.md, copy the template, and run the two commands at its end. Decide tonight whether you build on Sawaqi or on a comparable task of your own with synthetic data.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T03:19:01Z","version":"2027.1.0","commit":"93e55d3"},"course":{"id":"ae-301","code":"AE-301","title":"Applied Natural Language Processing Engineering","track":"ai-engineering","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ae-301/","repo":"SDAIAAcademy/ae-301","home":"../index.html"},"deck":{"id":"day3","kind":"day","day":3,"label":"Day 3","title":"Adapt","prev":"day2.html","next":"day4.html","md":"day3.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"Fine-tuning data","slide":"s1","outcomes":["Decide when fine-tuning is worth it","Split by customer to prevent leakage","Check label balance by department and variety"],"minutes":50,"lab":{"id":"3.1","title":"A split without leakage","minutes":25,"href":"../labs/D3_1_splits.ipynb"}},{"n":2,"label":"Session 2","title":"Fine-tuning an encoder","slide":"s2","outcomes":["Add a classification head to a pretrained encoder","Fine-tune it with sensible defaults and watch validation","Read a confusion matrix and name the errors"],"minutes":50,"lab":{"id":"3.2","title":"Fine-tune the course encoder for routing","minutes":25,"href":"../labs/D3_2_finetune_encoder.ipynb"}},{"n":3,"label":"Session 3","title":"Low-rank and quantised adapters","slide":"s3","outcomes":["Explain the memory cost of full fine-tuning","Write a low-rank adapter layer and count trainable parameters","Compare an adapter run with full fine-tuning on the same split"],"minutes":50,"lab":{"id":"3.3","title":"A low-rank adapter in a memory budget","minutes":25,"href":"../labs/D3_3_lora.ipynb"}},{"n":4,"label":"Session 4","title":"Evaluate and deploy","slide":"s4","outcomes":["Put every approach in one comparison table","Serve the chosen model behind a small API with a smoke test","Write a model card with results by variety and a hand-off rule"],"minutes":50,"lab":{"id":"3.4","title":"A small service with a model card","minutes":25,"href":"../labs/D3_4_service.ipynb"}}],"slides":[{"id":"title","n":1,"title":"Adapt","kind":"title","session":0,"hash":"9dc6f5c5","md":"#### [day3#title] Adapt\n\n*SDAIA Academy · Applied Natural Language Processing Engineering*\n\nDay 3\n\nAI Engineering Track · 3 teaching days + capstone day · 4 sessions · 4 labs · AE-301","notes":"Open with the table from Day 1: two rows are filled (the baseline, and each participant's prompted model). Today trains the third row, an encoder fine-tuned on Sawaqi's 400 labelled messages, and ships one of the three. No hosted model is needed today; everything trains on the laptop's processor.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"Adapt","kind":"content","session":0,"hash":"4b063fd2","md":"#### [day3#agenda] Adapt\n\n*Today*\n\n- **Session 1 · Fine-tuning data**: An honest test score needs a split by customer and enough labels in every variety\n- **Session 2 · Fine-tuning an encoder**: An encoder plus a small head, trained with a short loop and read through its confusion matrix\n- **Session 3 · Low-rank and quantised adapters**: Train a small update instead of every weight, within a memory budget\n- **Session 4 · Evaluate and deploy**: One table for every approach, a small tested service and a model card with results by variety","notes":"Four sessions. The first is about data and has no neural network in it; that order is deliberate. The last produces the service and the model card that the capstone builds on.","minutes":null,"lo":[]},{"id":"review-day-2","n":3,"title":"Before we train anything","kind":"quiz","session":0,"hash":"309eeb71","md":"#### [day3#review-day-2] Before we train anything\n\n*Review · Day 2*\n\n**Question:** Ghayth extracts fields with a hosted model. A reply has valid JSON with `\"account_number\": \"3055512345\"`. The message, as sent, contained `[ACCOUNT_1]`. What does the service do with this reply?\n\n- A. Accepts it, since it matches the account pattern\n- B. Rejects it, since the model only ever saw a placeholder\n- C. Accepts it if the number exists in the customer table\n- D. Asks a second model whether the number is plausible","notes":"Answer: B. Two minutes. The thread to today: code decides what code can decide. The same attitude applies to the test set this morning.","minutes":null,"lo":["LO3"]},{"id":"s1","n":4,"title":"Fine-tuning data","kind":"section","session":1,"hash":"d37c05d0","md":"#### [day3#s1] Fine-tuning data\n\n*Session 1*\n\n- Decide when fine-tuning is worth it\n- Split by customer to prevent leakage\n- Check label balance by department and variety","notes":"Session 1 serves LO4: the routing set split by customer is the condition under which every score of today is measured.","minutes":null,"lo":["LO4"]},{"id":"when-to-fine-tune","n":5,"title":"Fine-tune for a narrow, stable skill you have labels for","kind":"content","session":1,"hash":"a5afbe3a","md":"#### [day3#when-to-fine-tune] Fine-tune for a narrow, stable skill you have labels for\n\n*Fine-tuning data*\n\n| The need | Reach for | Because |\n| --- | --- | --- |\n| A task you can describe, no labels yet | A prompted model | Works today; costs per call |\n| Facts that change (the tariff) | Retrieval | Update a file, not a model |\n| One decision, thousands of times a day, with labels | A fine-tuned small model | Milliseconds on a processor, no cost per call |\n| A large model that must fit small memory | Adapters, quantised weights | Train a fraction of the weights |\n\n> **And always:** the baseline from Day 1 stays in the table. Fine-tuning has to beat it to be worth maintaining.","notes":"Fine-tuning buys latency and unit cost and pays in labels, training runs and a model you now own and must retrain. Ask the room for a task in their work for each row. The third row is routing at Sawaqi; whether the fine-tuned model wins there is an empirical question we answer by lunch.","minutes":null,"lo":["LO4","LO5"]},{"id":"customers-write-again","n":6,"title":"Customers write again, and their second message is almost the first","kind":"content","session":1,"hash":"04d94d6f","md":"#### [day3#customers-write-again] Customers write again, and their second message is almost the first\n\n*Measured in Lab 3.1 · 1,106 labelled messages, 345 customers*\n\n**C0009:** Hello, I want a wter connection for a new house in Al-Yasmeen and the meer was replaced last month\n\n**C0009:** I want a water connection for a new house in Al-Yasmeen and the meter was replaced last month. Thanks.\n\n- **274** near-duplicate pairs within customers\n- **29%** of labelled messages have at least one near-duplicate","notes":"From the course's run of Lab 3.1, step 1: pairs of messages by the same customer whose normalised word sets overlap by 0.6 or more (Jaccard). The pair on the slide is from the data, typos included. In real contact centres this is normal: nobody answered, so the customer wrote again. An exact-duplicate filter misses all of these.","minutes":null,"lo":["LO4"]},{"id":"leak-inflates-the-score","n":7,"title":"A random split tests the model on messages it has nearly seen","kind":"content","session":1,"hash":"a88b576e","md":"#### [day3#leak-inflates-the-score] A random split tests the model on messages it has nearly seen\n\n*Measured in Lab 3.1 · five seeds each*\n\n| Split | Test messages with a near-copy in training | Macro F1 |\n| --- | --- | --- |\n| Random | 16% | 0.892 |\n| By customer | 0% | 0.859 |\n\n- Same data, same baseline, same sizes: 400 to train, 400 to test.\n- The model did not get better. The test got easier.\n- The 0.033 of difference is a score no new customer will ever see.\n- A larger model memorises better, so it profits **more** from the leak.","notes":"Means over five seeds from the course's run of Lab 3.1, step 2, with Day 1's baseline. Three points sounds small; it is the size of many reported \"improvements\". The leak also changes model comparisons: a model with more capacity benefits more from seeing near-copies, so a random split can reverse a ranking.","minutes":null,"lo":["LO4"]},{"id":"split-by-what-repeats","n":8,"title":"Split by the unit that repeats, and give each part one job","kind":"content","session":1,"hash":"53c76f92","md":"#### [day3#split-by-what-repeats] Split by the unit that repeats, and give each part one job\n\n*The rule*\n\n```python\n# file: Lab 3.1\nids = df[\"customer_id\"].drop_duplicates() \\\n        .sample(frac=1, random_state=seed)\nsizes = df[\"customer_id\"].value_counts()\nside, n_test, n_train = {}, 0, 0\nfor cid in ids:                 # a customer goes whole\n    if n_test \u003c 400:\n        side[cid], n_test = \"test\", n_test + sizes[cid]\n    elif n_train \u003c 400:\n        side[cid], n_train = \"train\", n_train + sizes[cid]\n```\n\n| Part | Its one job |\n| --- | --- |\n| Train | fit the weights |\n| Validation | choose: epochs, thresholds, prompts, learning rates |\n| Test | one final measurement, by variety |","notes":"At Sawaqi the unit that repeats is the customer. In other data it is the author, the patient, the document, the day. The check that goes into the data card: customers on both sides, which must be zero. scikit-learn's StratifiedGroupKFold does the grouped split and keeps the label mix; the lab's stretch uses it.\n\nSources: scikit-learn documentation, StratifiedGroupKFold.","minutes":null,"lo":["LO4"]},{"id":"count-labels-by-variety","n":9,"title":"Count the labels for every department in every variety before training","kind":"content","session":1,"hash":"f1a4c3e4","md":"#### [day3#count-labels-by-variety] Count the labels for every department in every variety before training\n\n*Measured in Lab 3.1*\n\n| Department | MSA | Gulf | Arabizi | English |\n| --- | --- | --- | --- | --- |\n| billing | 21 | 24 | 13 | 7 |\n| payments | 18 | *3* | 7 | 9 |\n| connections | 6 | 10 | *0* | 9 |\n| wastewater | 19 | 18 | *1* | *3* |\n\n- Four cells of 32 have fewer than five training messages in this split.\n- Each one is a promise the model cannot keep.\n- Three honest answers: label more of exactly that kind, declare the cell unsupported, or send it to a person.","notes":"Four of the eight departments, from the course's run of Lab 3.1, step 3, on its own customer split with seed 1; the supplied split in data/split.csv has a similar pattern with other cells. This is Day 1's Arabizi table turned into a check that runs before any training. Label balance by department alone would have looked fine.","minutes":null,"lo":["LO4"]},{"id":"labels-are-decisions","n":10,"title":"A label is a decision someone made, and some were hard","kind":"content","session":1,"hash":"5a32e19f","md":"#### [day3#labels-are-decisions] A label is a decision someone made, and some were hard\n\n*Label quality*\n\n**Customer:** My bill is high and I think the meter is broken\n\n**Labelled:** meters\n\n**Customer:** The pressure is weak and I have already paid the last bill\n\n**Labelled:** supply\n\n- The first message is a billing complaint with a meters cause. Either label is defensible; an inconsistent one is not.\n- The second carries a clause with another department's words. It is not the complaint.\n- Write the rule down, label by it, and expect the model's ceiling to be the labellers' agreement.","notes":"Both patterns are planted in the data: one template about a high bill caused by the meter is labelled meters, and about three messages in ten carry a second clause from another department. They are the two main sources of confusion in the next lab's matrix. In real projects, measure agreement between two labellers on a sample before blaming a model.","minutes":null,"lo":["LO4"]},{"id":"data-card","n":11,"title":"A data card states what the scores were measured on","kind":"content","session":1,"hash":"efe9745e","md":"#### [day3#data-card] A data card states what the scores were measured on\n\n*The output of this session*\n\n- How many messages in each part, from how many customers.\n- How it was split, and the check: customers on both sides, 0.\n- Near-duplicates found, and what a random split would have reported.\n- Messages per variety; the cells with fewer than five labels.\n- Personal data: what is in it, how it is masked. What the data is not for.\n\n- **Why write it.** Every number in the model card is conditional on this page. The capstone's reproducibility criterion asks for it, with the seed.","notes":"The lab writes artifacts/D3_1/DATA_CARD.md from its own numbers. It is short on purpose: seven lines that a reviewer reads before the results table.","minutes":null,"lo":["LO4"]},{"id":"check-test-set","n":12,"title":"Six learning rates, one test set","kind":"quiz","session":1,"hash":"704efc10","md":"#### [day3#check-test-set] Six learning rates, one test set\n\n*Checkpoint*\n\n**Question:** A colleague fine-tunes the encoder with six learning rates, scores every run on the test split and reports the best: macro F1 0.66. What is the honest status of that number?\n\n- A. Too few runs: with twelve learning rates it would be reliable\n- B. Fine, since the test messages were never used for training\n- C. Optimistic: the test split chose the run, so it is no longer unseen\n- D. Invalid: all six runs must be repeated on new data","notes":"Answer: C. The fix costs nothing: the same six runs, ranked by validation score, then one test measurement. Every later choice today follows the same rule: the epoch, the rank of the adapter, the hand-off threshold.","minutes":null,"lo":["LO4"]},{"id":"lab-3-1","n":13,"title":"A split without leakage","kind":"lab","session":1,"hash":"efc52f1c","md":"#### [day3#lab-3-1] A split without leakage\n\nLab 3.1 · 25 min\n\nSplit a labelled set by customer to avoid leakage, show how much a random split inflates the score, and check label balance by dialect.\n\n[D3_1_splits.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D3_1_splits.ipynb)\n\n- [ ] Find near-duplicate messages per customer (5 min)\n- [ ] Random split against customer split (8 min)\n- [ ] Label balance by dialect (6 min)\n- [ ] Write the split and a data card (6 min)\n- [ ] ✱ Stretch: A split that is grouped by customer and stratified by department","notes":"Walk the room. No model call, no download; the baseline trains ten times in a few seconds each. Usual problems: comparing every message with every other across customers (slow, and not the definition); a customer split that stops filling the training side too early; a leaked share computed over pairs instead of test messages. The numbers on each laptop equal the slide's: the data and seeds are fixed.","minutes":null,"lo":[]},{"id":"s2","n":14,"title":"Fine-tuning an encoder","kind":"section","session":2,"hash":"be1c2eb0","md":"#### [day3#s2] Fine-tuning an encoder\n\n*Session 2*\n\n- Add a classification head to a pretrained encoder\n- Fine-tune it with sensible defaults and watch validation\n- Read a confusion matrix and name the errors","notes":"Session 2 produces the full fine-tuning run: one of the two runs that LO4's evidence compares.","minutes":null,"lo":["LO4"]},{"id":"encoder-plus-head","n":15,"title":"A pretrained encoder, a mean over real tokens, and eight scores","kind":"content","session":2,"hash":"6de32239","md":"#### [day3#encoder-plus-head] A pretrained encoder, a mean over real tokens, and eight scores\n\n*Fine-tuning an encoder*\n\n```python\n# file: Lab 3.2\nclass Router(nn.Module):\n    def __init__(self, encoder, n_labels):\n        super().__init__()\n        self.encoder = encoder\n        self.drop = nn.Dropout(0.1)\n        self.head = nn.Linear(encoder.cfg.d, n_labels)\n\n    def forward(self, ids):\n        mask = ids != 0              # padding out\n        h = self.encoder(ids, mask)  # a vector per token\n        pooled = (h * mask[..., None]).sum(1) \\\n                 / mask.sum(1, keepdim=True)\n        return self.head(self.drop(pooled))\n```\n\n- The **encoder** arrives pretrained: it has read Sawaqi-style messages without labels.\n- **Pooling** turns token vectors into one message vector. Padding is left out of the mean.\n- The **head** is new: 128 × 8 weights and 8 biases.\n- Full fine-tuning trains all 530,440 parameters.","notes":"The course encoder was pretrained by masked-token prediction on the text of the train and pool messages and on 10,000 further synthetic messages from other customers, none of them labelled and none from the validation or test splits: the script is _tools/pretrain_tiny.py in the labs folder. That stands for the unlabelled archive every organisation has. Many published encoders pool with a special first token instead of the mean; both work.\n\nSources: Devlin et al., BERT.","minutes":null,"lo":["LO4"]},{"id":"the-training-loop","n":16,"title":"The training loop is the one you know, with two habits for small data","kind":"content","session":2,"hash":"42abaa13","md":"#### [day3#the-training-loop] The training loop is the one you know, with two habits for small data\n\n*Lab 3.2, step 2*\n\n```python\n# file: Lab 3.2\ndef train_epoch(model, opt, x, y):\n    model.train()\n    perm, total = torch.randperm(len(x)), 0.0\n    for s in range(0, len(x), 32):\n        idx = perm[s:s + 32]\n        loss = F.cross_entropy(model(x[idx]), y[idx])\n        opt.zero_grad()\n        loss.backward()\n        opt.step()\n        total += loss.item() * len(idx)\n    return total / len(x)\n```\n\n- **Mask 15% of the input tokens.** Each epoch hides different tokens, as in pretraining. With 400 messages the model would otherwise learn single words by heart.\n- **Keep the best validation epoch.** Score the validation split after every epoch and keep those weights.","notes":"AdamW at a learning rate of 0.001 for this small model; a published base-size encoder wants about 0.00002. The token masking is a cheap augmentation: in the course's build experiments the encoder scored about 0.53 on the test split without it and about 0.63 with it. Say this openly, and say how such a choice should be made in their own work: on the validation split, with the test split measured once afterwards, as this session's checkpoints insist.","minutes":null,"lo":["LO4"]},{"id":"pick-the-epoch-on-validation","n":17,"title":"The training loss keeps falling; the validation score stops","kind":"content","session":2,"hash":"906199e0","md":"#### [day3#pick-the-epoch-on-validation] The training loss keeps falling; the validation score stops\n\n*Measured in Lab 3.2 · 40 epochs, about two minutes on a processor*\n\n| Epoch | 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| Training loss | 1.54 | 0.60 | 0.22 | 0.12 | 0.08 | 0.05 | 0.04 | 0.03 |\n| Validation macro F1 | 0.22 | 0.47 | 0.48 | 0.53 | 0.53 | 0.56 | 0.55 | 0.58 |\n\n- From epoch 20 the loss falls by a factor of four and validation moves within five points.\n- The loop keeps the weights of the best validation epoch: here epoch 29.\n- The test split has not been touched yet.","notes":"From the course's run of Lab 3.2, step 2 (seed fixed; small differences between machines are normal). A training loss of 0.03 says the model knows its 402 messages; the validation score says what it knows about messages it has not seen. The time depends on the laptop: one to three minutes.","minutes":null,"lo":["LO4"]},{"id":"encoder-against-baseline","n":18,"title":"The third row of the comparison: here, the baseline wins","kind":"content","session":2,"hash":"6c4ea9ef","md":"#### [day3#encoder-against-baseline] The third row of the comparison: here, the baseline wins\n\n*Measured in Lab 3.2 · 403 test messages*\n\n| Approach | Macro F1 | MSA | Gulf | Arabizi | English |\n| --- | --- | --- | --- | --- | --- |\n| Baseline | 0.85 | 0.94 | 0.86 | 0.42 | 0.81 |\n| Fine-tuned course encoder | 0.61 | 0.63 | 0.66 | 0.33 | 0.52 |\n\n- Half a million parameters and 400 labels do not beat character n-grams on short messages.\n- That is a result, not a failure of the lab: it is why the baseline row exists.\n- What would change it: far more labels, or an encoder pretrained on far more Arabic. The stretch tries the second in Colab.","notes":"From the course's run of Lab 3.2, step 3. The supplied full fine-tuning run used on the adapter slide and in the final table scored 0.63 on the same split: runs differ by about 0.03 between machines, which is why the order of the rows, not the second decimal, is the result. Do not soften this slide. The honest reading: a small model trained on a laptop is a teaching instrument, and on this data the cheap model is the better engineering choice. Published Arabic encoders are a hundred to two hundred times larger and pretrained on billions of words; on real customer text they usually beat a bag of words, and participants should measure that claim, not take it from this slide. The mechanics they practise here are identical.","minutes":null,"lo":["LO4","LO5"]},{"id":"read-the-confusion-matrix","n":19,"title":"A confusion matrix says where the messages went","kind":"content","session":2,"hash":"e89955c5","md":"#### [day3#read-the-confusion-matrix] A confusion matrix says where the messages went\n\n*Measured in Lab 3.2*\n\n| True department | Sent to | Messages |\n| --- | --- | --- |\n| supply | quality | 13 |\n| payments | billing | 11 |\n| supply | payments | 8 |\n| leaks | payments | 6 |\n| billing | payments | 6 |\n\n- Supply and quality share most of their words: water, tap, tank.\n- Payments and billing both speak of the bill.\n- Supply sent to payments: \"…and I have already paid the last bill\". The second clause won.\n- Read ten wrong messages of the largest cell before you change the model.","notes":"The five largest off-diagonal cells from the course's run of Lab 3.2, step 4. The third row is the planted second clause at work: the model followed words that are in the message and are not the complaint. An attention-based model could learn to discount such a clause with more examples of it; a bag of words discounts it by weight. Ask which errors are the model's and which are the label's.","minutes":null,"lo":["LO4"]},{"id":"model-error-or-label-error","n":20,"title":"Name the cause before you choose the fix","kind":"content","session":2,"hash":"8ec4138a","md":"#### [day3#model-error-or-label-error] Name the cause before you choose the fix\n\n*After the matrix*\n\n- **The label is arguable.** \"High bill, maybe the meter.\" Decide the rule, relabel consistently, tell the departments.\n- **The data is thin.** No Arabizi wastewater messages in training. Label more of that kind, or hand it off.\n- **The model is distracted.** A second clause wins. Add examples with such clauses; consider routing on the first sentence.\n\n> **\"Train longer\" is rarely on this list.** The training loss was already near zero.","notes":"This is the error analysis the capstone asks for: categories with counts, each with a different remedy. A participant who reports only a score has done half of the work.","minutes":null,"lo":["LO4"]},{"id":"check-validation-peak","n":21,"title":"Validation peaked early","kind":"quiz","session":2,"hash":"b3853eca","md":"#### [day3#check-validation-peak] Validation peaked early\n\n*Checkpoint*\n\n**Question:** You fine-tune for 40 epochs. Validation macro F1 is highest at epoch 12 and slightly lower afterwards, while the training loss falls to 0.01. Which weights do you measure on the test split?\n\n- A. Those of epoch 12, the best validation epoch\n- B. Those of epoch 40, where the loss is lowest\n- C. Those of whichever epoch scores best on the test split\n- D. An average of the weights of all 40 epochs","notes":"Answer: A. Tie it back to the first checkpoint of the day: the epoch is one more thing the test split must not choose.","minutes":null,"lo":["LO4"]},{"id":"lab-3-2","n":22,"title":"Fine-tune the course encoder for routing","kind":"lab","session":2,"hash":"bdf55c65","md":"#### [day3#lab-3-2] Fine-tune the course encoder for routing\n\nLab 3.2 · 25 min\n\nFine-tune a small Arabic-capable encoder for routing, score it by variety and read its confusion matrix.\n\n[D3_2_finetune_encoder.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D3_2_finetune_encoder.ipynb)\n\n- [ ] Load the encoder and encode a batch (4 min)\n- [ ] A classification head and a training loop (9 min)\n- [ ] Macro F1 overall and by variety (5 min)\n- [ ] Read the confusion matrix (7 min)\n- [ ] ✱ Stretch: Run the same notebook on a published Arabic encoder in Colab with a GPU","notes":"Walk the room. Nothing is downloaded. Training takes one to three minutes on a laptop processor; ANLP_QUICK=1 cuts it to seconds for a first pass. Usual problems: averaging over padded positions (the scores drop and vary with batch composition); forgetting model.train() after an evaluation; reading the confusion matrix by column. Scores differ a little between machines; the order of the table does not. The stretch downloads a published encoder and belongs in Colab with a GPU runtime, not on the classroom laptops.","minutes":null,"lo":[]},{"id":"s3","n":23,"title":"Low-rank and quantised adapters","kind":"section","session":3,"hash":"721f18bd","md":"#### [day3#s3] Low-rank and quantised adapters\n\n*Session 3*\n\n- Explain the memory cost of full fine-tuning\n- Write a low-rank adapter layer and count trainable parameters\n- Compare an adapter run with full fine-tuning on the same split","notes":"Session 3 completes LO4: the adapter run, its trainable-parameter count and its comparison with the full run on the same split. The course encoder is small enough that the memory saving is megabytes; the arithmetic slide shows the same ratios at sizes where it decides what is possible.","minutes":null,"lo":["LO4"]},{"id":"memory-budget","n":24,"title":"Training keeps every trainable weight four times","kind":"content","session":3,"hash":"0f3f8c93","md":"#### [day3#memory-budget] Training keeps every trainable weight four times\n\n*Low-rank and quantised adapters*\n\n| A weight that… | Bytes during training |\n| --- | --- |\n| trains (value, gradient, two Adam states) | 16 |\n| is frozen, 32-bit | 4 |\n| is frozen, 8-bit | 1 |\n| is frozen, 4-bit | 0.5 |\n\n| Model (gigabytes for the weights) | Full | Adapter, 32-bit | Adapter, 4-bit |\n| --- | --- | --- | --- |\n| Encoder, 110 million parameters | 1.8 | 0.4 | 0.1 |\n| Decoder, 7 billion parameters | 112 | 28.4 | 4.0 |\n\nAdapters at 0.5% of the weights. Activations come on top and grow with the batch and the length of the text.","notes":"The arithmetic is from Lab 3.3, step 3, and is exact for the stated assumptions (32-bit floats, Adam, activations excluded). The last row is the reason adapters exist: a free notebook GPU has a fixed memory, and the participants should look up today's figure for their service before reading the row. For a small encoder, full fine-tuning fits easily; say so, because the next slides show the adapter costs quality.","minutes":null,"lo":["LO4"]},{"id":"low-rank-update","n":25,"title":"Freeze the weight matrix; learn its change as two thin matrices","kind":"content","session":3,"hash":"d021f425","md":"#### [day3#low-rank-update] Freeze the weight matrix; learn its change as two thin matrices\n\n*The idea*\n\n1. **Frozen W** 128 × 128 = 16,384 numbers\n2. **A: 8 × 128 and B: 128 × 8** 2,048 trainable numbers at rank 8\n3. **Output** W x + (alpha / r) · B A x\n\n- The bet: the change a task needs is **low rank**, so two thin matrices can hold it.\n- **B starts at zero**: the adapted layer begins exactly as the pretrained one.\n- **Rank** sets capacity; **alpha / r** scales the update.\n- After training, add B A into W once: no extra latency when serving.","notes":"Low-rank adaptation was proposed by Hu and colleagues in 2021. Libraries such as PEFT apply it to published models in two lines; the lab writes the layer by hand in ten, so that the two-line version is understood. If both A and B started at zero, neither would receive a gradient.\n\nSources: Hu et al., LoRA: Low-Rank Adaptation of Large Language Models.","minutes":null,"lo":["LO4"]},{"id":"lora-layer-by-hand","n":26,"title":"The adapter layer is ten lines, and 1.7% of the model trains","kind":"content","session":3,"hash":"5eb4654c","md":"#### [day3#lora-layer-by-hand] The adapter layer is ten lines, and 1.7% of the model trains\n\n*Lab 3.3, steps 1 and 2*\n\n```python\n# file: Lab 3.3\nclass LoRALinear(nn.Module):\n    def __init__(self, base, r=8, alpha=16):\n        super().__init__()\n        self.base, self.scale = base, alpha / r\n        for p in self.base.parameters():\n            p.requires_grad = False\n        self.A = nn.Parameter(\n            torch.randn(r, base.in_features) * 0.01)\n        self.B = nn.Parameter(\n            torch.zeros(base.out_features, r))\n\n    def forward(self, x):\n        return self.base(x) \\\n            + (x @ self.A.T @ self.B.T) * self.scale\n```\n\n| Course encoder with head | Parameters |\n| --- | --- |\n| Total | 538,632 |\n| Adapters on query and value, 2 layers | 8,192 |\n| The new head | 1,032 |\n| Trainable | 9,224 (1.7%) |","notes":"Counts from the course's run of Lab 3.3, step 2. The query and value projections of attention are the usual place for adapters; which layers to adapt is a choice to test on validation data. The lab's first assertion is the one worth understanding: with B at zero, the adapted layer's output equals the frozen layer's.","minutes":null,"lo":["LO4"]},{"id":"quantised-frozen-weights","n":27,"title":"Frozen weights can be stored in fewer bits, at a small error","kind":"content","session":3,"hash":"0b0031e7","md":"#### [day3#quantised-frozen-weights] Frozen weights can be stored in fewer bits, at a small error\n\n*Measured in Lab 3.3, step 3*\n\n| Run on the course encoder | Megabytes for training | In a 3 MB budget |\n| --- | --- | --- |\n| Full fine-tuning | 8.49 | no |\n| Adapter, 32-bit frozen weights | 2.27 | yes |\n| Adapter, 8-bit frozen weights | 0.68 | yes |\n\n- **Quantising** rounds each weight to one of 255 levels and keeps one scale per matrix.\n- The frozen weights of the course encoder move by 2.5% on average.\n- Only frozen weights can be held this way: a gradient step is smaller than one level.\n- The adapters stay in 32 bits and learn on top of the rounded model.","notes":"From the course's run of Lab 3.3, step 3: symmetric 8-bit rounding per weight matrix, written out in six lines in the lab. The 3 MB budget is the lab's own, chosen so that full fine-tuning does not fit and the adapter does. Training adapters over 4-bit weights of a large decoder is known as QLoRA (Dettmers and colleagues, 2023); libraries do the storage, the idea is this slide.\n\nSources: Dettmers et al., QLoRA: Efficient Finetuning of Quantized LLMs.","minutes":null,"lo":["LO4"]},{"id":"adapter-vs-full","n":28,"title":"The adapter trains 1.7% of the weights and gives up 13 points","kind":"content","session":3,"hash":"934f8b1e","md":"#### [day3#adapter-vs-full] The adapter trains 1.7% of the weights and gives up 13 points\n\n*Measured in Lab 3.3 · the evidence of LO4*\n\n| Run | Trainable | Macro F1 | MSA | Gulf | Arabizi | English |\n| --- | --- | --- | --- | --- | --- | --- |\n| Full fine-tuning (supplied) | 530,440 | 0.63 | 0.68 | 0.66 | 0.28 | 0.59 |\n| Adapter, rank 8, 8-bit frozen weights | 9,224 | 0.50 | 0.43 | 0.55 | 0.22 | 0.55 |\n\n- Same split, same 40 epochs, same token masking. The logs carry timestamps.\n- At this size the saving is 8 megabytes, which nobody needs. The trade is real at 7 billion parameters, where full fine-tuning does not fit at all.","notes":"The supplied full run is in data/reference/full_ft_log.json; the adapter row is the course's run of Lab 3.3, step 4. On large published models, adapters often come within a point or two of full fine-tuning; on a tiny model with little pretrained knowledge, a low-rank update has little to steer. State both facts. The lesson for the capstone is the form of the evidence: two runs, their trainable-parameter counts, their logs, their scores by variety.","minutes":null,"lo":["LO4"]},{"id":"when-adapters-fit","n":29,"title":"Adapters are for a skill on a large model, not for facts and not for small models","kind":"content","session":3,"hash":"4f6af58e","md":"#### [day3#when-adapters-fit] Adapters are for a skill on a large model, not for facts and not for small models\n\n*Using adapters well*\n\n- **Good fit.** A large model that does not fit your memory in full. Several tasks on one frozen model, one small adapter each.\n- **Poor fit.** A small model you can fine-tune in full. You pay quality and save nothing you need.\n- **Wrong tool.** Facts that change: prices, rules, dates. They belong in the rule book that Day 2 retrieves from.","notes":"The capstone's adaptation criterion asks for the comparison, not for the adapter to win. A defended \"full fine-tuning, because memory was not our constraint\" scores as well as a defended adapter.","minutes":null,"lo":["LO4"]},{"id":"check-adapters","n":30,"title":"The tariff changes every quarter","kind":"quiz","session":3,"hash":"2528d5ee","md":"#### [day3#check-adapters] The tariff changes every quarter\n\n*Checkpoint*\n\n**Question:** Latifa updates the tariff rule book four times a year. A colleague proposes a new low-rank adapter each quarter so that Ghayth \"knows\" the current prices. What do you answer?\n\n- A. Yes, with a higher rank so that the adapter can hold the prices\n- B. Yes, but with full fine-tuning, since adapters lose quality\n- C. No: adapters over quantised weights would round the prices\n- D. No: keep prices in the rule book and retrieve them; adapt for skills","notes":"Answer: D. Ask what the adapter would be right for at Sawaqi: the routing skill in four varieties, if the model were large enough to need one.","minutes":null,"lo":["LO4"]},{"id":"lab-3-3","n":31,"title":"A low-rank adapter in a memory budget","kind":"lab","session":3,"hash":"ade3995b","md":"#### [day3#lab-3-3] A low-rank adapter in a memory budget\n\nLab 3.3 · 25 min\n\nTrain a low-rank adapter in a fixed memory budget and compare it with a supplied full fine-tuning run, with the frozen weights optionally held in 8 bits.\n\n[D3_3_lora.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D3_3_lora.ipynb)\n\n- [ ] A low-rank adapter layer by hand (7 min)\n- [ ] Wrap the attention and count parameters (4 min)\n- [ ] A memory budget, with 8-bit frozen weights (6 min)\n- [ ] Train and compare with full fine-tuning (8 min)\n- [ ] ✱ Stretch: Sweep the rank and plot macro F1 against trainable parameters","notes":"Walk the room. Training the adapter takes one to three minutes on a laptop processor. Usual problems: giving the optimiser every parameter, frozen ones included (it works and wastes memory: the point of the lab); initialising B with random numbers (the first assertion fails); wrapping the layers before freezing the encoder, which freezes A and B too. The stretch trains four more adapters for 15 epochs each; leave it for after class.","minutes":null,"lo":[]},{"id":"s4","n":32,"title":"Evaluate and deploy","kind":"section","session":4,"hash":"0fbc0024","md":"#### [day3#s4] Evaluate and deploy\n\n*Session 4*\n\n- Put every approach in one comparison table\n- Serve the chosen model behind a small API with a smoke test\n- Write a model card with results by variety and a hand-off rule","notes":"Session 4 serves LO6 and closes LO5: the table is complete, a model is chosen, and it becomes a service with a model card.","minutes":null,"lo":["LO6"]},{"id":"one-table-every-approach","n":33,"title":"Every approach in one table, on the same test messages","kind":"content","session":4,"hash":"9eb43853","md":"#### [day3#one-table-every-approach] Every approach in one table, on the same test messages\n\n*The comparison, complete*\n\n| Approach | Macro F1 | MSA | Gulf | Arabizi | English | Latency | Cost per 1,000 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| Baseline | 0.85 | 0.94 | 0.86 | 0.42 | 0.81 | milliseconds | none per call |\n| Prompted model | your Lab 2.4 run, widened to the test split | network | per token |  |  |  |  |\n| Fine-tuned encoder | 0.63 | 0.68 | 0.66 | 0.28 | 0.59 | milliseconds | none per call |\n| Encoder with adapter | 0.50 | 0.43 | 0.55 | 0.22 | 0.55 | milliseconds | none per call |\n\n> **With these rows, the baseline routes.** The open question is Arabizi, and the only row that can answer it is yours.","notes":"Rows one, three and four are the course's runs on the 403 test messages. The prompted row is left to the participants because the course was built without access to a hosted model. This is the table the capstone's first criterion asks for. The recommendation follows the evidence: nothing here beats the baseline overall, no row is good at Arabizi, so the service ships the baseline with a hand-off rule.","minutes":null,"lo":["LO5"]},{"id":"thin-api-over-a-function","n":34,"title":"The decision is a function; the API is a thin layer over it","kind":"content","session":4,"hash":"40a878dc","md":"#### [day3#thin-api-over-a-function] The decision is a function; the API is a thin layer over it\n\n*Deploying*\n\n```python\n# file: Lab 3.4\nclass Message(BaseModel):\n    text: str = Field(max_length=2000)\n\nclass Decision(BaseModel):\n    department: Optional[str]\n    confidence: float\n    variety: str\n    handoff: bool\n    reason: Optional[str]\n    account_number: Optional[str]\n    district: Optional[str]\n\n@app.post(\"/route\", response_model=Decision)\ndef route(message: Message) -> Decision:\n    return Decision(**decide(message.text))\n```\n\n- **FastAPI with Pydantic**: the schema validates what comes in and what goes out, and documents the service.\n- A message of 3,000 characters is refused with status 422 before the model runs.\n- A **demo page** at the root lets a colleague try a message without a tool. Gradio or Streamlit do the same with more polish.","notes":"The same Pydantic idea as Day 2's extraction schema, now as the contract of a service. The lab calls the app in the notebook's own process with a test client, so nothing has to listen on a port in class; capstone/service.py is the same code as a file to run with uvicorn. The account number and district come from exact patterns here: no hosted call in the request path, so no masking question and no network latency.\n\nSources: FastAPI documentation; Pydantic documentation, validators.","minutes":null,"lo":["LO6"]},{"id":"hand-off-rule","n":35,"title":"The hand-off rule is part of the model, and it has a price","kind":"content","session":4,"hash":"129d3a58","md":"#### [day3#hand-off-rule] The hand-off rule is part of the model, and it has a price\n\n*Measured in Lab 3.4 · the baseline, as served*\n\n- Fewer than two words: **no request**.\n- Best probability below 0.5, or 0.7 for Arabizi: **low confidence**.\n- Second department at 60% of the first or more: **two departments**.\n- This starting rule is right on every message it keeps, and keeps too few. Tuning it on validation data is the engineer's work; the trade is Hessa's decision.\n\n| Variety | Handed to a person | Accuracy on the rest |\n| --- | --- | --- |\n| MSA | 19% | 1.00 |\n| Gulf | 27% | 1.00 |\n| English | 41% | 1.00 |\n| Arabizi | 94% | 1.00 |","notes":"From the course's run of Lab 3.4, step 4, on the 403 test messages with the baseline served. The rule is deliberately cautious, so that the room has something to tune: about a third of all messages go to a person. Ask what Hessa's team can absorb, and which of the three conditions to loosen first. The Arabizi row says the service, as it stands, is a router for three varieties and a sorter of Arabizi into the human queue, and the model card must say exactly that.","minutes":null,"lo":["LO6"]},{"id":"smoke-test-is-not-quality","n":36,"title":"A smoke test proves the service is alive and sane at the edges","kind":"content","session":4,"hash":"ee932321","md":"#### [day3#smoke-test-is-not-quality] A smoke test proves the service is alive and sane at the edges\n\n*Lab 3.4, step 2*\n\n| Case | Must |\n| --- | --- |\n| 20 real test messages, five per variety | answer 200 with a department from the list |\n| An empty message | be handed to a person |\n| Punctuation only |  |\n| A greeting with no request |  |\n| Three problems in one message |  |\n\n- 24 cases, a second to run, on every change.\n- It says nothing about quality: that is the table by variety on the test split.\n- The course's service passes: 24 of 24, with 18 of the 20 real messages sent to the right department.","notes":"From the course's run of Lab 3.4, step 2. The edge cases are where services embarrass their owners: an empty text that crashes the tokeniser, a greeting confidently routed to billing. The third bullet's \"18 of 20\" is not the pass criterion; it is printed so that nobody mistakes the smoke test for an evaluation.","minutes":null,"lo":["LO6"]},{"id":"latency-through-the-service","n":37,"title":"Measure latency through the service, not around the model","kind":"content","session":4,"hash":"30056ef5","md":"#### [day3#latency-through-the-service] Measure latency through the service, not around the model\n\n*Measured in Lab 3.4, step 3*\n\n- **4 ms** the baseline alone, median (Lab 1.4)\n- **25 ms** through the service, median\n- **31 ms** through the service, 95th percentile; the budget is 300 ms\n\n- The customer waits for validation, extraction, the model, the hand-off rule and the response.\n- Report the median and the 95th percentile, on the hardware you will run on, and say which hardware.","notes":"From the course's run on one laptop processor while other work was running on it; expect other numbers on each laptop and the same order of magnitude. The service figure includes the test client's overhead. The point stands either way: the model was a sixth of the total.","minutes":null,"lo":["LO5","LO6"]},{"id":"model-card-by-variety","n":38,"title":"A model card says who the model fails, and what happens then","kind":"content","session":4,"hash":"c0a64206","md":"#### [day3#model-card-by-variety] A model card says who the model fails, and what happens then\n\n*The output of the course's labs*\n\n1. **What it is for**, and what it is not for.\n2. **The served model** and its data card.\n3. **Results by language variety**, as served, with the hand-off rate.\n4. **The approaches compared**: the table.\n5. **Latency**, and on what hardware.\n6. **Limits**: varieties below 0.7 macro F1.\n7. **The hand-off rule**, in plain words.\n8. **Data and privacy**: what is masked, and where.\n\n- **For this service.** \"Arabizi messages are routed correctly far less often than the others. Almost all of them go to a person. Do not staff as if they were automated.\"","notes":"Model cards were proposed by Mitchell and colleagues in 2019: results by subgroup are their core. The lab writes this card from its own numbers into artifacts/D3_4/MODEL_CARD.md and asks for two sentences in the participant's own words. SDAIA's AI Ethics Principles and its Generative AI guidelines are in the course sources; read them at their official addresses for what a deploying organisation is expected to document.\n\nSources: Mitchell et al., Model Cards for Model Reporting; SDAIA, Principles of AI Ethics; SDAIA, Generative AI Guidelines.","minutes":null,"lo":["LO6"]},{"id":"check-model-card","n":39,"title":"One sentence about Arabizi","kind":"quiz","session":4,"hash":"d9d032b0","md":"#### [day3#check-model-card] One sentence about Arabizi\n\n*Checkpoint*\n\n**Question:** The served router scores macro F1 0.85 overall and 0.42 for Arabizi, and hands 94% of Arabizi messages to a person. Which sentence belongs in the model card?\n\n- A. \"Supports Arabic and English with a macro F1 of 0.85.\"\n- B. \"Arabizi support will improve in the next version.\"\n- C. \"Arabizi: macro F1 0.42; 94% of these messages go to a person.\"\n- D. \"Performance varies with out-of-distribution orthography.\"","notes":"Answer: C. The other three are sentences found in real model cards. Ask who reads the card at Sawaqi: Hessa, who must plan how many people handle the hand-offs.","minutes":null,"lo":["LO6"]},{"id":"lab-3-4","n":40,"title":"A small service with a model card","kind":"lab","session":4,"hash":"2fcf49ee","md":"#### [day3#lab-3-4] A small service with a model card\n\nLab 3.4 · 25 min\n\nWrap the chosen model in a small API with a demo page, pass the smoke test, measure CPU latency and draft the model card.\n\n[D3_4_service.ipynb](https://sdaiaacademy.github.io/ae-301/labs/D3_4_service.ipynb)\n\n- [ ] An API that routes, extracts and hands off (7 min)\n- [ ] Pass the smoke test (5 min)\n- [ ] CPU latency, median and 95th percentile (5 min)\n- [ ] Draft the model card by variety (8 min)\n- [ ] ✱ Stretch: Serve the same model with a Gradio or Streamlit demo","notes":"Walk the room. No port is opened: the test client calls the app inside the notebook. Usual problems: a decide function that calls the model on an empty text; returning a confidence that is not rounded (harmless) or a reason on a message that is not handed off (the schema accepts it, the card becomes confusing); measuring latency on a cold first call only. Participants who finish early switch CHOSEN to the encoder, run again and compare the two cards: which would they sign?","minutes":null,"lo":[]},{"id":"day-3-recap","n":41,"title":"The third row is in, a model is served, and its limits are written down","kind":"content","session":4,"hash":"799b4b75","md":"#### [day3#day-3-recap] The third row is in, a model is served, and its limits are written down\n\n*Day 3 recap*\n\n- **Split by customer**: a random split reported 0.033 that no new customer sees.\n- **Validation chooses**, the test split measures once.\n- **Fine-tuned encoder**: 0.63 against the baseline's 0.85 on this data.\n\n- **Adapter**: 1.7% of the weights, 13 points lower; worth it when the model does not fit.\n- **Service**: smoke test passed, latency measured through it.\n- **Model card**: results by variety and a hand-off rule.","notes":"Ask each table which of today's numbers surprised them most. Many expect the neural model to win; hold the room on why it did not, and on what they would need to see before believing that a larger published encoder does.","minutes":null,"lo":[]},{"id":"tomorrow-capstone","n":42,"title":"Capstone: your service, your table, your defence","kind":"content","session":4,"hash":"6dfd94eb","md":"#### [day3#tomorrow-capstone] Capstone: your service, your table, your defence\n\n*Tomorrow · Day 4*\n\nA public repository with the three-way comparison by variety, latency and cost, validated extraction, both adaptation runs, a tested service and a model card. Then eight minutes to defend it, with a batch you have not seen.","notes":"Tonight: read labs/capstone/README.md, copy the template, and run the two commands at its end. Decide tonight whether you build on Sawaqi or on a comparable task of your own with synthetic data.","minutes":null,"lo":[]}],"activities":[{"id":"review-day-2-q1","slide":"review-day-2","type":"single","prompt":"Ghayth extracts fields with a hosted model. A reply has valid JSON with \"account_number\": \"3055512345\". The message, as sent, contained [ACCOUNT_1]. What does the service do with this reply?","options":[{"key":"A","text":"Accepts it, since it matches the account pattern"},{"key":"B","text":"Rejects it, since the model only ever saw a placeholder"},{"key":"C","text":"Accepts it if the number exists in the customer table"},{"key":"D","text":"Asks a second model whether the number is plausible"}],"correct":[1],"explanation":"Masking makes invention provable: any real-looking account number in the reply cannot have come from the message. The validator rejects it and the repair call asks again.","misconceptions":["Checks the shape only: the number looks like an account number, yet the model never saw one","","Lets an invented value pass because it happens to exist in a table","Replaces a rule with a guess: the validator knows the mapping, so nothing needs estimating"],"lo":["LO3"]},{"id":"check-test-set-q1","slide":"check-test-set","type":"single","prompt":"A colleague fine-tunes the encoder with six learning rates, scores every run on the test split and reports the best: macro F1 0.66. What is the honest status of that number?","options":[{"key":"A","text":"Too few runs: with twelve learning rates it would be reliable"},{"key":"B","text":"Fine, since the test messages were never used for training"},{"key":"C","text":"Optimistic: the test split chose the run, so it is no longer unseen"},{"key":"D","text":"Invalid: all six runs must be repeated on new data"}],"correct":[2],"explanation":"The best of six test scores is partly luck that fits this test split. Choose on the validation split; then measure the chosen run once on the test split.","misconceptions":["Sees a search problem: more runs would make the selection effect larger, not smaller","Treats selection as harmless because no weights were trained on the test data","","Throws the work away: the runs are valid, only the choice must move to validation"],"lo":["LO4"]},{"id":"check-validation-peak-q1","slide":"check-validation-peak","type":"single","prompt":"You fine-tune for 40 epochs. Validation macro F1 is highest at epoch 12 and slightly lower afterwards, while the training loss falls to 0.01. Which weights do you measure on the test split?","options":[{"key":"A","text":"Those of epoch 12, the best validation epoch"},{"key":"B","text":"Those of epoch 40, where the loss is lowest"},{"key":"C","text":"Those of whichever epoch scores best on the test split"},{"key":"D","text":"An average of the weights of all 40 epochs"}],"correct":[0],"explanation":"The validation split exists to make this choice. After its peak, the model fits the training messages more closely without doing better on unseen ones.","misconceptions":["","Trusts the training loss: it measures memory of the training messages, not skill on new ones","Lets the test split choose the epoch, which makes its score optimistic","Averages good and overfitted weights without a reason to expect a gain"],"lo":["LO4"]},{"id":"check-adapters-q1","slide":"check-adapters","type":"single","prompt":"Latifa updates the tariff rule book four times a year. A colleague proposes a new low-rank adapter each quarter so that Ghayth \"knows\" the current prices. What do you answer?","options":[{"key":"A","text":"Yes, with a higher rank so that the adapter can hold the prices"},{"key":"B","text":"Yes, but with full fine-tuning, since adapters lose quality"},{"key":"C","text":"No: adapters over quantised weights would round the prices"},{"key":"D","text":"No: keep prices in the rule book and retrieve them; adapt for skills"}],"correct":[3],"explanation":"A changed file is searchable, citable and auditable within minutes. Weights give no citation and no guarantee that the old price is gone.","misconceptions":["Assumes rank is the issue: no rank makes weights a reliable store for exact prices","Moves the same mistake to more weights: full fine-tuning stores prices no more reliably","Treats quantisation as the risk when the problem is where the facts live",""],"lo":["LO4"]},{"id":"check-model-card-q1","slide":"check-model-card","type":"single","prompt":"The served router scores macro F1 0.85 overall and 0.42 for Arabizi, and hands 94% of Arabizi messages to a person. Which sentence belongs in the model card?","options":[{"key":"A","text":"\"Supports Arabic and English with a macro F1 of 0.85.\""},{"key":"B","text":"\"Arabizi support will improve in the next version.\""},{"key":"C","text":"\"Arabizi: macro F1 0.42; 94% of these messages go to a person.\""},{"key":"D","text":"\"Performance varies with out-of-distribution orthography.\""}],"correct":[2],"explanation":"A card states the limit by group, with the number and with what the service does about it, in words its reader can staff against.","misconceptions":["States the average and a language list: true, and hides the one group the model fails","Promises a fix instead of stating today's limit: a card describes the model as it is served","","Hides the limit in a technical term that a contact-centre lead cannot act on"],"lo":["LO6"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day3.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

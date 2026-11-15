@@ -1,0 +1,56 @@
+[
+ {
+  "gap": "الماي [MASK] عندنا من الصبح",
+  "encoder fills": [
+   "،",
+   "ت",
+   "يطلع",
+   "سمحتو",
+   "ه"
+  ],
+  "prefix": "الماي",
+  "decoder continues": [
+   "يسرب",
+   "يطلع",
+   "يـ",
+   "يجي",
+   "طع"
+  ]
+ },
+ {
+  "gap": "the water [MASK] is very weak on the second floor",
+  "encoder fills": [
+   "pressure",
+   "income",
+   "This",
+   "this",
+   "dripping"
+  ],
+  "prefix": "the water",
+  "decoder continues": [
+   "smells",
+   "coming",
+   "pressure",
+   "was",
+   "comes"
+  ]
+ },
+ {
+  "gap": "el [MASK] maqtoo3 3indna",
+  "encoder fills": [
+   "mai",
+   "fatura",
+   "may",
+   "bar",
+   "tasreeb"
+  ],
+  "prefix": "el",
+  "decoder continues": [
+   "3",
+   "mai",
+   "fatoora",
+   "el",
+   "raw"
+  ]
+ }
+]

@@ -1,0 +1,38 @@
+[
+ {
+  "index": "baseline",
+  "macro_f1": 0.81,
+  "msa": 1.0,
+  "gulf": 0.6,
+  "arabizi": 0.505,
+  "en": 0.711,
+  "p50_ms": 4.11,
+  "p95_ms": 4.73,
+  "usd_per_1000": 0.0,
+  "priced_as": "your own processor"
+ },
+ {
+  "index": "larger",
+  "macro_f1": 0.672,
+  "msa": 0.48,
+  "gulf": 0.433,
+  "arabizi": 0.435,
+  "en": 0.495,
+  "p50_ms": 0.5,
+  "p95_ms": 0.72,
+  "usd_per_1000": 0.039,
+  "priced_as": "google/gemma-4-31b-it"
+ },
+ {
+  "index": "smaller",
+  "macro_f1": 0.692,
+  "msa": 0.524,
+  "gulf": 0.394,
+  "arabizi": 0.688,
+  "en": 0.556,
+  "p50_ms": 0.5,
+  "p95_ms": 0.6,
+  "usd_per_1000": 0.0156,
+  "priced_as": "liquid/lfm-3-1.7b"
+ }
+]

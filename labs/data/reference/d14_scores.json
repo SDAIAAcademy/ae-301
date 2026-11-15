@@ -1,0 +1,32 @@
+[
+ {
+  "variety": "all",
+  "n": 403,
+  "macro_f1": 0.847,
+  "accuracy": 0.861
+ },
+ {
+  "variety": "msa",
+  "n": 115,
+  "macro_f1": 0.938,
+  "accuracy": 0.957
+ },
+ {
+  "variety": "gulf",
+  "n": 157,
+  "macro_f1": 0.856,
+  "accuracy": 0.898
+ },
+ {
+  "variety": "arabizi",
+  "n": 51,
+  "macro_f1": 0.42,
+  "accuracy": 0.569
+ },
+ {
+  "variety": "en",
+  "n": 80,
+  "macro_f1": 0.808,
+  "accuracy": 0.838
+ }
+]

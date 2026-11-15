@@ -1,0 +1,24 @@
+{"id": "M0516", "text": "أعترض على قيمه أفاتوره الأخيره لأن استهلاكنا لم يتغير حسابي رقم 3086064286 رقم جوالي 0502386513", "variety": "msa", "department": "billing", "handoff": false}
+{"id": "M0828", "text": "انا حمد العتيبي، تم خصم مبلغ الفاتروة مرتين من حسابي البنكي حسابي رقم 3099543205 للتواصل 0584389477", "variety": "msa", "department": "billing", "handoff": false}
+{"id": "M1150", "text": "ارـسل لكم قراءِة العداد الحاليه وهَي 65711 علما بأنـني سددت الفاتورة السابقة نحن في حي الـربوه حسابي رقم 3095246994", "variety": "msa", "department": "meters", "handoff": false}
+{"id": "M1152", "text": "تحية طيبة، انا مشاري اِلبقمي، ضغط المياه ضعيف جدُا في الطابق الثانى رقم الْحساب 3082769373 رقم جوالَى 0526992369", "variety": "msa", "department": "supply", "handoff": false}
+{"id": "M1211", "text": "مرحبا، ضغط المياه ضعيف جدا في الطابق الثاني ولم تصلْني فاتورة هذا الشهر بعد حسابي رقم 3088849933 للتواصل 0522665507", "variety": "msa", "department": "supply", "handoff": false}
+{"id": "M0576", "text": "معك حمد الشهرى الماي يسرب من وصه العداد والرصيف كله مويه الحساب 3052011120", "variety": "gulf", "department": "leaks", "handoff": false}
+{"id": "M0582", "text": "مساء الخير يا جماعه معك هيفاء العتيبي قدمت طلب توصيل من 2 ايام ومحد رد وكان فيه تسريب بالشارع السنه اللي فاتت رقم حسابي ٣٠٧٤٣٢٢٥٦٩", "variety": "gulf", "department": "connections", "handoff": false}
+{"id": "M0601", "text": "الماى يطلع من ماسوره مكسوره عند تقاطع المنهل من 2 ايام وفيه شغل مجاري بشارعنا الحساب ٣٠٧٨٩٠٢٠٤٣ كلموني على 0543420589", "variety": "gulf", "department": "leaks", "handoff": false}
+{"id": "M0934", "text": "لو سمحتو ابي توصيل ماي لبيت جديد في الغدير واـنا مسدد الفاتوره أللي قبل الحسـاب ٣٠٣١١٥٩٢٧٦", "variety": "gulf", "department": "connections", "handoff": false}
+{"id": "M1647", "text": "معك ناصر ألمالكي البيت فيه انسداد بخط المجاري اولماي كان مقطوع الاسبوع اللي فات بعد الحساب 3057484877 جوالي 0592868599 ألله يعطيكم العافيه", "variety": "gulf", "department": "wastewater", "handoff": false}
+{"id": "M0503", "text": "law sama7tu fee tasreeb 3ind el 3adad barra el bait rqm el 7sab 3096856254 tkfoon sa3dona", "variety": "arabizi", "department": "leaks", "handoff": false}
+{"id": "M0786", "text": "el fatoora 6al3a li mkarara bil kashf e7na fi el manhal rqm el 7sab 3069236499 kalmoni 3la 0598063493", "variety": "arabizi", "department": "billing", "handoff": false}
+{"id": "M1002", "text": "hala m3ak Khalid Al-Zahrani el mai yiji saaif wagt el thurwa fi el nasim 7sabi 3070327107 kalmoni 3la 0590198404", "variety": "arabizi", "department": "supply", "handoff": false}
+{"id": "M1120", "text": "el qiraa bil fatura ghair 3an qiraat el 3adad 7sabi 3045359737 jawali 0572708070", "variety": "arabizi", "department": "meters", "handoff": false}
+{"id": "M1417", "text": "hala ansa7ab el mablagh min el bataqa bs el fatoora lil7een mo madfoo3a e7na fi el rabwa 7sabi 3018754829 kalmoni 3la 0592589814", "variety": "arabizi", "department": "payments", "handoff": false}
+{"id": "M0218", "text": "Hi, The meter box has been full of water for a week", "variety": "en", "department": "leaks", "handoff": false}
+{"id": "M0692", "text": "Hello, The water has tasted strange for 2 days call me on 0537374579", "variety": "en", "department": "quality", "handoff": false}
+{"id": "M1444", "text": "Please test my metre, it records the wrong usage my account is 3053418196 my mobile is 0543893645", "variety": "en", "department": "meters", "handoff": false}
+{"id": "M1556", "text": "Hello, What do I need to apply for a new meter for a shp? and this mont's ibll has not reached me yet acct 3095452390", "variety": "en", "department": "connections", "handoff": false}
+{"id": "M1986", "text": "I would like to pay 425 SAR in monthly instlaments acct 3086456772 call me on 0513867284", "variety": "en", "department": "payments", "handoff": false}
+{"id": "E01", "text": "", "variety": "edge", "department": null, "handoff": true, "note": "an empty message"}
+{"id": "E02", "text": "؟؟؟", "variety": "edge", "department": null, "handoff": true, "note": "punctuation only"}
+{"id": "E03", "text": "hello", "variety": "edge", "department": null, "handoff": true, "note": "a greeting with no request"}
+{"id": "E04", "text": "الماي مقطوع والمجاري طافحه والفاتوره غاليه", "variety": "edge", "department": null, "handoff": true, "note": "three problems in one message"}

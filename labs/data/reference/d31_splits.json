@@ -1,0 +1,82 @@
+[
+ {
+  "split": "random",
+  "seed": 1,
+  "train": 400,
+  "test": 400,
+  "leaked_share": 0.133,
+  "macro_f1": 0.9
+ },
+ {
+  "split": "random",
+  "seed": 2,
+  "train": 400,
+  "test": 400,
+  "leaked_share": 0.18,
+  "macro_f1": 0.872
+ },
+ {
+  "split": "random",
+  "seed": 3,
+  "train": 400,
+  "test": 400,
+  "leaked_share": 0.163,
+  "macro_f1": 0.899
+ },
+ {
+  "split": "random",
+  "seed": 4,
+  "train": 400,
+  "test": 400,
+  "leaked_share": 0.175,
+  "macro_f1": 0.886
+ },
+ {
+  "split": "random",
+  "seed": 5,
+  "train": 400,
+  "test": 400,
+  "leaked_share": 0.165,
+  "macro_f1": 0.903
+ },
+ {
+  "split": "by customer",
+  "seed": 1,
+  "train": 406,
+  "test": 403,
+  "leaked_share": 0.0,
+  "macro_f1": 0.854
+ },
+ {
+  "split": "by customer",
+  "seed": 2,
+  "train": 406,
+  "test": 403,
+  "leaked_share": 0.0,
+  "macro_f1": 0.872
+ },
+ {
+  "split": "by customer",
+  "seed": 3,
+  "train": 400,
+  "test": 403,
+  "leaked_share": 0.0,
+  "macro_f1": 0.843
+ },
+ {
+  "split": "by customer",
+  "seed": 4,
+  "train": 401,
+  "test": 400,
+  "leaked_share": 0.0,
+  "macro_f1": 0.902
+ },
+ {
+  "split": "by customer",
+  "seed": 5,
+  "train": 401,
+  "test": 404,
+  "leaked_share": 0.0,
+  "macro_f1": 0.824
+ }
+]
