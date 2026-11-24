@@ -414,7 +414,8 @@
           "outcomes": [
             "Decide when fine-tuning is worth it",
             "Split by customer to prevent leakage",
-            "Check label balance by department and variety"
+            "Check label balance by department and variety",
+            "Read agreement between two labellers and revise the guideline before labelling more"
           ],
           "lo": [
             "LO4"
