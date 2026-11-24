@@ -1,7 +1,7 @@
 ---
 course: "Applied Natural Language Processing Engineering"
 code: "AE-301"
-version: "2027.1.0"
+version: "2027.2.0"
 scope: "course"
 language: "en"
 view: "trainee"
@@ -1241,6 +1241,7 @@ AI Engineering Track · 3 teaching days + capstone day · 4 sessions · 4 labs �
 - Decide when fine-tuning is worth it
 - Split by customer to prevent leakage
 - Check label balance by department and variety
+- Read agreement between two labellers and revise the guideline before labelling more
 
 #### [day3#when-to-fine-tune] Fine-tune for a narrow, stable skill you have labels for
 
@@ -1332,7 +1333,37 @@ for cid in ids:                 # a customer goes whole
 
 - The first message is a billing complaint with a meters cause. Either label is defensible; an inconsistent one is not.
 - The second carries a clause with another department's words. It is not the complaint.
-- Write the rule down, label by it, and expect the model's ceiling to be the labellers' agreement.
+- The model's ceiling is the labellers' agreement: measure it before training.
+
+#### [day3#agreement-table] Two labellers, 60 messages: 80% agree, and one cell holds most of the rest
+
+*Label quality · complaint types in billing and payments*
+
+| C \ D | high bill | duplicate charge | payment failed |
+| --- | --- | --- | --- |
+| high bill | 27 | 2 | 0 |
+| duplicate charge | 1 | 11 | 1 |
+| payment failed | 1 | *7* | 10 |
+
+- **Observed** agreement: the diagonal, 48 of 60, 0.80.
+- **Chance** agreement: labelling at their own rates without reading, 0.36. Half the messages are high bills.
+- **Kappa** = (0.80 − 0.36) / (1 − 0.36) = 0.69.
+- 7 of the 12 splits sit in one cell. That is a rule missing, not careless people.
+
+#### [day3#fix-the-guideline] Fix the guideline, label the same sample again, then train
+
+*Label quality · what to do with low agreement*
+
+- **The cell's messages.** "The amount left my card but the bill still shows unpaid." C read a failed payment; D read money taken twice.
+- **Guideline v2 adds one rule.** Money left, bill unpaid: payment failed. The same bill paid twice: duplicate charge. One example of each.
+
+| Tempting move | Why it fails |
+| --- | --- |
+| Train anyway | The model learns both readings |
+| Drop the split messages | The hard cases leave the test set, not production |
+| A third labeller breaks ties | The rule stays unwritten; the next labeller splits again |
+
+> **Then measure again.** The same 60, labelled blind by v2: 0.93 observed, kappa 0.89.
 
 #### [day3#data-card] A data card states what the scores were measured on
 

@@ -1,7 +1,7 @@
 ---
 course: "Applied Natural Language Processing Engineering"
 code: "AE-301"
-version: "2027.1.0"
+version: "2027.2.0"
 language: "en"
 view: "trainee"
 source: "https://sdaiaacademy.github.io/ae-301/index.html"
@@ -85,6 +85,7 @@ Slides: https://sdaiaacademy.github.io/ae-301/slides/day3.md
   - Decide when fine-tuning is worth it
   - Split by customer to prevent leakage
   - Check label balance by department and variety
+  - Read agreement between two labellers and revise the guideline before labelling more
   - [Lab 3.1: A split without leakage (25 min)](https://sdaiaacademy.github.io/ae-301/labs/D3_1_splits.ipynb)
 - **Session 2: Fine-tuning an encoder**
   - Add a classification head to a pretrained encoder
@@ -187,4 +188,4 @@ A routing and extraction service for the utility, or for a comparable text task 
 
 SDAIA Academy · AI Engineering Track · Applied Natural Language Processing Engineering
 
-Course version 2027.1.0 · engine 1.0.0 · built 2026-11-15 · commit 93e55d3
+Course version 2027.2.0 · engine 1.0.0 · built 2026-11-24 · commit a5e4bce

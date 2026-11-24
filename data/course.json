@@ -2,9 +2,9 @@
   "v": 1,
   "engine": "1.0.0",
   "build": {
-    "at": "2026-11-15T03:19:01Z",
-    "version": "2027.1.0",
-    "commit": "93e55d3"
+    "at": "2026-11-24T16:12:33Z",
+    "version": "2027.2.0",
+    "commit": "a5e4bce"
   },
   "lang": "en",
   "dir": "ltr",
@@ -15,7 +15,7 @@
   "course": {
     "id": "ae-301",
     "code": "AE-301",
-    "version": "2027.1.0",
+    "version": "2027.2.0",
     "title": "Applied Natural Language Processing Engineering",
     "tagline": "Route, search and extract customer messages in four varieties of Arabic and English, and choose the model on measured quality, latency and cost",
     "description": "Participants build the language layer of a customer-service system for a fictional regional water utility whose messages arrive in Modern Standard Arabic, Gulf dialect, Arabic written in Latin script and English. They trace text through tokenisers, embeddings and attention, build semantic search, route messages and extract account fields three ways (a classical baseline, a prompted generative model and a fine-tuned encoder), adapt a model with low-rank adapters in free notebook memory, and ship the chosen model as a small service with a model card. Every choice rests on scores by dialect, latency and cost.",
@@ -471,7 +471,8 @@
             "outcomes": [
               "Decide when fine-tuning is worth it",
               "Split by customer to prevent leakage",
-              "Check label balance by department and variety"
+              "Check label balance by department and variety",
+              "Read agreement between two labellers and revise the guideline before labelling more"
             ],
             "lo": [
               "LO4"

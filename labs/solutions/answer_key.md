@@ -21,6 +21,7 @@ on the Day 1 and Day 2 slides' notes with what you measure.
 | Typing errors in about one message in ten | `messages.csv` | 1.4, 3.1 |
 | A second clause with another department's words in about three messages in ten ("…and I have already paid the last bill") | `messages.csv` | 1.4, 3.2 (confusion matrix: supply sent to payments) |
 | One template whose label is arguable: a high bill blamed on the meter, labelled `meters` | `messages.csv` | 3.2, the slide "A label is a decision" |
+| Two labellers who read guideline v1 differently: B sends a meters message that mentions the bill to billing, and often follows a second clause; both slip now and then | `double_labels.csv` | 3.1, second stretch |
 | Customers who write again: near-copies of their own earlier message | `messages.csv` | 3.1: 274 pairs, 29% of labelled messages |
 | Only about 400 labelled training messages; the rest of the archive is the unlabelled `pool` | `split.csv` | 1.4, 3.1 to 3.3 |
 | Account numbers in Arabic-Indic digits; messages with a phone number and no account number | `extraction_200.jsonl` | 2.2: the pattern baseline's account-number errors |
@@ -60,6 +61,14 @@ on the Day 1 and Day 2 slides' notes with what you measure.
 - **Lab 3.1.** 1,106 labelled messages from 345 customers; 274 near-duplicate pairs touching 321 messages (29%).
   Random split: 16.3% of test messages have a near-copy in training, macro F1 0.892; customer split: 0%, 0.859
   (means of five seeds).
+  Second stretch (two labellers, 120 pool messages): guideline v1 observed agreement 0.733, chance 0.158, kappa
+  0.683, below Sawaqi's 0.8; 32 messages split, most often billing against meters (12). v2: 0.950, kappa 0.941.
+  The two patterns behind most v1 splits: a meters message that mentions the bill (11) and a second clause from
+  another department (12); the other 9 are slips. Rules to add: "a bill blamed on the meter, or a reading that does
+  not match, goes to meters: they test it"; "label what the customer asks for now; a clause about another or past
+  matter is context". Training on v1 labels caps the model at the labellers' disagreement; dropping the split
+  messages removes exactly the hard cases production will send; a third labeller breaks ties without writing down
+  the rule, so the next labeller splits again.
 - **Lab 3.2.** Fine-tuned course encoder: macro F1 about 0.61 (MSA 0.63, Gulf 0.66, Arabizi 0.33, English 0.52);
   best validation epoch near 29 of 40. Expect ±0.03 between machines. Largest confusions: supply → quality 13,
   payments → billing 11, supply → payments 8. The supplied full run in `data/reference/full_ft_log.json` scored

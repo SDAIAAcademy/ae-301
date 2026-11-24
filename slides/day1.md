@@ -1,7 +1,7 @@
 ---
 course: "Applied Natural Language Processing Engineering"
 code: "AE-301"
-version: "2027.1.0"
+version: "2027.2.0"
 deck: "day1"
 day: 1
 language: "en"
