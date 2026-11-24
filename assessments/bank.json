@@ -592,6 +592,37 @@
       "timer": 90
     },
     {
+      "id": "q-labels-01",
+      "type": "single",
+      "prompt": "Sawaqi's leaks team will label 1,000 messages as a leak in the street or a leak at the meter. Two labellers first labelled the same 100: they agree on 82, kappa 0.57, and 14 of the 18 splits are messages about water in the meter box that A called a meter leak and B a street leak. What comes first?",
+      "options": [
+        "Start labelling all 1,000: with 82% agreement the model will average out the noise",
+        "Keep the 82 messages both agree on and train on them",
+        "Add a rule for water in the meter box, label the same 100 again blind, then measure",
+        "Ask a third labeller to settle each of the 18 splits, then train on the settled labels"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Most splits are one pair on one kind of message: the guideline is missing a rule. Write it with an example, re-label the sample blind and check kappa again before labelling at scale; the 82% includes agreement expected by chance, and kappa of 0.57 is low.",
+      "misconceptions": [
+        "Reads raw agreement as quality and ignores both chance and the concentrated split",
+        "Drops exactly the hard cases that production will send",
+        "",
+        "Settles this sample but leaves the rule unwritten, so the 1,000 split the same way"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 1,
+      "slide": "fix-the-guideline",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1,
+      "timer": 90
+    },
+    {
       "id": "q-decide-01",
       "type": "single",
       "prompt": "A router for three departments has F1 of 0.90 for billing (500 test messages), 0.80 for supply (400) and 0.10 for connections (100). What is its macro F1?",

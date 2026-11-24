@@ -1,0 +1,48 @@
+{
+ "v1": {
+  "n": 120,
+  "observed": 0.733,
+  "chance": 0.158,
+  "kappa": 0.683,
+  "pairs": [
+   [
+    "billing",
+    "meters",
+    12
+   ],
+   [
+    "meters",
+    "payments",
+    3
+   ],
+   [
+    "connections",
+    "leaks",
+    2
+   ]
+  ]
+ },
+ "v2": {
+  "n": 120,
+  "observed": 0.95,
+  "chance": 0.158,
+  "kappa": 0.941,
+  "pairs": [
+   [
+    "billing",
+    "wastewater",
+    2
+   ],
+   [
+    "meters",
+    "wastewater",
+    1
+   ],
+   [
+    "billing",
+    "meters",
+    1
+   ]
+  ]
+ }
+}

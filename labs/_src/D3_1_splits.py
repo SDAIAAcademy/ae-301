@@ -16,6 +16,7 @@
 # - [ ] 3 · Label balance by dialect (6')
 # - [ ] 4 · Write the split and a data card (6')
 # - [ ] ✱ Stretch · A split that is grouped by customer and stratified by department
+# - [ ] ✱ Stretch · Two labellers, one guideline: agreement before more labels
 
 # %%
 #@setup
@@ -216,6 +217,55 @@ mix = pd.DataFrame({"train": DATA.iloc[tr_idx]["department"].value_counts(normal
                     "test": DATA.iloc[te_idx]["department"].value_counts(normalize=True)}).round(3)
 print(mix.to_string())
 # END SOLUTION
+
+# %% [markdown]
+# ## ✱ Stretch · Two labellers, one guideline
+#
+# Before labelling more of the pool, Sawaqi had two labellers route the same 120 pool messages by guideline v1,
+# then again by guideline v2. `data/double_labels.csv` holds their labels (`a_v1`, `b_v1`, `a_v2`, `b_v2`).
+# Sawaqi's own rule: no labelling at scale until two labellers reach a kappa of 0.8 on a shared sample.
+#
+# ✏️ **Exercise** · Write `agreement(a, b)`: the observed agreement, the chance agreement (the sum over labels of
+# the two labellers' shares multiplied) and Cohen's kappa, (observed − chance) / (1 − chance). Write
+# `split_pairs(a, b)`: the pairs of departments the two split most often, with counts.
+
+# %%
+DOUBLE = pd.read_csv(G.DATA / "double_labels.csv").merge(G.messages("pool")[["msg_id", "variety", "text"]], on="msg_id")
+
+
+def agreement(a: pd.Series, b: pd.Series) -> dict:
+    # BEGIN SOLUTION
+    observed = float((a.to_numpy() == b.to_numpy()).mean())
+    pa, pb = a.value_counts(normalize=True), b.value_counts(normalize=True)
+    chance = float(sum(pa.get(k, 0) * pb.get(k, 0) for k in set(pa.index) | set(pb.index)))
+    return {"n": len(a), "observed": round(observed, 3), "chance": round(chance, 3),
+            "kappa": round((observed - chance) / (1 - chance), 3)}
+    # END SOLUTION
+
+
+def split_pairs(a: pd.Series, b: pd.Series, k: int = 3) -> list:
+    # BEGIN SOLUTION
+    pairs = pd.Series([tuple(sorted(p)) for p in zip(a, b) if p[0] != p[1]]).value_counts()
+    return [[x, y, int(c)] for (x, y), c in pairs.head(k).items()]
+    # END SOLUTION
+
+
+# %%
+from sklearn.metrics import cohen_kappa_score
+
+AGREE = G.attempt(lambda: {v: agreement(DOUBLE[f"a_{v}"], DOUBLE[f"b_{v}"]) | {"pairs": split_pairs(DOUBLE[f"a_{v}"], DOUBLE[f"b_{v}"])}
+                           for v in ("v1", "v2")}, "d31_agreement")
+for v in ("v1", "v2"):
+    print(v, {k: AGREE[v][k] for k in ("observed", "chance", "kappa")}, "most split:", AGREE[v]["pairs"])
+    assert abs(AGREE[v]["kappa"] - cohen_kappa_score(DOUBLE[f"a_{v}"], DOUBLE[f"b_{v}"])) < 0.001
+split_v1 = DOUBLE[DOUBLE["a_v1"] != DOUBLE["b_v1"]]
+print(f"\n{len(split_v1)} messages split under v1; eight of them:")
+print(split_v1[["a_v1", "b_v1", "text"]].head(8).to_string(index=False, max_colwidth=90))
+
+# %% [markdown]
+# 🔍 Which version passes Sawaqi's rule? Read the split messages: name the two patterns behind most of them and
+# write the rule you would add to v1 for each. Why is training on v1 labels, dropping the split messages, or
+# letting a third labeller break each tie not a fix?
 
 # %% [markdown]
 # ## Checkpoint

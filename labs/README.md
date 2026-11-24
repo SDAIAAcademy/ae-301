@@ -76,6 +76,7 @@ Synthetic and deterministic (`prepare_data.py`, standard library only, fixed see
 | Gold fields | `data/extraction_200.jsonl` | 200 test messages with account number, district and complaint type (Lab 2.2) |
 | Rule book | `data/rules/R-01 … R-10` | the tariff rules, each in English and Arabic; `data/rule_questions.jsonl` has 16 questions, 4 of which the rules do not answer (Lab 2.3) |
 | Reply tasks | `data/reply_tasks.jsonl` | ten messages with the facts a reply may use (Lab 2.1) |
+| Two labellers | `data/double_labels.csv` | 120 pool messages routed by two labellers under guideline v1 and again under v2 (Lab 3.1, stretch); `_tools/double_labels.py` wrote it |
 | Smoke test | `data/smoke_test.jsonl` | 20 test messages and 4 edge cases that must go to a person (Lab 3.4) |
 | Reference results | `data/reference/` | results of the course's solution runs, for the safety nets and for labs that compare with an earlier lab; the published prices read on the date inside `prices.json` |
 | Models | `models/` | the course tokeniser (2,000 entries), encoder and decoder, and the encoder fine-tuned for routing; `_tools/pretrain_tiny.py` trained them |

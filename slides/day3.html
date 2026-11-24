@@ -38,7 +38,7 @@
     <tr><td>A large model that must fit small memory</td><td>Adapters, quantised weights</td><td>Train a fraction of the weights</td></tr>
   </table>
   <div class="callout note small mt-s"><b>And always:</b> the baseline from Day 1 stays in the table. Fine-tuning has to beat it to be worth maintaining.</div>
-  <aside class="notes"><p>Fine-tuning buys latency and unit cost and pays in labels, training runs and a model you now own and must retrain. Ask the room for a task in their work for each row. The third row is routing at Sawaqi; whether the fine-tuned model wins there is an empirical question we answer by lunch.</p></aside>
+  <aside class="notes"><p>Fine-tuning buys latency and unit cost and pays in labels, training runs and a model you now own and must retrain. The third row is routing at Sawaqi; whether the fine-tuned model wins there is an empirical question we answer by lunch. Keep this slide short: the time goes to label agreement later in the session.</p></aside>
 </section>
 
 <section class="slide" data-label="Near-duplicates" id="customers-write-again" data-lo="LO4">
@@ -132,10 +132,51 @@ for cid in ids:                 # a customer goes whole
     <ul class="bullets small">
       <li>The first message is a billing complaint with a meters cause. Either label is defensible; an inconsistent one is not.</li>
       <li>The second carries a clause with another department's words. It is not the complaint.</li>
-      <li>Write the rule down, label by it, and expect the model's ceiling to be the labellers' agreement.</li>
+      <li>The model's ceiling is the labellers' agreement: measure it before training.</li>
     </ul>
   </div>
-  <aside class="notes"><p>Both patterns are planted in the data: one template about a high bill caused by the meter is labelled meters, and about three messages in ten carry a second clause from another department. They are the two main sources of confusion in the next lab's matrix. In real projects, measure agreement between two labellers on a sample before blaming a model.</p></aside>
+  <aside class="notes"><p>Both patterns are planted in the data: one template about a high bill caused by the meter is labelled meters, and about three messages in ten carry a second clause from another department. They are the two main sources of confusion in the next lab's matrix. The next two slides show how to measure agreement and what to do when it is low.</p></aside>
+</section>
+
+<section class="slide" data-label="Agreement" id="agreement-table" data-lo="LO4">
+  <div class="kicker">Label quality · complaint types in billing and payments</div>
+  <h2>Two labellers, 60 messages: 80% agree, and one cell holds most of the rest</h2>
+  <div class="cols cols-2">
+    <table class="t small">
+      <tr><th>C \ D</th><th class="num">high bill</th><th class="num">duplicate charge</th><th class="num">payment failed</th></tr>
+      <tr><td>high bill</td><td class="num">27</td><td class="num">2</td><td class="num">0</td></tr>
+      <tr><td>duplicate charge</td><td class="num">1</td><td class="num">11</td><td class="num">1</td></tr>
+      <tr class="hl"><td>payment failed</td><td class="num">1</td><td class="num"><em>7</em></td><td class="num">10</td></tr>
+    </table>
+    <ul class="bullets small">
+      <li><b>Observed</b> agreement: the diagonal, 48 of 60, 0.80.</li>
+      <li><b>Chance</b> agreement: labelling at their own rates without reading, 0.36. Half the messages are high bills.</li>
+      <li><b>Kappa</b> = (0.80 − 0.36) / (1 − 0.36) = 0.69.</li>
+      <li>7 of the 12 splits sit in one cell. That is a rule missing, not careless people.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>A parallel example, not the lab's data: two labellers, C and D, typed the complaint type of 60 billing and payments messages by guideline v1, which defines each type in one line. Ask the room to read the table before you say anything: where are the splits? Raw agreement flatters a skewed label mix; kappa (Cohen's) removes what two people would agree on by chance. Exact values from the course script: observed 0.800, chance 0.361, kappa 0.687. The script is _tools/double_labels.py in the labs folder; the labellers are simulated.</p></aside>
+</section>
+
+<section class="slide" data-label="Fix the rule" id="fix-the-guideline" data-lo="LO4">
+  <div class="kicker">Label quality · what to do with low agreement</div>
+  <h2>Fix the guideline, label the same sample again, then train</h2>
+  <div class="cols cols-2">
+    <div class="stack">
+      <div class="card c-teal flat"><h4>The cell's messages</h4><p class="small mb0">"The amount left my card but the bill still shows unpaid." C read a failed payment; D read money taken twice.</p></div>
+      <div class="card c-purple flat"><h4>Guideline v2 adds one rule</h4><p class="small mb0">Money left, bill unpaid: payment failed. The same bill paid twice: duplicate charge. One example of each.</p></div>
+    </div>
+    <div class="stack">
+      <table class="t small">
+        <tr><th>Tempting move</th><th>Why it fails</th></tr>
+        <tr><td>Train anyway</td><td>The model learns both readings</td></tr>
+        <tr><td>Drop the split messages</td><td>The hard cases leave the test set, not production</td></tr>
+        <tr><td>A third labeller breaks ties</td><td>The rule stays unwritten; the next labeller splits again</td></tr>
+      </table>
+      <div class="callout tip small"><b>Then measure again.</b> The same 60, labelled blind by v2: 0.93 observed, kappa 0.89.</div>
+    </div>
+  </div>
+  <aside class="notes"><p>Sawaqi's own rule, not a published standard: no labelling at scale until two labellers reach a kappa of 0.8 on a shared sample. v1 fails it at 0.69, v2 passes at 0.89 (observed 0.933, chance 0.385, from the same script). Re-labelling blind matters: if the labellers see each other's first answers, agreement rises for the wrong reason. A third labeller is fine for the few slips left after the rule is written. The lab's second stretch does the same with Sawaqi's routing labels.</p></aside>
 </section>
 
 <section class="slide" data-label="Data card" id="data-card" data-lo="LO4">
